@@ -77,7 +77,7 @@ class _RatingCardState extends State<RatingCard> {
                               onPressed: () {
                                 // وظيفة الزر
                               },
-                              text: 'تذكر  أن \nقطع الاعناق ولاقطع الارزاق \nلذا راع الله في تقييمك'
+                              text: 'تذكر  أن \nقطع الرقاب ولاقطع الارزاق \nلذا راع الله في تقييمك'
                             ),
                           ),
                           const SizedBox(height: 40),
