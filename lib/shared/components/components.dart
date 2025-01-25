@@ -289,3 +289,33 @@ Widget defultTextFormField({
         ),
       ),
     );
+Widget headingTitle()=> Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.arrow_back_ios_rounded,
+                color: Colors.black),
+          ),
+          const Expanded(
+            child: Center(
+              child: Text(
+                'روز للورود الطبيعية',
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 20,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ),
+          // IconButton(
+          //   onPressed: () {},
+          //   icon: const Icon(Icons.menu, color: Colors.black),
+          // ),
+        ],
+      ),
+    );
+ 
