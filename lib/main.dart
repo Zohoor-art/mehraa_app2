@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mehra_app/modules/SearchLocation/SearchLocation.dart';
+
 import 'package:mehra_app/modules/chats/chat_screen.dart';
 import 'package:mehra_app/modules/chats/chats.dart';
 import 'package:mehra_app/modules/notifications/Notification.dart';
@@ -50,16 +52,18 @@ class MyApp extends StatelessWidget {
           // tested with just a hot reload.
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
-          fontFamily: 'Tajawal'),  
+   search-page-with-location
+          fontFamily: 'Tajawal'),
       home: Directionality(
-
           textDirection: TextDirection.rtl,
+           child: SearchLocation()),
 
-           child: VervicationScreen()),
+         
 
 
 
           
+
     );
   }
 }  

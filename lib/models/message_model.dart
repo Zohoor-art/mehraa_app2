@@ -19,12 +19,17 @@ class Message {
 }
 
 // مثال على المستخدمين، يمكنك تخصيص الأسماء حسب الحاجة
-final User addison = User(name: 'الينا روز', avatar: 'assets/images/1.jpg', id: 1);
-final User jason = User(name: 'لوليتا', avatar: 'assets/images/2.jpg' ,id: 2);
-final User deanna = User(name: 'دياناياسر', avatar: 'assets/images/3.jpg', id: 3);
-final User nathan = User(name: 'لينا ماهر', avatar: 'assets/images/4.jpg', id: 4);
-final User virgil = User(name: 'سماح احمد', avatar: 'assets/images/5.jpg', id: 5);
-final User stanley = User(name: 'ياسمينا', avatar: 'assets/images/6.jpg', id: 6);
+final User addison =
+    User(name: 'الينا روز', avatar: 'assets/images/1.jpg', id: 1);
+final User jason = User(name: 'لوليتا', avatar: 'assets/images/2.jpg', id: 2);
+final User deanna =
+    User(name: 'دياناياسر', avatar: 'assets/images/3.jpg', id: 3);
+final User nathan =
+    User(name: 'لينا ماهر', avatar: 'assets/images/4.jpg', id: 4);
+final User virgil =
+    User(name: 'سماح احمد', avatar: 'assets/images/5.jpg', id: 5);
+final User stanley =
+    User(name: 'ياسمينا', avatar: 'assets/images/6.jpg', id: 6);
 final User leslie = User(name: 'روزي', avatar: 'assets/images/2.jpg', id: 7);
 final User judd = User(name: 'جاد', avatar: 'assets/images/1.jpg', id: 8);
 final User currentUser = User(name: 'المستخدم الحالي', avatar: '', id: 9);
@@ -153,6 +158,30 @@ final List<Message> messages = [
   ),
   Message(
     sender: addison,
+    time: '11:30 PM',
+    avatar: addison.avatar,
+    text: "كنت أتوقعك في مكتبي قبل 20 دقيقة.",
+    isRead: true,
+    unreadCount: 5,
+  ),
+  Message(
+    sender: addison,
+    time: '11:30 PM',
+    avatar: addison.avatar,
+    text: "كنت أتوقعك في مكتبي قبل 20 دقيقة.",
+    isRead: true,
+    unreadCount: 5,
+  ),
+  Message(
+    sender: addison,
+    time: '11:30 PM',
+    avatar: addison.avatar,
+    text: "كنت أتوقعك في مكتبي قبل 20 دقيقة.",
+    isRead: true,
+    unreadCount: 5,
+  ),
+  Message(
+    sender: currentUser,
     time: '11:30 PM',
     avatar: addison.avatar,
     text: "كنت أتوقعك في مكتبي قبل 20 دقيقة.",
