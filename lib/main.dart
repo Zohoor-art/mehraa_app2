@@ -11,9 +11,13 @@ import 'package:mehra_app/modules/register/sign_up.dart';
 
 import 'package:mehra_app/modules/signup2/sign_up2.dart';
 import 'package:mehra_app/modules/settings/Settings.dart';
+
+import 'package:mehra_app/modules/vervication/vervication.dart';
+
 import 'package:mehra_app/modules/xplore/xplore_screen.dart';
 
 import 'package:mehra_app/shared/components/components.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -51,7 +55,9 @@ class MyApp extends StatelessWidget {
 
           textDirection: TextDirection.rtl,
 
-           child: ProfileScreen()),
+           child: VervicationScreen()),
+
+
 
           
     );
