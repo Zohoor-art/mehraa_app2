@@ -89,8 +89,10 @@ Widget bottomImage() => Stack(
 Widget GradientButton(
     {required VoidCallback onPressed,
     required text,
+   fontSize,
     double? width,
-    double? height}) {
+    double? height,}) {
+  var fontsize;
   return Container(
     width: width,
     height: height,
@@ -118,8 +120,8 @@ Widget GradientButton(
       child: Text(
         textAlign: TextAlign.center,
         text,
-        style: const TextStyle(
-            color: Colors.white, fontSize: 22, fontFamily: 'Tajawal'),
+        style: TextStyle(
+            color: Colors.white,fontSize: fontsize, fontFamily: 'Tajawal'),
       ),
     ),
   );
