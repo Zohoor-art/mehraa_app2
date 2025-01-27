@@ -9,6 +9,7 @@ import 'package:mehra_app/modules/register/register_screen.dart';
 import 'package:mehra_app/modules/register/sign_up.dart';
 import 'package:mehra_app/modules/signup2/sign_up2.dart';
 import 'package:mehra_app/modules/settings/Settings.dart';
+import 'package:mehra_app/modules/vervication/vervication.dart';
 
 void main() {
   runApp(const MyApp());
@@ -45,7 +46,7 @@ class MyApp extends StatelessWidget {
       home: Directionality(
 
           textDirection: TextDirection.rtl,
-           child: SignUp2screen()),
+           child: VervicationScreen()),
 
     );
   }
