@@ -14,13 +14,14 @@ class DetailsPage extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage(imageUrl), // استخدام imageUrl هنا
+                  image:NetworkImage(imageUrl), // استخدام imageUrl هنا
                   fit: BoxFit.cover,
                 ),
               ),
               child: SafeArea(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  padding: EdgeInsets.symmetric(horizontal: 20,
+                  vertical: 20),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,

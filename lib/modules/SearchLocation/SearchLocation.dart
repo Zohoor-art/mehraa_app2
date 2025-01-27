@@ -177,7 +177,7 @@ class _SearchLocationState extends State<SearchLocation> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => DetailsPage(
-                                  imageUrl: 'assets/images/${index + 1}.jpg',
+                                  imageUrl:  'https://picsum.photos/${800 + index}/${(index % 2 + 1) * 970}',
                                 ),
                               ),
                             );
@@ -190,22 +190,22 @@ class _SearchLocationState extends State<SearchLocation> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => DetailsPage(
-                                      imageUrl:
-                                          'assets/images/${(index + 1)}.jpg',
-                                    ),
+                                        imageUrl:
+                                            'https://picsum.photos/${800 + index}/${(index % 2 + 1) * 970}'),
                                   ),
                                 );
                               },
                               child: FutureBuilder(
                                 future: precacheImage(
-                                    AssetImage(
-                                        'assets/images/${index + 1}.jpg'),
-                                    context),
+                                  NetworkImage(
+                                      'https://picsum.photos/${800 + index}/${(index % 2 + 1) * 970}'), // استبدل هذا بالرابط الصحيح
+                                  context,
+                                ),
                                 builder: (context, snapshot) {
                                   if (snapshot.connectionState ==
                                       ConnectionState.done) {
-                                    return Image.asset(
-                                      'assets/images/${(index + 1)}.jpg',
+                                    return Image.network(
+                                      'https://picsum.photos/${800 + index}/${(index % 2 + 1) * 970}', // استبدل هذا بالرابط الصحيح
                                       fit: BoxFit.cover,
                                     );
                                   } else {
