@@ -72,8 +72,6 @@ class _SiteScreenState extends State<SiteScreen> {
                 ),
 
                 SizedBox(height: 40),
-
-                // قائمة منسدلة مع إطار
                 Container(
                   width: 348, // عرض القائمة المنسدلة
                   height: 65, // ارتفاع القائمة المنسدلة
@@ -87,7 +85,7 @@ class _SiteScreenState extends State<SiteScreen> {
                       child: Text(
                         ' يدوي',
                         style: TextStyle(
-                          color: Colors.black, // لون النص
+                          color: Colors.black, 
                         ),
                       ),
                     ),
@@ -106,7 +104,7 @@ class _SiteScreenState extends State<SiteScreen> {
                           child: Text(
                             value,
                             style: TextStyle(
-                              color: Colors.black, // لون النص
+                              color: Colors.black, 
                             ),
                           ),
                         ),
