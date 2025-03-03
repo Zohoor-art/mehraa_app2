@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
+     import 'package:flutter/material.dart';
+import 'package:mehra_app/modules/vervication/InputScreen.dart';
 import 'package:mehra_app/shared/components/constants.dart';
+
 
 class VervicationScreen extends StatefulWidget {
   const VervicationScreen({super.key});
@@ -10,21 +12,45 @@ class VervicationScreen extends StatefulWidget {
 
 class _VervicationScreenState extends State<VervicationScreen> {
   final TextEditingController _controller = TextEditingController();
-  List<bool> _selectedCircles = List.filled(6, false); // مصفوفة لتتبع حالة الدوائر
+  List<bool> _selectedCircles = List.filled(6, false);
+  List<String> _enteredNumbers = List.filled(6, '');
 
   void _onClear() {
     setState(() {
-      _controller.clear(); // مسح النص
-      _selectedCircles = List.filled(6, false); // إعادة تعيين حالة الدوائر
+      _controller.clear();
+      _selectedCircles = List.filled(6, false);
+      _enteredNumbers = List.filled(6, '');
     });
   }
 
   void _onCirclePressed(int index) {
     setState(() {
-      _selectedCircles[index] = !_selectedCircles[index]; // تغيير حالة الدائرة عند الضغط
+      _selectedCircles[index] = !_selectedCircles[index];
     });
   }
 
+  void _onNumberPressed(String number) {
+    setState(() {
+      _controller.text += number;
+      for (int i = 0; i < _enteredNumbers.length; i++) {
+        if (_enteredNumbers[i].isEmpty) {
+          _enteredNumbers[i] = number;
+          break;
+        }
+      }
+    });
+  }
+
+  void _onDeletePressed() {
+    setState(() {
+      for (int i = _enteredNumbers.length - 1; i >= 0; i--) {
+        if (_enteredNumbers[i].isNotEmpty) {
+          _enteredNumbers[i] = '';
+          break;
+        }
+      }
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,8 +60,7 @@ class _VervicationScreenState extends State<VervicationScreen> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                MyColor.blueColor,
-                MyColor.purpleColor,
+                MyColor.blueColor,MyColor.purpleColor,
               ],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
@@ -46,7 +71,7 @@ class _VervicationScreenState extends State<VervicationScreen> {
       resizeToAvoidBottomInset: false,
       body: GestureDetector(
         onTap: () {
-          FocusScope.of(context).unfocus(); // إخفاء لوحة المفاتيح عند النقر خارج الحقل
+          FocusScope.of(context).unfocus();
         },
         child: Stack(
           children: [
@@ -62,14 +87,13 @@ class _VervicationScreenState extends State<VervicationScreen> {
                 fit: BoxFit.cover,
               ),
             ),
-            // الكارد العلوي بجوار شريط التطبيق
             Positioned(
-              top: 0, // التصاقه بشريط التطبيق
+              top: 0,
               left: 0,
               right: 0,
               child: Container(
-                width: 430, // العرض المطلوب للكارد العلوي
-                height: 268, // الارتفاع المطلوب للكارد العلوي
+                width: 430,
+                height: 268,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(15),
@@ -86,11 +110,10 @@ class _VervicationScreenState extends State<VervicationScreen> {
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     children: [
-                       SizedBox(height: 20),
+                      SizedBox(height: 20),
                       CircleAvatar(
-                        
                         radius: 40,
-                        backgroundImage: AssetImage('assets/1.png'), // صورة الملف الشخصي
+                        backgroundImage: AssetImage('assets/1.png'),
                       ),
                       SizedBox(height: 20),
                       Text(
@@ -102,74 +125,50 @@ class _VervicationScreenState extends State<VervicationScreen> {
                         ),
                       ),
                       SizedBox(height: 20),
-                      // صف الدوائر
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(6, (index) {
                           return GestureDetector(
-                            onTap: () => _onCirclePressed(index), // تغيير حالة الدائرة عند الضغط
+                            onTap: () => _onCirclePressed(index),
                             child: Container(
                               margin: EdgeInsets.symmetric(horizontal: 5),
-                              width: 34, // العرض المطلوب للدائرة
-                              height: 34, // الارتفاع المطلوب للدائرة
+                              width: 34,
+                              height: 34,
                               decoration: BoxDecoration(
                                 gradient: _selectedCircles[index]
                                     ? LinearGradient(
                                         colors: [
-                                          Color(0xFF4423B1), // اللون الأول
-                                          Color(0xFFA02D87), // اللون الثاني
+                                          Color(0xFF4423B1),
+                                          Color(0xFFA02D87),
                                         ],
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                       )
-                                    : null, // لا تدرج إذا لم يتم الضغط
+                                    : null,
                                 color: _selectedCircles[index]
-                                    ? null // لا لون أساسي إذا كان هناك تدرج
-                                    : Color(0xFFE4E4E4), // اللون الأساسي
+                                    ? null
+                                    : Color(0xFFE4E4E4),
                                 shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  _enteredNumbers[index],
+                                  style: TextStyle(
+                                    color: MyColor.purpleColor,
+                                    fontSize: 18,
+                                  ),
+                                ),
                               ),
                             ),
                           );
                         }),
                       ),
                     ],
-                  ),
-                ),
-              ),
-            ),
-            // مركز المحتوى
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(height: 288), // المسافة لتجنب تداخل الكارد العلوي
-                  // الكارد السفلي
-                  Container(
-                    width: 332, // العرض المطلوب للكارد السفلي
-                    height: 363, // الارتفاع المطلوب للكارد السفلي
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          spreadRadius: 5,
-                          blurRadius: 7,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        children: [
-                          SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                  ), ), ),),
+            NumberInputScreen(
+              onNumberPressed: _onNumberPressed,
+              onDeletePressed: _onDeletePressed,
+              enteredNumbers: _enteredNumbers,
             ),
           ],
         ),
