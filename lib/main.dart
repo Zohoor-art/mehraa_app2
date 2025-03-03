@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mehra_app/modules/rating/add_rating.dart';
 import 'package:mehra_app/modules/site/site.dart';
 import 'package:mehra_app/modules/SearchLocation/SearchLocation.dart';
 
@@ -21,7 +22,7 @@ class MyApp extends StatelessWidget {
       ),
       home: Directionality(
         textDirection: TextDirection.rtl,
-        child: SiteScreen(), // يمكنك تغييرها إلى SearchLocation() إذا رغبت
+        child: AddAating(), 
       ),
     );
   }
