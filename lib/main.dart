@@ -3,13 +3,17 @@ import 'package:mehra_app/modules/SearchLocation/SearchLocation.dart';
 
 import 'package:mehra_app/modules/chats/chat_screen.dart';
 import 'package:mehra_app/modules/chats/chats.dart';
+import 'package:mehra_app/modules/comments/comments.dart';
 import 'package:mehra_app/modules/notifications/Notification.dart';
 import 'package:mehra_app/modules/onbording/onboarding_screen.dart';
 import 'package:mehra_app/modules/profile/profile_screen.dart';
 import 'package:mehra_app/modules/rating/rating.dart';
+import 'package:mehra_app/modules/reels/home.dart';
+import 'package:mehra_app/modules/reels/reels.dart';
 
 import 'package:mehra_app/modules/register/register_screen.dart';
 import 'package:mehra_app/modules/register/sign_up.dart';
+import 'package:mehra_app/modules/sharing/sharing.dart';
 
 import 'package:mehra_app/modules/signup2/sign_up2.dart';
 import 'package:mehra_app/modules/settings/Settings.dart';
@@ -53,7 +57,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
           fontFamily: 'Tajawal'),
       home: Directionality(
-          textDirection: TextDirection.rtl, child: SearchLocation()),
+          textDirection: TextDirection.rtl, child: HomePage()),
     );
   }
 }
