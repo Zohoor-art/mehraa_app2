@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:mehra_app/modules/Story/storyy_view.dart';
 import 'package:mehra_app/modules/site/site.dart';
 import 'package:mehra_app/modules/SearchLocation/SearchLocation.dart';
 import 'package:mehra_app/modules/chats/chat_screen.dart';
@@ -14,6 +16,7 @@ import 'package:mehra_app/modules/settings/Settings.dart';
 import 'package:mehra_app/modules/vervication/vervication.dart';
 import 'package:mehra_app/modules/xplore/xplore_screen.dart';
 import 'package:mehra_app/shared/components/components.dart';
+import 'package:story_view/story_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -34,7 +37,7 @@ class MyApp extends StatelessWidget {
       ),
       home: Directionality(
         textDirection: TextDirection.rtl,
-        child: SettingsPage() // يمكنك تغييرها إلى SiteScreen() أو SearchLocation() إذا رغبت
+        child: StoryyView(title: '',) 
       ),
     );
   }
