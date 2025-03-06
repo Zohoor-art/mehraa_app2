@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mehra_app/modules/site/site.dart';
 import 'package:mehra_app/modules/SearchLocation/SearchLocation.dart';
 
+
 void main() {
   runApp(const MyApp());
 }
@@ -20,9 +21,11 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Tajawal',
       ),
       home: Directionality(
+
         textDirection: TextDirection.rtl,
         child: SiteScreen(), // يمكنك تغييرها إلى SearchLocation() إذا رغبت
       ),
+
     );
   }
 }

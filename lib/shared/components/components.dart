@@ -320,4 +320,15 @@ Widget headingTitle()=> Padding(
         ],
       ),
     );
- 
+  Widget _buildListItem(String name, String imageUrl, BuildContext context) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: CircleAvatar(
+        radius: 20,
+        backgroundImage: AssetImage(imageUrl),
+      ),
+      title: Text(name),
+      trailing: GradientButton(
+          onPressed: () {}, text: 'إرسال', height: 38, width: 101),
+    );
+  }
