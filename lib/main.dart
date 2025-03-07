@@ -18,6 +18,7 @@ import 'package:mehra_app/modules/xplore/xplore_screen.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:story_view/story_view.dart';
 
+
 void main() {
   runApp(const MyApp());
 }
@@ -36,9 +37,11 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Tajawal',
       ),
       home: Directionality(
+
         textDirection: TextDirection.rtl,
         child: StoryyView(title: '',) 
       ),
+
     );
   }
 }
