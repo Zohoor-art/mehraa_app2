@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'package:mehra_app/modules/profile/profile_screen.dart';
+import 'package:mehra_app/modules/rating/add_rating.dart';
+import 'package:mehra_app/modules/rating/rating.dart';
+
+
 import 'package:mehra_app/modules/Story/storyy_view.dart';
+
 import 'package:mehra_app/modules/site/site.dart';
 import 'package:mehra_app/modules/SearchLocation/SearchLocation.dart';
 import 'package:mehra_app/modules/chats/chat_screen.dart';
@@ -39,7 +45,9 @@ class MyApp extends StatelessWidget {
       home: Directionality(
 
         textDirection: TextDirection.rtl,
+
         child: StoryyView(title: '',) 
+
       ),
 
     );
