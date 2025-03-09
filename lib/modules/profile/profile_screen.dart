@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mehra_app/modules/rating/add_rating.dart';
+import 'package:mehra_app/modules/rating/rating.dart';
 import 'package:mehra_app/modules/tabs/feed_view.dart';
 import 'package:mehra_app/modules/tabs/reels_view.dart';
 import 'package:mehra_app/modules/tabs/tagged_view.dart';
@@ -58,7 +60,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: <Widget>[
                     Text(
                       '444',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                     ),
                     SizedBox(height: 5.0),
                     Text(
@@ -72,7 +75,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10.0),
                   child: ClipOval(
-                    child: Image.asset('assets/images/4.jfif', // Replace with your image URL
+                    child: Image.asset(
+                      'assets/images/4.jfif', // Replace with your image URL
                       height: 100,
                       width: 100,
                       fit: BoxFit.cover, // Ensures the image covers the circle
@@ -86,7 +90,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     Text(
                       '444k',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                     ),
                     SizedBox(height: 5.0),
                     Text(
@@ -131,12 +136,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Text(
                   'https://github.com/Zohoor-art/mehraa_app2/branches',
-                  style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Colors.blue, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 5.0),
                 Text(
                   'https://github.com/Zohoor-art/mehraa_app2/branches',
-                  style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: Colors.blue, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -154,7 +161,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       SizedBox(width: 5),
                       ...List.generate(5, (index) {
                         return Icon(
-                          index < 4 ? Icons.star : Icons.star_border, // 4 stars filled
+                          index < 4
+                              ? Icons.star
+                              : Icons.star_border, // 4 stars filled
                           color: Colors.amber,
                         );
                       }),
@@ -164,7 +173,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Row(
                     children: [
                       GradientButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => RatingsListPage()),
+                          );
+                        },
                         text: 'تفاصيل',
                         width: 70,
                         height: 35,
@@ -172,7 +187,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       SizedBox(width: 10),
                       GradientButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => RatingCard()),
+                          );
+                        },
                         text: 'تقييم',
                         width: 70,
                         height: 35,

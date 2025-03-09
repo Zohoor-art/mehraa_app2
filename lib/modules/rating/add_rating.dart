@@ -1,53 +1,60 @@
 import 'package:flutter/material.dart';
 
-class AddAating extends StatefulWidget {
-  const AddAating({super.key});
-
+class RatingsListPage extends StatefulWidget {
   @override
-  State<AddAating> createState() => _AddAatingState();
+  _RatingsListPageState createState() => _RatingsListPageState();
 }
 
-class _AddAatingState extends State<AddAating> {
+class _RatingsListPageState extends State<RatingsListPage> {
+  final List<Map<String, dynamic>> ratingsData = [
+    {'name': 'متجر زهره', 'rating': 90.0},
+    {'name': 'متجرنا للكيك', 'rating': 85.5},
+    {'name': 'متجر لورد', 'rating': 92.0},
+    {'name': 'متجر روز', 'rating': 88.5},
+    {'name': 'متجر للخياطة', 'rating': 99.0},
+    {'name': 'متجر للخياطة', 'rating': 98.0},
+    {'name': 'متجر للخياطة', 'rating': 77.0},
+    {'name': 'متجر للخياطة', 'rating': 96.0},
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إضافة تقييم'),
+
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Card(
-          elevation: 5, // لإضافة ظل للكارد
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8), // زوايا دائرية
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'قم بإضافة تقييمك:',
-                  style: TextStyle(fontSize: 24),
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'اكتب تقييمك هنا',
+      body: Align(
+        alignment: Alignment(0, 1.15), // لضبط الكارد في منتصف الشاشة
+        child: Container(
+          height: 400,
+          padding: const EdgeInsets.all(20),
+          child: Card(
+            elevation: 8,
+            child: SingleChildScrollView( 
+              child: Column(
+                children: [
+                  SizedBox(height: 20),
+                  Text(
+                    'التفاصيل',
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                   ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    // هنا يمكنك إضافة الكود لمعالجة التقييم
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('تم إضافة التقييم!')),
+                  ...ratingsData.map((data) {
+                    return ListTile(
+                      title: Text(
+                        data['name'],
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      trailing: Text(
+                        '${data['rating']}%',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
                     );
-                  },
-                  child: const Text('إرسال'),
-                ),
-              ],
+                  }).toList(),
+                ],
+              ),
             ),
           ),
         ),

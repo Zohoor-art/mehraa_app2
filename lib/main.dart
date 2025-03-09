@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mehra_app/modules/profile/profile_screen.dart';
 import 'package:mehra_app/modules/rating/add_rating.dart';
+import 'package:mehra_app/modules/rating/rating.dart';
 import 'package:mehra_app/modules/site/site.dart';
 import 'package:mehra_app/modules/SearchLocation/SearchLocation.dart';
 
@@ -22,7 +24,7 @@ class MyApp extends StatelessWidget {
       ),
       home: Directionality(
         textDirection: TextDirection.rtl,
-        child: AddAating(), 
+        child: RatingsListPage(), 
       ),
     );
   }
