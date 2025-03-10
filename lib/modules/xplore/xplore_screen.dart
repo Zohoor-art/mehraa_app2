@@ -23,35 +23,48 @@ class XploreScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: Column(
+      body: XploreBody(),
+    );
+  }
+}
+
+class XploreBody extends StatefulWidget {
+  @override
+  _XploreBodyState createState() => _XploreBodyState();
+}
+
+class _XploreBodyState extends State<XploreBody> {
+  final FocusNode _focusNode = FocusNode();
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      if (!_focusNode.hasFocus) {
+        FocusScope.of(context).unfocus();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus(); // إخفاء لوحة المفاتيح عند النقر خارج حقل البحث
+      },
+      child: Column(
         children: [
-          SizedBox(height: 10), // مسافة فوق الكارد الجديد
-          // إضافة أيقونة القائمة والنص في صف واحد
+          SizedBox(height: 20),
           Container(
-            width: MediaQuery.of(context).size.width * 0.9, // 90% من عرض الشاشة
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween, // توزيع العناصر بين اليسار واليمين
-              children: [
-                Icon(
-                  Icons.menu, // أيقونة القائمة
-                  size: 30,
-                  color: MyColor.blueColor,
-                ),
-                Text(
-                  'اكسبلور',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: const Color.fromARGB(255, 12, 12, 12),
-                  ),
-                  textAlign: TextAlign.right, // محاذاة النص إلى اليمين
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 10), // مسافة تحت النص
-          Container(
-            width: MediaQuery.of(context).size.width * 0.9, // 90% من عرض الشاشة
+            width: MediaQuery.of(context).size.width * 0.9,
             height: 55,
             decoration: BoxDecoration(
               boxShadow: const [
@@ -62,32 +75,37 @@ class XploreScreen extends StatelessWidget {
                   spreadRadius: 1,
                 ),
               ],
-              color: Colors.white, // لون الخلفية
-              borderRadius: BorderRadius.circular(10), // زوايا مدورة
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
             ),
             alignment: Alignment.center,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.start, // التوزيع من اليسار
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0), // تباعد عن الحواف
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: IconButton(
                     icon: Icon(Icons.search, color: MyColor.blueColor),
                     onPressed: () {
-                      Navigator.pop(context);
+                      FocusScope.of(context).requestFocus(_focusNode); // إظهار لوحة المفاتيح
                     },
                   ),
                 ),
-                Text(
-                  'بحث',
-                  style: TextStyle(
-                    color: const Color.fromARGB(255, 12, 12, 12),
-                    fontSize: 25,
-                    fontFamily: 'Tajawal',
+                Expanded(
+                  child: TextField(
+                    focusNode: _focusNode,
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'بحث',
+                      border: InputBorder.none,
+                    ),
+                    onTap: () {
+                      FocusScope.of(context).requestFocus(_focusNode); // إظهار لوحة المفاتيح عند النقر
+                    },
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0), // تباعد عن الحواف
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: Icon(
                     Icons.notifications_outlined,
                     size: 22,
@@ -97,91 +115,35 @@ class XploreScreen extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: 20), // مسافة بين الكارد والأزرار
-          // إضافة الأزرار في صف واحد
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal, // جعل الأزرار قابلة للتمرير أفقيًا
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center, // توسيط الأزرار
-              children: [
-                ElevatedButton(
-                  onPressed: () {},
-                  child: Text('الكل'),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(100, 20), // تعيين الحجم الأدنى
-                    textStyle: TextStyle(fontSize: 18), // حجم النص
-                  ),
-                ),
-                SizedBox(width: 10), // مسافة بين الأزرار
-                ElevatedButton(
-                  onPressed: () {},
-                  child: Text('كيك'),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(100, 20),
-                    textStyle: TextStyle(fontSize: 18),
-                  ),
-                ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {},
-                  child: Text('ورد'),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(100, 20),
-                    textStyle: TextStyle(fontSize: 18),
-                  ),
-                ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {},
-                  child: Text('خياط'),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(100, 20),
-                    textStyle: TextStyle(fontSize: 18),
-                  ),
-                ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {},
-                  child: Text('كوافير'),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(100, 20),
-                    textStyle: TextStyle(fontSize: 18),
-                  ),
-                ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {},
-                  child: Text('كعك'),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(100, 20),
-                    textStyle: TextStyle(fontSize: 18),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 20), // مسافة بين الأزرار وصور المعرض
-          // إضافة GridView لعرض الصور
+          SizedBox(height: 20),
           Expanded(
             child: GridView.builder(
               padding: EdgeInsets.all(8.0),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2, // عدد الأعمدة
-                crossAxisSpacing: 8.0, // المسافة بين الأعمدة
-                mainAxisSpacing: 8.0, // المسافة بين الصفوف
-                childAspectRatio: 1, // نسبة عرض إلى ارتفاع الخلايا
+                crossAxisCount: 3,
+                crossAxisSpacing: 2.0,
+                mainAxisSpacing: 2.0,
+                childAspectRatio: 0.75,
               ),
-              itemCount: 20, // عدد الصور
+              itemCount: 20,
               itemBuilder: (context, index) {
-                return Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8.0),
-                    image: DecorationImage(
-                      image: NetworkImage('https://picsum.photos/200/200?random=$index'), // صورة عشوائية من Picsum
-                      fit: BoxFit.cover, // ضبط الصورة لتملأ الحاوية
-                    ),
-                  ),
-                );
+                return index == 2
+                    ? Container(
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: NetworkImage('https://picsum.photos/200/400?random=$index'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      )
+                    : Container(
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: NetworkImage('https://picsum.photos/200/200?random=$index'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      );
               },
             ),
           ),

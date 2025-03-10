@@ -1,7 +1,6 @@
-     import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:mehra_app/modules/vervication/InputScreen.dart';
 import 'package:mehra_app/shared/components/constants.dart';
-
 
 class VervicationScreen extends StatefulWidget {
   const VervicationScreen({super.key});
@@ -31,10 +30,12 @@ class _VervicationScreenState extends State<VervicationScreen> {
 
   void _onNumberPressed(String number) {
     setState(() {
-      _controller.text += number;
+      // إضافة الرقم إلى المدخلات
       for (int i = 0; i < _enteredNumbers.length; i++) {
         if (_enteredNumbers[i].isEmpty) {
           _enteredNumbers[i] = number;
+          // تغيير لون الدائرة إلى متدرج عند إدخال الرقم
+          _selectedCircles[i] = true;
           break;
         }
       }
@@ -46,11 +47,13 @@ class _VervicationScreenState extends State<VervicationScreen> {
       for (int i = _enteredNumbers.length - 1; i >= 0; i--) {
         if (_enteredNumbers[i].isNotEmpty) {
           _enteredNumbers[i] = '';
+          _selectedCircles[i] = false; // إعادة لون الدائرة إلى الأصلي
           break;
         }
       }
     });
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,7 +63,8 @@ class _VervicationScreenState extends State<VervicationScreen> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                MyColor.blueColor,MyColor.purpleColor,
+                MyColor.blueColor,
+                MyColor.purpleColor,
               ],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
@@ -113,7 +117,7 @@ class _VervicationScreenState extends State<VervicationScreen> {
                       SizedBox(height: 20),
                       CircleAvatar(
                         radius: 40,
-                        backgroundImage: AssetImage('assets/1.png'),
+                        backgroundImage: AssetImage('assets/images/1.jpg'),
                       ),
                       SizedBox(height: 20),
                       Text(
@@ -121,7 +125,7 @@ class _VervicationScreenState extends State<VervicationScreen> {
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: MyColor.purpleColor,
+                          color: Colors.black54,
                         ),
                       ),
                       SizedBox(height: 20),
@@ -151,20 +155,25 @@ class _VervicationScreenState extends State<VervicationScreen> {
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
-                                child: Text(
-                                  _enteredNumbers[index],
-                                  style: TextStyle(
-                                    color: MyColor.purpleColor,
-                                    fontSize: 18,
-                                  ),
-                                ),
+                                child: _selectedCircles[index]
+                                    ? SizedBox() // لا تظهر أي رقم
+                                    : Text(
+                                        _enteredNumbers[index],
+                                        style: TextStyle(
+                                          color: MyColor.purpleColor,
+                                          fontSize: 18,
+                                        ),
+                                      ),
                               ),
                             ),
                           );
                         }),
                       ),
                     ],
-                  ), ), ),),
+                  ),
+                ),
+              ),
+            ),
             NumberInputScreen(
               onNumberPressed: _onNumberPressed,
               onDeletePressed: _onDeletePressed,

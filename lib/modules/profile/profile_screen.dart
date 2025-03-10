@@ -5,6 +5,7 @@ import 'package:mehra_app/modules/tabs/feed_view.dart';
 import 'package:mehra_app/modules/tabs/reels_view.dart';
 import 'package:mehra_app/modules/tabs/tagged_view.dart';
 import 'package:mehra_app/shared/components/components.dart';
+import 'package:mehra_app/shared/components/constants.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -32,25 +33,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text('Profile'),
+         appBar: AppBar(
+        toolbarHeight: 50,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                MyColor.blueColor,
+                MyColor.purpleColor,
+              ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+          ),
+        ),
+         title: Text('Profile',
+         style: TextStyle(color: Colors.white),),
           actions: [
             IconButton(
-              icon: Icon(Icons.edit),
+              icon: Icon(Icons.edit,
+              color: Colors.white,),
               onPressed: () {
                 // Handle edit action
               },
             ),
             IconButton(
-              icon: Icon(Icons.share),
+              icon: Icon(Icons.share,color: Colors.white,),
               onPressed: () {
                 // Handle share action
               },
             ),
-          ],
-        ),
+          ]
+      ),
+       
         body: ListView(
           children: [
+            SizedBox(
+              height: 20,
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
