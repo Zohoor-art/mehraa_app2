@@ -48,7 +48,8 @@ class Notifications extends StatelessWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8.0), // تباعد عن الحواف
+                    
+                      horizontal: 8.0,), // تباعد عن الحواف
                   child: IconButton(
                     icon: Icon(Icons.arrow_back, color: MyColor.blueColor),
                     onPressed: () {
@@ -56,19 +57,22 @@ class Notifications extends StatelessWidget {
                     },
                   ),
                 ),
-                Text(
-                  'الاشعارات',
-                  style: TextStyle(
-                    color: const Color.fromARGB(255, 12, 12, 12),
-                    fontSize: 25,
-                    fontFamily: 'Tajawal',
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Text(
+                    'الاشعارات',
+                    style: TextStyle(
+                      color: const Color.fromARGB(255, 12, 12, 12),
+                      fontSize: 25,
+                      fontFamily: 'Tajawal',
+                    ),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 8.0), // تباعد عن الحواف
+                      horizontal: 15.0), // تباعد عن الحواف
                   child: Icon(
-                    Icons.notifications_outlined,
+                    Icons.notifications,
                     size: 22,
                     color: MyColor.blueColor,
                   ),
