@@ -72,44 +72,43 @@ class _SiteScreenState extends State<SiteScreen> {
                 ),
 
                 SizedBox(height: 40),
+
+                // المربع الذي يحتوي على القائمة المنسدلة
                 Container(
-                  width: 348, // عرض القائمة المنسدلة
-                  height: 65, // ارتفاع القائمة المنسدلة
+                  width: 348, // عرض المربع
+                  height: 65, // ارتفاع المربع
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.purple, width: 2), // لون وحجم الإطار
                     borderRadius: BorderRadius.circular(8), // زوايا دائرية للإطار
                   ),
-                  child: DropdownButton<String>(
-                    isExpanded: true, // لتوسيع القائمة بالكامل
-                    hint: Center(
-                      child: Text(
-                        ' يدوي',
-                        style: TextStyle(
-                          color: Colors.black, 
-                        ),
-                      ),
-                    ),
-                    value: selectedValue,
-                    onChanged: (String? newValue) {
+                  child: PopupMenuButton<String>(
+                    onSelected: (String newValue) {
                       setState(() {
-                        selectedValue = newValue;
+                        selectedValue = newValue; // تعيين القيمة المحددة
                       });
                     },
-                    items: <String>['مذبح', 'عصر', ' شملان']
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 10), // لتوسيع العنصر
-                          child: Text(
-                            value,
-                            style: TextStyle(
-                              color: Colors.black, 
-                            ),
-                          ),
+                    child: Center(
+                      child: Text(
+                        selectedValue ?? 'يدوي', // عرض القيمة المحددة أو النص الافتراضي
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ),
+                    itemBuilder: (BuildContext context) {
+                      return <PopupMenuEntry<String>>[
+                        PopupMenuItem<String>(
+                          value: 'مذبح',
+                          child: Text('مذبح'),
                         ),
-                      );
-                    }).toList(),
+                        PopupMenuItem<String>(
+                          value: 'عصر',
+                          child: Text('عصر'),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'شملان',
+                          child: Text('شملان'),
+                        ),
+                      ];
+                    },
                   ),
                 ),
 
