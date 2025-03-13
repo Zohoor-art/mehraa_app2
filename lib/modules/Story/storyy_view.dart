@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:story_view/controller/story_controller.dart';
-import 'package:story_view/widgets/story_view.dart';
+// import 'package:story_view/controller/story_controller.dart';
+// import 'package:story_view/widgets/story_view.dart';
 
 class StoryyView extends StatefulWidget {
   const StoryyView({Key? key, required this.title}) : super(key: key);
@@ -12,7 +12,7 @@ class StoryyView extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<StoryyView> {
-  final StoryController controller = StoryController();
+  // final StoryController controller = StoryController();
 
   @override
   Widget build(BuildContext context) {
@@ -24,38 +24,39 @@ class _MyHomePageState extends State<StoryyView> {
         children: [
           Container(
             height: 500,
-            child: StoryView(
-              controller: controller,
-              storyItems: [
-                StoryItem.text(
-                  title: "",
-                  backgroundColor: const Color.fromARGB(255, 180, 58, 180),
-                  roundedTop: true,
-                ),
-                StoryItem.inlineImage(
-                    url: "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif",
-                    controller: controller,
-                    caption: Text(
-                      "Image caption",
-                      style: TextStyle(
-                        color: Colors.white,
-                        backgroundColor: Colors.black54,
-                        fontSize: 17,
-                      ),
-                    )),
-                StoryItem.inlineImage(
-                    url: "https://i.pinimg.com/736x/4c/26/ff/4c26ffa8495c0c631231f1fa2166d5c3.jpg",
-                    controller: controller,
-                    caption: Text(
-                      "Image caption",
-                      style: TextStyle(
-                        color: Colors.white,
-                        backgroundColor: Colors.black54,
-                        fontSize: 17,
-                      ),
-                    ))
-              ],
-            ),
+            // child: StoryView(
+            //   controller: controller,
+            //   storyItems: [
+            //     StoryItem.text(
+            //       title: "",
+            //       backgroundColor: const Color.fromARGB(255, 180, 58, 180),
+            //       roundedTop: true,
+            //     ),
+            //     StoryItem.inlineImage(
+            //         url: "https://media.giphy.com/media/5GoVLqeAOo6PK/giphy.gif",
+            //         controller: controller,
+            //         caption: Text(
+            //           "Image caption",
+            //           style: TextStyle(
+            //             color: Colors.white,
+            //             backgroundColor: Colors.black54,
+            //             fontSize: 17,
+            //           ),
+            //         )),
+            //     StoryItem.inlineImage(
+            //         url: "https://i.pinimg.com/736x/4c/26/ff/4c26ffa8495c0c631231f1fa2166d5c3.jpg",
+            //         controller: controller,
+            //         caption: Text(
+            //           "Image caption",
+            //           style: TextStyle(
+            //             color: Colors.white,
+            //             backgroundColor: Colors.black54,
+            //             fontSize: 17,
+            //           ),
+            //         ))
+            //   ],
+            // ),
+         
           ),
           // الجزء العلوي لاسم المستخدم وصورته
           Positioned(

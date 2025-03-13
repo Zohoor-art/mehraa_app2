@@ -17,6 +17,21 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+       appBar: AppBar(
+        toolbarHeight: 15,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                MyColor.blueColor,
+                MyColor.purpleColor,
+              ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+          ),
+        ),
+      ),
       backgroundColor: MyColor.LightSearchColor,
       body: SafeArea(
         child: Container(
