@@ -50,7 +50,11 @@ dependencies:
   google_sign_in: ^6.2.2
   firebase_core: ^3.12.1
   firebase_auth: ^5.5.1
-  
+  firebase_storage: ^12.4.4
+  cloud_firestore: ^5.6.5
+  image_picker: ^1.1.2
+  awesome_dialog: ^3.2.1
+  flutter_dropdown_search: ^0.0.4
   # chewie: ^1.10.0
   # video_player: ^2.9.3
 

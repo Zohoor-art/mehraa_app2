@@ -1,9 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mehra_app/firebase_options.dart';
 import 'package:mehra_app/modules/Story/storyy_view.dart';
 import 'package:mehra_app/modules/rating/rating.dart';
 import 'package:mehra_app/modules/register/register_screen.dart';
+import 'package:mehra_app/modules/register/sign_up.dart';
 import 'package:mehra_app/modules/signup2/sign_up2.dart';
 import 'package:mehra_app/modules/site/site.dart';
 import 'package:mehra_app/modules/SearchLocation/SearchLocation.dart';
@@ -16,18 +18,31 @@ import 'package:mehra_app/modules/reels/home.dart';
 import 'package:mehra_app/modules/vervication/vervication.dart';
 import 'package:mehra_app/modules/xplore/xplore_screen.dart';
 
-
-
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatefulWidget {
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (user == null) {
+        print('====================User is currently signed out!');
+      } else {
+        print('=======================User is signed in!');
+      }
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,11 +55,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Tajawal',
       ),
       home: Directionality(
-
-        textDirection: TextDirection.rtl,
-        child: RegisterScreen() 
-      ),
-
+          textDirection: TextDirection.rtl, child: SignUpscreen()),
     );
   }
 }
