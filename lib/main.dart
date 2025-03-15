@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mehra_app/firebase_options.dart';
+// import 'package:mehra_app/modules/chats/all_chats.dart';
 
 import 'package:mehra_app/modules/profile/profile_screen.dart';
 import 'package:mehra_app/modules/rating/add_rating.dart';
@@ -51,7 +52,7 @@ class MyApp extends StatelessWidget {
       home: Directionality(
 
         textDirection: TextDirection.rtl,
-        child: HomePage() 
+        child: ChatsPage()
       ),
 
     );
