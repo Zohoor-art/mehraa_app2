@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mehra_app/modules/signup2/sign_up2.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 
@@ -208,6 +209,11 @@ class _SignUpscreenState extends State<SignUpscreen> {
                                 Center(
                                   child: GradientButton(
                                     onPressed: () {
+                                      Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => SignUp2screen()),
+                          );
                                       if (_formKey.currentState?.validate() ??
                                           false) {
                                         // Proceed with the sign-up process

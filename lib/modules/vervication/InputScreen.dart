@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mehra_app/shared/components/constants.dart';
+
 class NumberInputScreen extends StatelessWidget {
   final Function(String) onNumberPressed;
   final Function onDeletePressed;
@@ -55,14 +57,43 @@ class NumberInputScreen extends StatelessWidget {
                 }),
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start, // وضع العناصر في أقصى اليسار
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      onNumberPressed("0");
-                    },
-                    child: Container(
-                      alignment: Alignment.center,
+                  
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10,
+                    horizontal: 20),
+                    child: GestureDetector(
+                      onTap: () {
+                        onDeletePressed();
+                      },
+                      child: Container(
+                        width: 50, // عرض الشكل الدائري
+                        height: 50, // ارتفاع الشكل الدائري
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [MyColor.blueColor, MyColor.purpleColor],
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.close_outlined, // أيقونة "x"
+                          size: 25,
+                          color: Colors.white, // تغيير اللون حسب الحاجة
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 45,
+                  ),
+                  Container(
+                    alignment: Alignment.center,
+                    child: GestureDetector(
+                      onTap: () {
+                        onNumberPressed("0");
+                      },
                       child: Text("0", style: TextStyle(fontSize: 35)),
                     ),
                   ),

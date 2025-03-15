@@ -21,13 +21,14 @@ class RegisterScreen extends StatelessWidget {
                       onPressed: () {},
                       text: 'المتابعة بدون تسجيل دخول',
                       width: 336,
-                      height: 69),
+                      height: 69,
+                      fontSize: 30),
                   SizedBox(height: 60), // Space between buttons
                   GradientButton(
                       onPressed: () {},
                       text: 'انشاء حساب تجاري ',
                       width: 336,
-                      height: 69),
+                      height: 69,),
                   SizedBox(height: 60),
                   buildGoogleButton(text: 'المتابعة بحساب جوجل', onPressed: () {}),
                   SizedBox(height: 60), // Space between button and text
