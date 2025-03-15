@@ -7,10 +7,13 @@ class MyColor {
   static Color pinkColor = Color(0xffA02D87);
   static Color darkTopapColor = Color(0xff52495B);
   static Color darkSearchColor = Color(0xff22232A);
+  static const Color darkPurpleColor = Color(0xFF92328F);
+  static const Color mediumPurpleColor = Color(0xFF94328D);
   // ignore: non_constant_identifier_names
   static Color LightSearchColor = Color(0xffFFFFFF);
   static Color darkprimaryColor = Color(0xff121216);
     static Color backcardsetting = Color(0xffE9DCF0);
+    
 
   
 }

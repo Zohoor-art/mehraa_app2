@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+
+import 'package:mehra_app/models/user_model.dart';
+import 'package:mehra_app/modules/chats/chat_room.dart';
+
 import 'package:mehra_app/modules/rating/add_rating.dart';
+
 import 'package:mehra_app/modules/rating/rating.dart';
 import 'package:mehra_app/modules/tabs/feed_view.dart';
 import 'package:mehra_app/modules/tabs/reels_view.dart';
@@ -21,56 +26,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Tab(icon: Icon(Icons.person_2_sharp)),
   ];
 
-  // Tap bar view pages
   final List<Widget> tabBarViews = [
     FeedView(),
     ReelsView(),
     TaggedView(),
   ];
 
+  bool _isExpanded = false;  // To control overall expansion
+
+  // Define shop's opening hours
+  final TimeOfDay openingTime = TimeOfDay(hour: 9, minute: 0);  // 9:00 AM
+  final TimeOfDay closingTime = TimeOfDay(hour: 21, minute: 0); // 9:00 PM
+
+  bool isOpen() {
+    final now = TimeOfDay.now();
+    // Check if current time is within opening hours
+    return (now.hour > openingTime.hour || (now.hour == openingTime.hour && now.minute >= openingTime.minute)) &&
+           (now.hour < closingTime.hour || (now.hour == closingTime.hour && now.minute < closingTime.minute));
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-         appBar: AppBar(
-        toolbarHeight: 50,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                MyColor.blueColor,
-                MyColor.purpleColor,
-              ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-          ),
-        ),
-         title: Text('Profile',
-         style: TextStyle(color: Colors.white),),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.edit,
-              color: Colors.white,),
-              onPressed: () {
-                // Handle edit action
-              },
-            ),
-            IconButton(
-              icon: Icon(Icons.share,color: Colors.white,),
-              onPressed: () {
-                // Handle share action
-              },
-            ),
-          ]
+
+      appBar: AppBar(
+  toolbarHeight: 38,
+  flexibleSpace: Container(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        colors: [
+          MyColor.blueColor,
+          MyColor.purpleColor,
+        ],
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
       ),
-       
+    ),
+  ),
+  actions: [
+    IconButton(
+      icon: Icon(Icons.edit, color: Colors.white),
+      onPressed: () {
+        // Handle edit action
+      },
+    ),
+    IconButton(
+      icon: Icon(Icons.share, color: Colors.white),
+      onPressed: () {
+        // Handle share
+        // action
+      },
+    ),
+    Padding(
+      padding: const EdgeInsets.only(right: 265.0),
+      child: IconButton(
+        icon: Icon(Icons.message, color: Colors.white),
+        onPressed: () {
+          // Handle message action
+          Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ChatRoom(user: User(id: 1, name: 'Adison', avatar: 'assets/images/2.jpg'),)), // Navigate to ChatPage
+    );
+        },
+      ),
+    ),
+  ],
+),
+    
         body: ListView(
-          children: [
+          
+     
             SizedBox(
               height: 20,
             ),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -99,7 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       'assets/images/4.jfif', // Replace with your image URL
                       height: 100,
                       width: 100,
-                      fit: BoxFit.cover, // Ensures the image covers the circle
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
@@ -139,17 +170,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
             SizedBox(height: 5.0),
-            // Bio
+            // Opening Hours and Status
             Container(
               alignment: Alignment.center,
-              child: Text(
-                'متجر زهره المتجر الذي سيجعل هاتفك انعكاسا لك وهداياك تصنع بحب',
-                maxLines: 2,
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 16),
-              ),
+              // Opening Hours and Status
+
+  child: Column(
+    children: [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'ساعات العمل: 9:00 ص - 9:00 م',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+      SizedBox(height: 5.0),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            isOpen() ? 'المتجر مفتوح' : 'المتجر مغلق',
+            style: TextStyle(
+              color: isOpen() ? Colors.green : Colors.red,
+              fontWeight: FontWeight.bold,
             ),
+
+          ),
+        ],
+      ),
+    ],
+  ),
+
+            ),
+            SizedBox(height: 5.0),
+            // Overall Details with Read More feature
+            Container(
+              alignment: Alignment.center,
+              child: Column(
+                children: [
+                  Text(
+                    'متجر زهره المتجر الذي سيجعل هاتفك انعكاسا لك وهداياك تصنع بحب.\n'
+                    '\n'
+                    'https://github.com/Zohoor-art/mehraa_app2/branches\n'
+                    'https://github.com/Zohoor-art/mehraa_app2/branches',
+                    maxLines: _isExpanded ? null : 2,
+                    textAlign: TextAlign.center,
+                    overflow: _isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  SizedBox(height: 5.0),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _isExpanded = !_isExpanded; // Toggle the expansion state
+                      });
+                    },
+                    child: Text(_isExpanded ? 'عرض أقل' : 'عرض المزيد', style: TextStyle(color: Colors.blue)),
+                  ),
+                ],
+              ),
+
             SizedBox(height: 10.0),
             // Links
             Column(
@@ -166,6 +248,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       color: Colors.blue, fontWeight: FontWeight.bold),
                 ),
               ],
+
             ),
             SizedBox(height: 10.0),
             // Rating and Buttons
@@ -174,22 +257,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Stars and Rating Text
                   Row(
                     children: [
                       Text('التقييم', style: TextStyle(fontSize: 16)),
                       SizedBox(width: 5),
                       ...List.generate(5, (index) {
                         return Icon(
+
+                          index < 4 ? Icons.star : Icons.star_border,
+
                           index < 4
                               ? Icons.star
                               : Icons.star_border, // 4 stars filled
+
                           color: Colors.amber,
                         );
                       }),
                     ],
                   ),
-                  // Buttons
                   Row(
                     children: [
                       GradientButton(
@@ -209,10 +294,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       GradientButton(
                         onPressed: () {
                           Navigator.push(
+
+      context,
+      MaterialPageRoute(builder: (context) => RatingCard()), // Navigate to ChatPage
+    );
+
                             context,
                             MaterialPageRoute(
                                 builder: (context) => RatingCard()),
                           );
+
                         },
                         text: 'تقييم',
                         width: 70,
