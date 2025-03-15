@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mehra_app/modules/chats/chat_screen.dart';
+import 'package:mehra_app/modules/homePage/home_screen.dart';
 import 'package:mehra_app/modules/profile/profile_screen.dart';
 import 'package:mehra_app/modules/site/site.dart';
 import 'package:mehra_app/modules/SearchLocation/SearchLocation.dart';
@@ -24,7 +26,7 @@ class MyApp extends StatelessWidget {
 
      textDirection: TextDirection.rtl,
 
-           child: ProfileScreen(),
+           child:HomeScreen(),
 
       )
       );}
