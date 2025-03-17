@@ -1,14 +1,18 @@
 {
   "project_info": {
+
     "project_number": "617347888301",
     "firebase_url": "https://greentaxi-44f9b-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "greentaxi-44f9b",
     "storage_bucket": "greentaxi-44f9b.appspot.com"
+
   },
   "client": [
     {
       "client_info": {
+
         "mobilesdk_app_id": "1:617347888301:android:f9ffac81b7064f3e50c224",
+
         "android_client_info": {
           "package_name": "com.example.mehra_app"
         }
@@ -16,6 +20,7 @@
       "oauth_client": [],
       "api_key": [
         {
+
           "current_key": "AIzaSyA6w-8lYiWXcksdEETpYBtSgwO_SboNhDM"
         }
       ],
@@ -36,6 +41,7 @@
       "api_key": [
         {
           "current_key": "AIzaSyA6w-8lYiWXcksdEETpYBtSgwO_SboNhDM"
+
         }
       ],
       "services": {
