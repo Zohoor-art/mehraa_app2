@@ -1,1 +1,2 @@
+
 {"flutter":{"platforms":{"android":{"default":{"projectId":"greentaxi-44f9b","appId":"1:617347888301:android:f9ffac81b7064f3e50c224","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"greentaxi-44f9b","configurations":{"android":"1:617347888301:android:f9ffac81b7064f3e50c224","ios":"1:617347888301:ios:ef413816f7ca86f450c224","macos":"1:617347888301:ios:ef413816f7ca86f450c224","web":"1:617347888301:web:e28a1b1bfb259b3950c224","windows":"1:617347888301:web:fa9f7c7f2e61d24b50c224"}}}}}}

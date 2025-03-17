@@ -25,7 +25,7 @@ class _RatingCardState extends State<RatingCard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 15,
+        toolbarHeight: 30,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -36,6 +36,17 @@ class _RatingCardState extends State<RatingCard> {
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
+          ),
+          
+        ),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.of(context).pop(); // العودة للصفحة السابقة
+          },
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            size: 18,
+            color: Colors.white,
           ),
         ),
       ),
