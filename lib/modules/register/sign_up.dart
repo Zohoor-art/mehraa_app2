@@ -44,7 +44,7 @@ class _SignUpscreenState extends State<SignUpscreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
+      appBar: AppBar(
         toolbarHeight: 15,
         flexibleSpace: Container(
           decoration: BoxDecoration(
@@ -59,7 +59,6 @@ class _SignUpscreenState extends State<SignUpscreen> {
           ),
         ),
       ),
-  
       resizeToAvoidBottomInset: false,
       body: GestureDetector(
         onTap: () {
@@ -210,10 +209,11 @@ class _SignUpscreenState extends State<SignUpscreen> {
                                   child: GradientButton(
                                     onPressed: () {
                                       Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => SignUp2screen()),
-                          );
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                SignUp2screen()),
+                                      );
                                       if (_formKey.currentState?.validate() ??
                                           false) {
                                         // Proceed with the sign-up process

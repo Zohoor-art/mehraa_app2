@@ -56,31 +56,22 @@ class _SignUpscreenState extends State<SignUp2screen> {
     super.dispose();
   }
 
-  void _showContactOptions() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Center(child: Text('طريقة توصيل الخدمة')),
-          content: Text('اختر طريقة التوصيل:'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                // إضافة الكود لتوصيل الخدمة بشكل اختياري
-                Navigator.of(context).pop();
-              },
-              child: Text('توصيل اختياري'),
-            ),
-            TextButton(
-              onPressed: () {
-                // إضافة الكود لتوصيل الخدمة بموقع ثابت
-                Navigator.of(context).pop();
-              },
-              child: Text('موقع ثابت'),
-            ),
-          ],
-        );
-      },
+  InputDecoration inputDecoration(String label, IconData prefixIcon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(prefixIcon, color: MyColor.blueColor),
+      border: OutlineInputBorder(
+        borderSide: BorderSide(color: MyColor.purpleColor, width: 2.0), // حدود عريضة
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: MyColor.purpleColor, width: 2.0), // حدود عريضة عند التركيز
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: MyColor.purpleColor, width: 2.0), // حدود عريضة عند التفعيل
+      ),
+      errorBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.red, width: 2.0), // حدود حمراء عند الخطأ
+      ),
     );
   }
 
@@ -92,10 +83,7 @@ class _SignUpscreenState extends State<SignUp2screen> {
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                MyColor.blueColor,
-                MyColor.purpleColor,
-              ],
+              colors: [MyColor.blueColor, MyColor.purpleColor],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
@@ -112,20 +100,11 @@ class _SignUpscreenState extends State<SignUp2screen> {
             Container(
               color: MyColor.lightprimaryColor,
             ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Image.asset(
-                'assets/bottom.png',
-                fit: BoxFit.cover,
-              ),
-            ),
             Center(
               child: SingleChildScrollView(
                 child: Container(
                   width: MediaQuery.of(context).size.width * 0.90,
-                  padding: const EdgeInsets.symmetric(vertical: 20.0), // Padding for better spacing
+                  padding: const EdgeInsets.symmetric(vertical: 20.0),
                   child: Card(
                     color: Colors.white,
                     shadowColor: Color(0xFF000000),
@@ -136,8 +115,20 @@ class _SignUpscreenState extends State<SignUp2screen> {
                       child: Form(
                         key: _formKey,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch, // Stretch to fill width
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
+                            TextFormField(
+                              controller: descriptionController,
+                              keyboardType: TextInputType.text,
+                              validator: (value) {
+                                if (value!.isEmpty) {
+                                  return 'يرجى إدخال وصف العمل';
+                                }
+                                return null;
+                              },
+                              decoration: inputDecoration('وصف العمل', Icons.description),
+                            ),
+                            SizedBox(height: 20.0),
                             DropdownButtonFormField<String>(
                               value: selectedWorkType,
                               hint: Text('اختر نوع العمل'),
@@ -158,41 +149,7 @@ class _SignUpscreenState extends State<SignUp2screen> {
                                 }
                                 return null;
                               },
-                              decoration: InputDecoration(
-                                labelText: 'نوع العمل',
-                                prefixIcon: Icon(
-                                  Icons.business,
-                                  color: MyColor.blueColor,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: MyColor.blueColor,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 20.0),
-                            TextFormField(
-                              controller: descriptionController,
-                              keyboardType: TextInputType.text,
-                              validator: (value) {
-                                if (value!.isEmpty) {
-                                  return 'يرجى إدخال وصف العمل';
-                                }
-                                return null;
-                              },
-                              decoration: InputDecoration(
-                                labelText: 'وصف العمل',
-                                prefixIcon: Icon(
-                                  Icons.description,
-                                  color: MyColor.blueColor,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: MyColor.blueColor,
-                                  ),
-                                ),
-                              ),
+                              decoration: inputDecoration('نوع العمل', Icons.business),
                             ),
                             SizedBox(height: 20.0),
                             DropdownButtonFormField<String>(
@@ -215,18 +172,7 @@ class _SignUpscreenState extends State<SignUp2screen> {
                                 }
                                 return null;
                               },
-                              decoration: InputDecoration(
-                                labelText: 'الأيام',
-                                prefixIcon: Icon(
-                                  Icons.calendar_today,
-                                  color: MyColor.blueColor,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: MyColor.blueColor,
-                                  ),
-                                ),
-                              ),
+                              decoration: inputDecoration('الأيام', Icons.calendar_today),
                             ),
                             SizedBox(height: 20.0),
                             DropdownButtonFormField<String>(
@@ -249,18 +195,7 @@ class _SignUpscreenState extends State<SignUp2screen> {
                                 }
                                 return null;
                               },
-                              decoration: InputDecoration(
-                                labelText: 'الساعات',
-                                prefixIcon: Icon(
-                                  Icons.access_time,
-                                  color: MyColor.blueColor,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: MyColor.blueColor,
-                                  ),
-                                ),
-                              ),
+                              decoration: inputDecoration('الساعات', Icons.access_time),
                             ),
                             SizedBox(height: 20.0),
                             TextFormField(
@@ -272,19 +207,7 @@ class _SignUpscreenState extends State<SignUp2screen> {
                                 }
                                 return null;
                               },
-                              onTap: _showContactOptions,
-                              decoration: InputDecoration(
-                                labelText: 'رقم تواصل',
-                                prefixIcon: Icon(
-                                  Icons.phone,
-                                  color: MyColor.blueColor,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: MyColor.blueColor,
-                                  ),
-                                ),
-                              ),
+                              decoration: inputDecoration('رقم تواصل', Icons.phone),
                             ),
                             SizedBox(height: 20.0),
                             TextFormField(
@@ -296,18 +219,7 @@ class _SignUpscreenState extends State<SignUp2screen> {
                                 }
                                 return null;
                               },
-                              decoration: InputDecoration(
-                                labelText: 'الموقع',
-                                prefixIcon: Icon(
-                                  Icons.map,
-                                  color: MyColor.blueColor,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: MyColor.blueColor,
-                                  ),
-                                ),
-                              ),
+                              decoration: inputDecoration('الموقع', Icons.map),
                             ),
                             SizedBox(height: 25),
                             Center(
