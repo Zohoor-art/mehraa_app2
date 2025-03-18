@@ -95,7 +95,7 @@ final List<Message> allChats = [
     unreadCount: 0,
     isRead: true,
     text: "لقد قمت بالتسجيل.",
-  ),
+   ),
   Message(
     sender: judd,
     avatar: judd.avatar,
