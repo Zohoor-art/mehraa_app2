@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mehra_app/modules/signup2/sign_up2.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
+import 'dart:io';
 
 class SignUpscreen extends StatefulWidget {
   const SignUpscreen({super.key});
@@ -12,33 +17,87 @@ class SignUpscreen extends StatefulWidget {
 
 class _SignUpscreenState extends State<SignUpscreen> {
   final _formKey = GlobalKey<FormState>();
-  String? selectedCountryCode = "+967"; // Default Yemen country code
-  final List<String> countryCodes = [
-    "+1", // USA
-    "+44", // UK
-    "+91", // India
-    "+967", // Yemen
-  ];
-
   late TextEditingController storeNameController;
-  late TextEditingController phoneController;
+  late TextEditingController emailController;
   late TextEditingController passwordController;
   bool isPassword = true;
+  bool isLoading = false;
+  String? imageUrl;
+  final ImagePicker _picker = ImagePicker();
+  XFile? _imageFile;
 
   @override
   void initState() {
     super.initState();
     storeNameController = TextEditingController();
-    phoneController = TextEditingController();
+    emailController = TextEditingController();
     passwordController = TextEditingController();
   }
 
   @override
   void dispose() {
     storeNameController.dispose();
-    phoneController.dispose();
+    emailController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        setState(() {
+          _imageFile = pickedFile;
+        });
+      }
+    } catch (e) {
+      print("Error picking image: $e");
+    }
+  }
+
+  Future<void> _submit() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        isLoading = true;
+      });
+
+      try {
+        UserCredential userCredential = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(
+          email: emailController.text,
+          password: passwordController.text,
+        );
+
+        if (_imageFile != null) {
+          final storageRef = FirebaseStorage.instance.ref()
+              .child('profiles/${userCredential.user!.uid}.jpg');
+          await storageRef.putFile(File(_imageFile!.path));
+          imageUrl = await storageRef.getDownloadURL();
+        }
+
+        // تخزين بيانات المستخدم في Firestore
+        await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+          'storeName': storeNameController.text,
+          'email': emailController.text,
+          'profileImage': imageUrl,
+        });
+
+        await FirebaseAuth.instance.currentUser!.sendEmailVerification();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => SignUp2screen(userId: userCredential.user!.uid)),
+        );
+      } catch (e) {
+        print("Error: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('حدث خطأ: $e')),
+        );
+      } finally {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -62,8 +121,7 @@ class _SignUpscreenState extends State<SignUpscreen> {
       resizeToAvoidBottomInset: false,
       body: GestureDetector(
         onTap: () {
-          FocusScope.of(context)
-              .unfocus(); // إخفاء لوحة المفاتيح عند النقر خارج الحقل
+          FocusScope.of(context).unfocus();
         },
         child: Stack(
           children: [
@@ -99,6 +157,27 @@ class _SignUpscreenState extends State<SignUpscreen> {
                                 top: 70.0, bottom: 40, right: 10, left: 10),
                             child: Column(
                               children: [
+                                Expanded(
+                                  child: Stack(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 64,
+                                        backgroundImage: _imageFile != null
+                                            ? FileImage(File(_imageFile!.path))
+                                            : AssetImage('assets/images/2.jpg') as ImageProvider,
+                                      ),
+                                      Positioned(
+                                        bottom: -10,
+                                        left: 80,
+                                        child: IconButton(
+                                          onPressed: _pickImage,
+                                          icon: const Icon(Icons.add_a_photo),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(height: 20),
                                 defultTextFormField(
                                   controller: storeNameController,
                                   type: TextInputType.text,
@@ -111,69 +190,20 @@ class _SignUpscreenState extends State<SignUpscreen> {
                                   label: 'اسم المتجر',
                                   prefix: Icons.home,
                                 ),
-                                SizedBox(height: 60.0),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Expanded(
-                                      flex: 1,
-                                      child: DropdownButtonFormField<String>(
-                                        value: selectedCountryCode,
-                                        decoration: InputDecoration(
-                                          labelText: 'رمز الدولة',
-                                          enabledBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: MyColor
-                                                  .purpleColor, // لون البوردر عند التمكين
-                                              width:
-                                                  2.0, // سمك البوردر عند التمكين
-                                            ),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderSide: BorderSide(
-                                              color: MyColor
-                                                  .blueColor, // لون البوردر عند التركيز
-                                              width:
-                                                  2.3, // سمك البوردر عند التركيز
-                                            ),
-                                          ),
-                                        ),
-                                        items: countryCodes.map((String code) {
-                                          return DropdownMenuItem<String>(
-                                            value: code,
-                                            child: Text(code),
-                                          );
-                                        }).toList(),
-                                        onChanged: (String? newValue) {
-                                          setState(() {
-                                            selectedCountryCode = newValue;
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                    SizedBox(width: 10.0),
-                                    Expanded(
-                                      flex: 2,
-                                      child: defultTextFormField(
-                                        controller: phoneController,
-                                        type: TextInputType.phone,
-                                        validate: (value) {
-                                          if (value!.isEmpty) {
-                                            return 'يرجى إدخال رقم الهاتف';
-                                          }
-                                          if (selectedCountryCode == "+967" &&
-                                              value.length != 9) {
-                                            return 'يجب أن يحتوي رقم الهاتف على 9 أرقام';
-                                          }
-                                          return null;
-                                        },
-                                        label: 'رقم الهاتف',
-                                        prefix: Icons.phone,
-                                      ),
-                                    ),
-                                  ],
+                                SizedBox(height: 40.0),
+                                defultTextFormField(
+                                  controller: emailController,
+                                  type: TextInputType.emailAddress,
+                                  validate: (value) {
+                                    if (value!.isEmpty) {
+                                      return 'يرجى إدخال  الايميل';
+                                    }
+                                    return null;
+                                  },
+                                  label: 'البريد الالكتروني ',
+                                  prefix: Icons.email,
                                 ),
-                                SizedBox(height: 60.0),
+                                SizedBox(height: 20.0),
                                 defultTextFormField(
                                   controller: passwordController,
                                   type: TextInputType.visiblePassword,
@@ -204,22 +234,11 @@ class _SignUpscreenState extends State<SignUpscreen> {
                                     });
                                   },
                                 ),
-                                SizedBox(height: 50),
+                                SizedBox(height: 20),
                                 Center(
                                   child: GradientButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                SignUp2screen()),
-                                      );
-                                      if (_formKey.currentState?.validate() ??
-                                          false) {
-                                        // Proceed with the sign-up process
-                                      }
-                                    },
-                                    text: 'التحقق',
+                                    onPressed: isLoading ? () {} : _submit,
+                                    text: isLoading ? 'جارٍ التحميل...' : 'التحقق',
                                     width: 319,
                                     height: 67,
                                   ),

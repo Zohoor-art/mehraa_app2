@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 
 class SignUp2screen extends StatefulWidget {
-  const SignUp2screen({super.key});
+  final String userId; // استلام معرف المستخدم
+
+  const SignUp2screen({super.key, required this.userId});
 
   @override
   State<SignUp2screen> createState() => _SignUpscreenState();
@@ -46,6 +49,19 @@ class _SignUpscreenState extends State<SignUp2screen> {
     descriptionController = TextEditingController();
     contactNumberController = TextEditingController();
     locationController = TextEditingController();
+    _fetchUserData(); // استرجاع بيانات المستخدم
+  }
+
+  Future<void> _fetchUserData() async {
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
+
+    if (userDoc.exists) {
+      setState(() {
+        descriptionController.text = userDoc['description'] ?? ''; // تأكد من إضافة الحقل إذا كان موجودًا
+        contactNumberController.text = userDoc['contactNumber'] ?? '';
+        locationController.text = userDoc['location'] ?? '';
+      });
+    }
   }
 
   @override
@@ -61,18 +77,36 @@ class _SignUpscreenState extends State<SignUp2screen> {
       labelText: label,
       prefixIcon: Icon(prefixIcon, color: MyColor.blueColor),
       border: OutlineInputBorder(
-        borderSide: BorderSide(color: MyColor.purpleColor, width: 2.0), // حدود عريضة
+        borderSide: BorderSide(color: MyColor.purpleColor, width: 2.0),
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: MyColor.purpleColor, width: 2.0), // حدود عريضة عند التركيز
+        borderSide: BorderSide(color: MyColor.purpleColor, width: 2.0),
       ),
       enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: MyColor.purpleColor, width: 2.0), // حدود عريضة عند التفعيل
+        borderSide: BorderSide(color: MyColor.purpleColor, width: 2.0),
       ),
       errorBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.red, width: 2.0), // حدود حمراء عند الخطأ
+        borderSide: BorderSide(color: Colors.red, width: 2.0),
       ),
     );
+  }
+
+  Future<void> _saveUserData() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      // تخزين البيانات في Firestore
+      await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
+        'description': descriptionController.text,
+        'workType': selectedWorkType,
+        'days': selectedDays,
+        'hours': selectedHours,
+        'contactNumber': contactNumberController.text,
+        'location': locationController.text,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تم حفظ البيانات بنجاح')),
+      );
+    }
   }
 
   @override
@@ -224,11 +258,7 @@ class _SignUpscreenState extends State<SignUp2screen> {
                             SizedBox(height: 25),
                             Center(
                               child: GradientButton(
-                                onPressed: () {
-                                  if (_formKey.currentState?.validate() ?? false) {
-                                    // Proceed with the sign-up process
-                                  }
-                                },
+                                onPressed: _saveUserData,
                                 text: 'التحقق',
                                 width: 319,
                                 height: 67,

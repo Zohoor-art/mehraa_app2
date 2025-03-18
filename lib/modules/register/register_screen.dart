@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:mehra_app/modules/register/sign_up.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 
@@ -15,14 +16,16 @@ Future<UserCredential?> signInWithGoogle() async {
   try {
     // Initialize GoogleSignIn with the client ID
     final GoogleSignIn googleSignIn = GoogleSignIn(
-      clientId: 'AIzaSyA6w-8lYiWXcksdEETpYBtSgwO_SboNhDM.apps.googleusercontent.com',
+      clientId:
+          'AIzaSyA6w-8lYiWXcksdEETpYBtSgwO_SboNhDM.apps.googleusercontent.com',
     );
 
     // Trigger the authentication flow
     final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
 
     // Obtain the auth details from the request
-    final GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+    final GoogleSignInAuthentication? googleAuth =
+        await googleUser?.authentication;
 
     // Create a new credential
     final credential = GoogleAuthProvider.credential(
@@ -62,7 +65,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   SizedBox(height: 60),
                   GradientButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                SignUpscreen()), // استبدل ReelsPage باسم صفحتك
+                      );
+                    },
                     text: 'انشاء حساب تجاري ',
                     width: 336,
                     height: 69,
