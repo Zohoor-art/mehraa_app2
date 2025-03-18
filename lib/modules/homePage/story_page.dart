@@ -89,7 +89,9 @@ class StoryPage extends StatelessWidget {
                                     Icons.add,
                                     color: Colors.white,
                                     size: 20,
+                                    
                                   ),
+                                  
                                 ),
                               ),
                             ],

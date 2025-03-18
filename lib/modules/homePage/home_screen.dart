@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mehra_app/modules/SearchLocation/SearchLocation.dart';
 import 'package:mehra_app/modules/chats/chats.dart';
+import 'package:mehra_app/modules/homePage/add_postScreen.dart';
 import 'package:mehra_app/modules/homePage/post.dart';
 import 'package:mehra_app/modules/homePage/story_page.dart';
 import 'package:mehra_app/modules/notifications/Notification.dart';
@@ -143,7 +144,7 @@ class HomePage extends StatelessWidget {
                         // Navigate to another page (مثلاً، الصفحة الخاصة بك)
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => SearchLocation()),
+                          MaterialPageRoute(builder: (context) => AddPostscreen()),
                         );
                       },
                       child: const Icon(Icons.add_circle_outline_outlined, size: 25),
