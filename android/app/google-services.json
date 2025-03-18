@@ -1,13 +1,18 @@
 {
   "project_info": {
-    "project_number": "108382778388",
-    "project_id": "mehra-app1",
-    "storage_bucket": "mehra-app1.firebasestorage.app"
+
+    "project_number": "617347888301",
+    "firebase_url": "https://greentaxi-44f9b-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "greentaxi-44f9b",
+    "storage_bucket": "greentaxi-44f9b.appspot.com"
+
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:108382778388:android:182a9def24c55477352301",
+
+        "mobilesdk_app_id": "1:617347888301:android:f9ffac81b7064f3e50c224",
+
         "android_client_info": {
           "package_name": "com.example.mehra_app"
         }
@@ -15,7 +20,28 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCC0og0PrOAZMP7pdEeTOIpmEnxGQeyVL0"
+
+          "current_key": "AIzaSyA6w-8lYiWXcksdEETpYBtSgwO_SboNhDM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:617347888301:android:8e7b5a154561f95850c224",
+        "android_client_info": {
+          "package_name": "com.example.taxi_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6w-8lYiWXcksdEETpYBtSgwO_SboNhDM"
+
         }
       ],
       "services": {
