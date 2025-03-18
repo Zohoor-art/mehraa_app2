@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+
 import 'create_story_page.dart'; // تأكد من استيراد صفحة إنشاء الاستوري
+
+import 'package:mehra_app/shared/components/constants.dart';
+
 
 class StoryPage extends StatelessWidget {
   List<dynamic> story = [
@@ -7,6 +11,12 @@ class StoryPage extends StatelessWidget {
     {"images": 'assets/images/2.jpg', "username": 'زينب جسار'},
     {"images": 'assets/images/3.jpg', "username": 'علا عبدالله'},
     {"images": 'assets/images/4.jpg', "username": 'ثريا الزليل'},
+
+    {"images": 'assets/images/1.jpg', "username": 'زهور الجبرني'},
+    {"images": 'assets/images/2.jpg', "username": 'زهور الجبرني'},
+    {"images": 'assets/images/3.jpg', "username": 'زهور الجبرني'},
+    {"images": 'assets/images/4.jpg', "username": 'زهور الجبرني'},
+
   ];
 
   @override
@@ -23,7 +33,9 @@ class StoryPage extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
+
                     // زر إضافة استوري
+
                     Padding(
                       padding: const EdgeInsets.all(7.0),
                       child: Column(
@@ -31,11 +43,14 @@ class StoryPage extends StatelessWidget {
                           Stack(
                             alignment: Alignment.center,
                             children: [
+
+                              // Container for the colored border in house shape
                               ClipPath(
                                 clipper: HouseClipper(),
                                 child: Container(
-                                  width: 70,
-                                  height: 77,
+                                  width: 70, // Width of the outer container (larger)
+                                  height: 77, // Height of the outer container (larger)
+
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       colors: [
@@ -48,16 +63,19 @@ class StoryPage extends StatelessWidget {
                                   ),
                                 ),
                               ),
+
+                              // House shape with image inside
                               ClipPath(
                                 clipper: HouseClipper(),
                                 child: Container(
-                                  width: 60,
-                                  height: 67,
+                                  width: 60, // Width of the inner container
+                                  height: 67, // Height of the inner container
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: Colors.white, // Background color for the house shape
                                   ),
                                   child: Image.asset(
-                                    'assets/images/5.jpg',
+                                    'assets/images/5.jpg', // صورة البروفايل
+
                                     fit: BoxFit.cover,
                                   ),
                                 ),
@@ -65,6 +83,7 @@ class StoryPage extends StatelessWidget {
                               Positioned(
                                 bottom: -2,
                                 right: -1,
+
                                 child: GestureDetector(
                                   onTap: () {
                                     // توجيه المستخدم إلى صفحة إنشاء الاستوري
@@ -93,7 +112,7 @@ class StoryPage extends StatelessWidget {
                                       size: 20,
                                     ),
                                   ),
-                                ),
+                  ),
                               ),
                             ],
                           ),
@@ -104,8 +123,9 @@ class StoryPage extends StatelessWidget {
                         ],
                       ),
                     ),
+
                     // توليد قصص أخرى
-                    ...List.generate(story.length, (index) {
+        ...List.generate(story.length, (index) {
                       return Padding(
                         padding: const EdgeInsets.all(7.0),
                         child: Column(
@@ -113,11 +133,13 @@ class StoryPage extends StatelessWidget {
                             Stack(
                               alignment: Alignment.center,
                               children: [
+                        // Container for the colored border in house shape
                                 ClipPath(
                                   clipper: HouseClipper(),
                                   child: Container(
-                                    width: 70,
-                                    height: 76,
+                                    width: 70, // Width of the outer container (larger)
+                                    height: 76, // Height of the outer container (larger)
+
                                     decoration: BoxDecoration(
                                       gradient: LinearGradient(
                                         colors: [
@@ -130,13 +152,16 @@ class StoryPage extends StatelessWidget {
                                     ),
                                   ),
                                 ),
+
+                                // House shape for stories with image inside
                                 ClipPath(
                                   clipper: HouseClipper(),
                                   child: Container(
-                                    width: 60,
-                                    height: 67,
+                                    width: 60, // Width of the inner container
+                                    height: 67, // Height of the inner container
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: Colors.white, // Background color for the house shape
+
                                     ),
                                     child: Image.asset(
                                       '${story[index]["images"]}',
@@ -158,7 +183,8 @@ class StoryPage extends StatelessWidget {
                 ),
               ),
             ),
-            // زر إضافة استوري أسفل القصص (اختياري)
+
+            // Additional content can go here
           ],
         ),
       ),
@@ -166,7 +192,8 @@ class StoryPage extends StatelessWidget {
   }
 }
 
-// كلاس القصير لشكل المنزل
+// Custom clipper for the house shape
+
 class HouseClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {

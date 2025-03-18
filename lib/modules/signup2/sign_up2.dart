@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 
 class SignUp2screen extends StatefulWidget {
-  const SignUp2screen({super.key});
+  final String userId; // استلام معرف المستخدم
+
+  const SignUp2screen({super.key, required this.userId});
 
   @override
   State<SignUp2screen> createState() => _SignUpscreenState();
@@ -46,6 +49,19 @@ class _SignUpscreenState extends State<SignUp2screen> {
     descriptionController = TextEditingController();
     contactNumberController = TextEditingController();
     locationController = TextEditingController();
+    _fetchUserData(); // استرجاع بيانات المستخدم
+  }
+
+  Future<void> _fetchUserData() async {
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
+
+    if (userDoc.exists) {
+      setState(() {
+        descriptionController.text = userDoc['description'] ?? ''; // تأكد من إضافة الحقل إذا كان موجودًا
+        contactNumberController.text = userDoc['contactNumber'] ?? '';
+        locationController.text = userDoc['location'] ?? '';
+      });
+    }
   }
 
   @override
@@ -56,32 +72,41 @@ class _SignUpscreenState extends State<SignUp2screen> {
     super.dispose();
   }
 
-  void _showContactOptions() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Center(child: Text('طريقة توصيل الخدمة')),
-          content: Text('اختر طريقة التوصيل:'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                // إضافة الكود لتوصيل الخدمة بشكل اختياري
-                Navigator.of(context).pop();
-              },
-              child: Text('توصيل اختياري'),
-            ),
-            TextButton(
-              onPressed: () {
-                // إضافة الكود لتوصيل الخدمة بموقع ثابت
-                Navigator.of(context).pop();
-              },
-              child: Text('موقع ثابت'),
-            ),
-          ],
-        );
-      },
+  InputDecoration inputDecoration(String label, IconData prefixIcon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(prefixIcon, color: MyColor.blueColor),
+      border: OutlineInputBorder(
+        borderSide: BorderSide(color: MyColor.purpleColor, width: 2.0),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: MyColor.purpleColor, width: 2.0),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: MyColor.purpleColor, width: 2.0),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: Colors.red, width: 2.0),
+      ),
     );
+  }
+
+  Future<void> _saveUserData() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      // تخزين البيانات في Firestore
+      await FirebaseFirestore.instance.collection('users').doc(widget.userId).update({
+        'description': descriptionController.text,
+        'workType': selectedWorkType,
+        'days': selectedDays,
+        'hours': selectedHours,
+        'contactNumber': contactNumberController.text,
+        'location': locationController.text,
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تم حفظ البيانات بنجاح')),
+      );
+    }
   }
 
   @override
@@ -92,10 +117,7 @@ class _SignUpscreenState extends State<SignUp2screen> {
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                MyColor.blueColor,
-                MyColor.purpleColor,
-              ],
+              colors: [MyColor.blueColor, MyColor.purpleColor],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
@@ -112,20 +134,11 @@ class _SignUpscreenState extends State<SignUp2screen> {
             Container(
               color: MyColor.lightprimaryColor,
             ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Image.asset(
-                'assets/bottom.png',
-                fit: BoxFit.cover,
-              ),
-            ),
             Center(
               child: SingleChildScrollView(
                 child: Container(
                   width: MediaQuery.of(context).size.width * 0.90,
-                  padding: const EdgeInsets.symmetric(vertical: 20.0), // Padding for better spacing
+                  padding: const EdgeInsets.symmetric(vertical: 20.0),
                   child: Card(
                     color: Colors.white,
                     shadowColor: Color(0xFF000000),
@@ -136,8 +149,20 @@ class _SignUpscreenState extends State<SignUp2screen> {
                       child: Form(
                         key: _formKey,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch, // Stretch to fill width
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
+                            TextFormField(
+                              controller: descriptionController,
+                              keyboardType: TextInputType.text,
+                              validator: (value) {
+                                if (value!.isEmpty) {
+                                  return 'يرجى إدخال وصف العمل';
+                                }
+                                return null;
+                              },
+                              decoration: inputDecoration('وصف العمل', Icons.description),
+                            ),
+                            SizedBox(height: 20.0),
                             DropdownButtonFormField<String>(
                               value: selectedWorkType,
                               hint: Text('اختر نوع العمل'),
@@ -158,41 +183,7 @@ class _SignUpscreenState extends State<SignUp2screen> {
                                 }
                                 return null;
                               },
-                              decoration: InputDecoration(
-                                labelText: 'نوع العمل',
-                                prefixIcon: Icon(
-                                  Icons.business,
-                                  color: MyColor.blueColor,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: MyColor.blueColor,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 20.0),
-                            TextFormField(
-                              controller: descriptionController,
-                              keyboardType: TextInputType.text,
-                              validator: (value) {
-                                if (value!.isEmpty) {
-                                  return 'يرجى إدخال وصف العمل';
-                                }
-                                return null;
-                              },
-                              decoration: InputDecoration(
-                                labelText: 'وصف العمل',
-                                prefixIcon: Icon(
-                                  Icons.description,
-                                  color: MyColor.blueColor,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: MyColor.blueColor,
-                                  ),
-                                ),
-                              ),
+                              decoration: inputDecoration('نوع العمل', Icons.business),
                             ),
                             SizedBox(height: 20.0),
                             DropdownButtonFormField<String>(
@@ -215,18 +206,7 @@ class _SignUpscreenState extends State<SignUp2screen> {
                                 }
                                 return null;
                               },
-                              decoration: InputDecoration(
-                                labelText: 'الأيام',
-                                prefixIcon: Icon(
-                                  Icons.calendar_today,
-                                  color: MyColor.blueColor,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: MyColor.blueColor,
-                                  ),
-                                ),
-                              ),
+                              decoration: inputDecoration('الأيام', Icons.calendar_today),
                             ),
                             SizedBox(height: 20.0),
                             DropdownButtonFormField<String>(
@@ -249,18 +229,7 @@ class _SignUpscreenState extends State<SignUp2screen> {
                                 }
                                 return null;
                               },
-                              decoration: InputDecoration(
-                                labelText: 'الساعات',
-                                prefixIcon: Icon(
-                                  Icons.access_time,
-                                  color: MyColor.blueColor,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: MyColor.blueColor,
-                                  ),
-                                ),
-                              ),
+                              decoration: inputDecoration('الساعات', Icons.access_time),
                             ),
                             SizedBox(height: 20.0),
                             TextFormField(
@@ -272,19 +241,7 @@ class _SignUpscreenState extends State<SignUp2screen> {
                                 }
                                 return null;
                               },
-                              onTap: _showContactOptions,
-                              decoration: InputDecoration(
-                                labelText: 'رقم تواصل',
-                                prefixIcon: Icon(
-                                  Icons.phone,
-                                  color: MyColor.blueColor,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: MyColor.blueColor,
-                                  ),
-                                ),
-                              ),
+                              decoration: inputDecoration('رقم تواصل', Icons.phone),
                             ),
                             SizedBox(height: 20.0),
                             TextFormField(
@@ -296,27 +253,12 @@ class _SignUpscreenState extends State<SignUp2screen> {
                                 }
                                 return null;
                               },
-                              decoration: InputDecoration(
-                                labelText: 'الموقع',
-                                prefixIcon: Icon(
-                                  Icons.map,
-                                  color: MyColor.blueColor,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                    color: MyColor.blueColor,
-                                  ),
-                                ),
-                              ),
+                              decoration: inputDecoration('الموقع', Icons.map),
                             ),
                             SizedBox(height: 25),
                             Center(
                               child: GradientButton(
-                                onPressed: () {
-                                  if (_formKey.currentState?.validate() ?? false) {
-                                    // Proceed with the sign-up process
-                                  }
-                                },
+                                onPressed: _saveUserData,
                                 text: 'التحقق',
                                 width: 319,
                                 height: 67,

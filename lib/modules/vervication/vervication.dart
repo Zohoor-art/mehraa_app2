@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mehra_app/modules/signup2/sign_up2.dart';
 import 'package:mehra_app/modules/vervication/InputScreen.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 
@@ -11,14 +15,33 @@ class VervicationScreen extends StatefulWidget {
 
 class _VervicationScreenState extends State<VervicationScreen> {
   final TextEditingController _controller = TextEditingController();
-  List<bool> _selectedCircles = List.filled(6, false);
-  List<String> _enteredNumbers = List.filled(6, '');
+  List<bool> _selectedCircles = List.filled(12, false);
+  List<String> _enteredNumbers = List.filled(12, '');
+  String verificationCode = ""; // هذا سيتضمن كود التحقق المرسل
+  String profileImageUrl = ""; // رابط صورة البروفايل
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileImage();
+  }
+
+  Future<void> _loadProfileImage() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // الحصول على رابط الصورة من Firestore
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      setState(() {
+        profileImageUrl = userDoc['profileImage'] ?? ''; // تأكد من أن 'profileImage' هو الاسم الصحيح في Firestore
+      });
+    }
+  }
 
   void _onClear() {
     setState(() {
       _controller.clear();
-      _selectedCircles = List.filled(6, false);
-      _enteredNumbers = List.filled(6, '');
+      _selectedCircles = List.filled(12, false);
+      _enteredNumbers = List.filled(12, '');
     });
   }
 
@@ -30,14 +53,16 @@ class _VervicationScreenState extends State<VervicationScreen> {
 
   void _onNumberPressed(String number) {
     setState(() {
-      // إضافة الرقم إلى المدخلات
       for (int i = 0; i < _enteredNumbers.length; i++) {
         if (_enteredNumbers[i].isEmpty) {
           _enteredNumbers[i] = number;
-          // تغيير لون الدائرة إلى متدرج عند إدخال الرقم
           _selectedCircles[i] = true;
           break;
         }
+      }
+      // تحقق من الكود إذا تم إدخال الرقم الأخير
+      if (_enteredNumbers.every((element) => element.isNotEmpty)) {
+        _verifyCode();
       }
     });
   }
@@ -47,11 +72,30 @@ class _VervicationScreenState extends State<VervicationScreen> {
       for (int i = _enteredNumbers.length - 1; i >= 0; i--) {
         if (_enteredNumbers[i].isNotEmpty) {
           _enteredNumbers[i] = '';
-          _selectedCircles[i] = false; // إعادة لون الدائرة إلى الأصلي
+          _selectedCircles[i] = false;
           break;
         }
       }
     });
+  }
+
+  Future<void> _verifyCode() async {
+    String enteredCode = _enteredNumbers.join('');
+
+    // هنا نتحقق من كود التحقق
+    if (enteredCode == verificationCode) {
+      // إذا كان الكود صحيحًا، انتقل إلى صفحة تسجيل الدخول الثانية
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(builder: (context) => SignUp2screen()
+      //), // تأكد من استبدالها بالصفحة الصحيحة
+      // );
+    } else {
+      // عرض رسالة خطأ
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('كود التحقق غير صحيح')),
+      );
+    }
   }
 
   @override
@@ -101,14 +145,6 @@ class _VervicationScreenState extends State<VervicationScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(15),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
-                      spreadRadius: 5,
-                      blurRadius: 7,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
@@ -117,7 +153,9 @@ class _VervicationScreenState extends State<VervicationScreen> {
                       SizedBox(height: 20),
                       CircleAvatar(
                         radius: 40,
-                        backgroundImage: AssetImage('assets/images/1.jpg'),
+                        backgroundImage: profileImageUrl.isNotEmpty
+                            ? NetworkImage(profileImageUrl)
+                            : AssetImage('assets/images/1.jpg') as ImageProvider,
                       ),
                       SizedBox(height: 20),
                       Text(
@@ -129,46 +167,50 @@ class _VervicationScreenState extends State<VervicationScreen> {
                         ),
                       ),
                       SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(6, (index) {
-                          return GestureDetector(
-                            onTap: () => _onCirclePressed(index),
-                            child: Container(
-                              margin: EdgeInsets.symmetric(horizontal: 5),
-                              width: 34,
-                              height: 34,
-                              decoration: BoxDecoration(
-                                gradient: _selectedCircles[index]
-                                    ? LinearGradient(
-                                        colors: [
-                                          Color(0xFF4423B1),
-                                          Color(0xFFA02D87),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      )
-                                    : null,
-                                color: _selectedCircles[index]
-                                    ? null
-                                    : Color(0xFFE4E4E4),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: _selectedCircles[index]
-                                    ? SizedBox() // لا تظهر أي رقم
-                                    : Text(
-                                        _enteredNumbers[index],
-                                        style: TextStyle(
-                                          color: MyColor.purpleColor,
-                                          fontSize: 18,
+                      Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(12, (index) {
+                            return GestureDetector(
+                              onTap: () => _onCirclePressed(index),
+                              child: Container(
+                                margin: EdgeInsets.symmetric(horizontal: 2), // تقليل الفجوة بين الدوائر
+                                width: 20, // تصغير حجم الدائرة
+                                height: 20, // تصغير حجم الدائرة
+                                decoration: BoxDecoration(
+                                  gradient: _selectedCircles[index]
+                                      ? LinearGradient(
+                                          colors: [
+                                            Color(0xFF4423B1),
+                                            Color(0xFFA02D87),
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        )
+                                      : null,
+                                  color: _selectedCircles[index]
+                                      ? null
+                                      : Color(0xFFE4E4E4),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: _selectedCircles[index]
+                                      ? SizedBox()
+                                      : Text(
+                                          _enteredNumbers[index],
+                                          style: TextStyle(
+                                            color: MyColor.purpleColor,
+                                            fontSize: 14,
+                                          ),
                                         ),
-                                      ),
+                                ),
                               ),
-                            ),
-                          );
-                        }),
+                            );
+                          }),
+                        ),
                       ),
+                      SizedBox(height: 20),
+                      // تم حذف زر "تحقق من الكود"
                     ],
                   ),
                 ),
