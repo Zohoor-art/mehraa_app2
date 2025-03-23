@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 
 class CreateStoryPage extends StatefulWidget {
@@ -10,7 +12,6 @@ class CreateStoryPage extends StatefulWidget {
 
 class _CreateStoryPageState extends State<CreateStoryPage> {
   final TextEditingController _titleController = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
   XFile? _media;
   bool _isTextStory = false;
   bool _isVideo = false;
@@ -33,6 +34,31 @@ class _CreateStoryPageState extends State<CreateStoryPage> {
         _isVideo = true;
       });
     }
+  }
+
+  Future<String?> _uploadMedia() async {
+    if (_media != null) {
+      File file = File(_media!.path);
+      try {
+        String filePath = 'stories/${DateTime.now().millisecondsSinceEpoch}_${file.uri.pathSegments.last}';
+        await FirebaseStorage.instance.ref(filePath).putFile(file);
+        return filePath; // إرجاع مسار الملف
+      } catch (e) {
+        print('Error uploading media: $e');
+      }
+    }
+    return null;
+  }
+
+  Future<void> _saveStory(String title) async {
+    String? mediaPath = await _uploadMedia();
+    await FirebaseFirestore.instance.collection('stories').add({
+      'title': title,
+      'mediaPath': mediaPath,
+      'isTextStory': _isTextStory,
+      'color': _storyColor.value,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
   }
 
   void _selectColor(Color color) {
@@ -104,9 +130,9 @@ class _CreateStoryPageState extends State<CreateStoryPage> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () {
+                    onPressed: () async {
                       String title = _titleController.text;
-                      print('استوري جديد: $title, وسائط: ${_media?.path}, نص: ${_isTextStory ? title : ''}');
+                      await _saveStory(title);
                       Navigator.pop(context);
                     },
                     child: Text(
@@ -143,33 +169,89 @@ class _CreateStoryPageState extends State<CreateStoryPage> {
                         GestureDetector(
                           onTap: () => _selectColor(Colors.red),
                           child: Container(
-                            width: 30,
-                            height: 30,
-                            color: Colors.red,
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.black.withOpacity(0.5),
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 3,
+                                  offset: Offset(0, 1),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         GestureDetector(
                           onTap: () => _selectColor(Colors.green),
                           child: Container(
-                            width: 30,
-                            height: 30,
-                            color: Colors.green,
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.black.withOpacity(0.5),
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 3,
+                                  offset: Offset(0, 1),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         GestureDetector(
                           onTap: () => _selectColor(Colors.blue),
                           child: Container(
-                            width: 30,
-                            height: 30,
-                            color: Colors.blue,
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.blue,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.black.withOpacity(0.5),
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 3,
+                                  offset: Offset(0, 1),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         GestureDetector(
                           onTap: () => _selectColor(Colors.yellow),
                           child: Container(
-                            width: 30,
-                            height: 30,
-                            color: Colors.yellow,
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.yellow,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Colors.black.withOpacity(0.5),
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 3,
+                                  offset: Offset(0, 1),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -227,8 +309,6 @@ class _CreateStoryPageState extends State<CreateStoryPage> {
                   ],
                   TextField(
                     controller: _titleController,
-                    focusNode: _focusNode,
-                    keyboardType: TextInputType.text,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
                       hintText: 'أدخل عنوان الاستوري',
