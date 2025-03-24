@@ -203,8 +203,8 @@ class _PostWidgetState extends State<PostWidget> {
                               : SvgPicture.asset(
                                   'assets/images/heartEmp.svg',
                                   color: Colors.deepPurple,
-                                  width: 30,
-                                  height: 30,
+                                  width: 25,
+                                  height: 25,
                                 ),
                           SizedBox(width: 5),
                           Text(post.favoriteCount.toString()),
@@ -232,8 +232,8 @@ class _PostWidgetState extends State<PostWidget> {
                           SvgPicture.asset(
                             'assets/images/share.svg',
                             color: Colors.deepPurple,
-                            width: 30,
-                            height: 30,
+                            width: 28,
+                            height: 28,
                           ),
                           SizedBox(width: 5),
                           Text(post.shareCount.toString()),

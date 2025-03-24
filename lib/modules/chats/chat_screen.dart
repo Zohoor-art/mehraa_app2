@@ -17,7 +17,6 @@ class ChatScreen extends StatelessWidget {
       child: Column(
         children: [
           RecentChats(),
-          AllChats(),
         ],
       ),
     );

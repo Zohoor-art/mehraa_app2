@@ -48,6 +48,7 @@ import 'package:mehra_app/modules/settings/Settings.dart';
 import 'package:mehra_app/modules/vervication/vervication.dart';
 import 'package:mehra_app/modules/xplore/xplore_screen.dart';
 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -78,22 +79,25 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'تطبيق مهرة',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
         fontFamily: 'Tajawal',
       ),
-      home: Directionality(
 
+      home: (FirebaseAuth.instance.currentUser != null &&
+              FirebaseAuth.instance.currentUser!.emailVerified)
+          ? HomeScreen()
+          : OnboardingScreen(),
+      // تعيين اتجاه النص للتطبيق بالكامل
+      builder: (context, child) {
+        return Directionality(
+          textDirection: TextDirection.rtl, // تعيين اتجاه النص إلى اليمين لليسار
+          child: child!,
+        );
+      },
 
-
-        textDirection: TextDirection.rtl,
-
-        child: HomeScreen()
-
-      ),
     );
   }
 }
-

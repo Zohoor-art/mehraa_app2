@@ -4,8 +4,6 @@ import 'package:mehra_app/models/model.dart';
 import 'package:mehra_app/modules/register/register_screen.dart';
 import 'package:mehra_app/shared/components/components.dart';
 
-
-
 class OnboardingScreen extends StatefulWidget {
   @override
   _OnboardingScreenState createState() => _OnboardingScreenState();
@@ -64,9 +62,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               itemCount: boarding.length,
             ),
           ),
-          SizedBox(
-            height: 20,
-            child: smooth_page_indicator()),
+          SizedBox(height: 20, child: smooth_page_indicator()),
 
           const SizedBox(height: 10), // امسافة بين العناصر
           Row(
@@ -75,14 +71,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               GradientButton(
                 height: 46,
                 width: 171,
-                onPressed: () {},
+                onPressed: () {
+                 
+                  
+                },
                 text: 'التالي',
               ),
               const SizedBox(width: 20), // المسافة بين الزرين
               GradientButton(
                 height: 46,
                 width: 171,
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (context) => RegisterScreen()),
+                  );
+                },
                 text: 'تخطي',
               ),
             ],

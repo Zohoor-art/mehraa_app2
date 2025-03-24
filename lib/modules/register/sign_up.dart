@@ -1,4 +1,8 @@
+
+import 'package:awesome_dialog/awesome_dialog.dart';
+
 import 'package:firebase_storage/firebase_storage.dart';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -24,8 +28,7 @@ class _SignUpscreenState extends State<SignUpscreen> {
   bool isPassword = true;
   bool isLoading = false;
   String? imageUrl;
-  final ImagePicker _picker = ImagePicker();
-  XFile? _imageFile;
+  XFile? _imageFile; // تأكد من إضافة المتغير هنا
 
   @override
   void initState() {
@@ -44,15 +47,13 @@ class _SignUpscreenState extends State<SignUpscreen> {
   }
 
   Future<void> _pickImage() async {
-    try {
-      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-      if (pickedFile != null) {
-        setState(() {
-          _imageFile = pickedFile;
-        });
-      }
-    } catch (e) {
-      print("Error picking image: $e");
+    final ImagePicker picker = ImagePicker();
+    final XFile? pickedFile =
+        await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = pickedFile;
+      });
     }
   }
 
@@ -63,36 +64,48 @@ class _SignUpscreenState extends State<SignUpscreen> {
       });
 
       try {
-        UserCredential userCredential = await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(
+        UserCredential userCredential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: emailController.text,
           password: passwordController.text,
         );
 
         if (_imageFile != null) {
-          final storageRef = FirebaseStorage.instance.ref()
+          final storageRef = FirebaseStorage.instance
+              .ref()
               .child('profiles/${userCredential.user!.uid}.jpg');
           await storageRef.putFile(File(_imageFile!.path));
           imageUrl = await storageRef.getDownloadURL();
         }
 
         // تخزين بيانات المستخدم في Firestore
-        await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set({
           'storeName': storeNameController.text,
           'email': emailController.text,
           'profileImage': imageUrl,
         });
 
-        await FirebaseAuth.instance.currentUser!.sendEmailVerification();
+        // الانتقال إلى الصفحة التالية بعد إرسال رمز التحقق
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => SignUp2screen(userId: userCredential.user!.uid)),
+          MaterialPageRoute(
+              builder: (context) =>
+                  SignUp2screen(userId: userCredential.user!.uid)),
         );
       } catch (e) {
         print("Error: $e");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('حدث خطأ: $e')),
-        );
+        AwesomeDialog(
+          context: context,
+          dialogType: DialogType.error,
+          animType: AnimType.scale,
+          title: 'حدث خطأ',
+          desc: e.toString(),
+          btnOkOnPress: () {},
+          btnOkColor: Colors.red,
+        ).show();
       } finally {
         setState(() {
           isLoading = false;
@@ -162,17 +175,22 @@ class _SignUpscreenState extends State<SignUpscreen> {
                                   child: Stack(
                                     children: [
                                       CircleAvatar(
-                                        radius: 64,
+                                        radius: 60,
                                         backgroundImage: _imageFile != null
                                             ? FileImage(File(_imageFile!.path))
-                                            : AssetImage('assets/images/2.jpg') as ImageProvider,
+                                            : AssetImage(
+                                                    'assets/images/profile.png')
+                                                as ImageProvider,
                                       ),
                                       Positioned(
                                         bottom: -10,
                                         left: 80,
                                         child: IconButton(
                                           onPressed: _pickImage,
-                                          icon: const Icon(Icons.add_a_photo),
+                                          icon: Icon(
+                                            Icons.add_a_photo_rounded,
+                                            color: MyColor.purpleColor,
+                                          ),
                                         ),
                                       )
                                     ],
@@ -181,6 +199,8 @@ class _SignUpscreenState extends State<SignUpscreen> {
                                 SizedBox(height: 20),
                                 defultTextFormField(
                                   controller: storeNameController,
+                                  label: 'اسم المتجر',
+                                  prefix: Icons.home,
                                   type: TextInputType.text,
                                   validate: (value) {
                                     if (value!.isEmpty) {
@@ -188,12 +208,12 @@ class _SignUpscreenState extends State<SignUpscreen> {
                                     }
                                     return null;
                                   },
-                                  label: 'اسم المتجر',
-                                  prefix: Icons.home,
                                 ),
-                                SizedBox(height: 40.0),
+                                SizedBox(height: 20.0),
                                 defultTextFormField(
                                   controller: emailController,
+                                  label: 'البريد الالكتروني',
+                                  prefix: Icons.email,
                                   type: TextInputType.emailAddress,
                                   validate: (value) {
                                     if (value!.isEmpty) {
@@ -201,8 +221,6 @@ class _SignUpscreenState extends State<SignUpscreen> {
                                     }
                                     return null;
                                   },
-                                  label: 'البريد الالكتروني ',
-                                  prefix: Icons.email,
                                 ),
                                 SizedBox(height: 20.0),
                                 defultTextFormField(
@@ -239,7 +257,9 @@ class _SignUpscreenState extends State<SignUpscreen> {
                                 Center(
                                   child: GradientButton(
                                     onPressed: isLoading ? () {} : _submit,
-                                    text: isLoading ? 'جارٍ التحميل...' : 'التحقق',
+                                    text: isLoading
+                                        ? 'جارٍ التحميل...'
+                                        : 'المتابعة',
                                     width: 319,
                                     height: 67,
                                   ),

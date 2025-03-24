@@ -1,4 +1,6 @@
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,12 +11,12 @@ import 'package:mehra_app/modules/homePage/add_postScreen.dart';
 
 import 'package:mehra_app/modules/homePage/post.dart';
 import 'package:mehra_app/modules/homePage/story_page.dart';
+import 'package:mehra_app/modules/login/login_screen.dart';
 import 'package:mehra_app/modules/notifications/Notification.dart';
 import 'package:mehra_app/modules/site/site.dart';
 import 'package:mehra_app/modules/xplore/xplore_screen.dart';
 import 'package:mehra_app/modules/profile/profile_screen.dart'; // تأكد من استيراد صفحة البروفايل
 import 'package:mehra_app/shared/components/constants.dart';
-
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -110,12 +112,14 @@ class HomePage extends StatelessWidget {
                         // Navigate to profile page
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => ProfileScreen()), // انتقل إلى صفحة البروفايل
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  ProfileScreen()), // انتقل إلى صفحة البروفايل
                         );
                       },
                       child: CircleAvatar(
                         radius: 15, // Adjust size as needed
-                        backgroundImage: AssetImage('assets/images/5.jpg'), 
+                        backgroundImage: AssetImage('assets/images/5.jpg'),
                       ),
                     ),
                     SizedBox(width: 8),
@@ -124,7 +128,8 @@ class HomePage extends StatelessWidget {
                         // Navigate to another page (مثلاً، XploreScreen)
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => XploreScreen()),
+                          MaterialPageRoute(
+                              builder: (context) => XploreScreen()),
                         );
                       },
                       child: Icon(FontAwesomeIcons.bars, size: 25),
@@ -135,7 +140,8 @@ class HomePage extends StatelessWidget {
                         // Navigate to ChatsPage
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => Notifications()),
+                          MaterialPageRoute(
+                              builder: (context) => Notifications()),
                         );
                       },
                       child: Icon(FontAwesomeIcons.bell, size: 25),
@@ -147,11 +153,45 @@ class HomePage extends StatelessWidget {
                         Navigator.push(
                           context,
 
+
                           MaterialPageRoute(builder: (context) => AddPostscreen()),
+
 
                         );
                       },
-                      child: const Icon(Icons.add_circle_outline_outlined, size: 25),
+                      child: const Icon(Icons.add_circle_outline_outlined,
+                          size: 25),
+                    ),
+                    SizedBox(
+                      width: 8,
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        AwesomeDialog(
+                          context: context,
+                          dialogType: DialogType.warning,
+                          animType: AnimType.scale,
+                          title: 'تأكيد الخروج',
+                          desc: 'هل أنت متأكد أنك تريد تسجيل الخروج؟',
+                          btnCancelOnPress: () {},
+                          btnOkOnPress: () async {
+                            try {
+                              await FirebaseAuth.instance
+                                  .signOut(); // تسجيل الخروج من Firebase
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        LoginScreen()), // استبدل  باسم صفحتك
+                              ); // الانتقال إلى صفحة تسجيل الدخول
+                            } catch (e) {
+                              print("Error signing out: $e");
+                              // يمكنك عرض رسالة خطأ هنا إذا رغبت
+                            }
+                          },
+                        ).show();
+                      },
+                      child: const Icon(Icons.logout_sharp, size: 25),
                     ),
                   ],
                 ),
