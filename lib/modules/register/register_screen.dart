@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:mehra_app/modules/homePage/home_screen.dart';
+import 'package:mehra_app/modules/login/login_screen.dart';
 import 'package:mehra_app/modules/register/sign_up.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
@@ -57,7 +59,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 children: [
                   GradientButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      MaterialPageRoute(builder: (context) => HomePage());
+                    },
                     text: 'المتابعة بدون تسجيل دخول',
                     width: 336,
                     height: 69,
@@ -91,12 +95,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       }
                     },
                   ),
-                  SizedBox(height: 60),
-                  Text(
-                    'ليس لديك حساب! انشئ حساب',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.black,
+                  SizedBox(height: 20),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  LoginScreen()), // استبدل  باسم صفحتك
+                        );
+                      },
+                      child: Text(
+                        'لديك حساب! الدخول بالحساب',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.black,
+                        ),
+                      ),
                     ),
                   ),
                 ],

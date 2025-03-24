@@ -1,27 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-
-import 'package:mehra_app/modules/chats/chat_screen.dart';
-import 'package:mehra_app/modules/homePage/home_screen.dart';
-import 'package:mehra_app/modules/profile/profile_screen.dart';
-
 import 'package:mehra_app/firebase_options.dart';
 import 'package:mehra_app/modules/Story/storyy_view.dart';
-<<<<<<<<< Temporary merge branch 1
-
-import 'package:mehra_app/modules/site/site.dart';
-import 'package:mehra_app/modules/SearchLocation/SearchLocation.dart';
-import 'package:mehra_app/modules/chats/chat_screen.dart';
-=========
->>>>>>>>> Temporary merge branch 2
-import 'package:mehra_app/modules/chats/chats.dart';
-import 'package:mehra_app/modules/notifications/Notification.dart';
+import 'package:mehra_app/modules/homePage/home_screen.dart';
 import 'package:mehra_app/modules/onbording/onboarding_screen.dart';
-import 'package:mehra_app/modules/profile/profile_screen.dart';
-import 'package:mehra_app/modules/reels/home.dart';
-import 'package:mehra_app/modules/vervication/vervication.dart';
-import 'package:mehra_app/modules/xplore/xplore_screen.dart';
+import 'package:mehra_app/modules/signup2/sign_up2.dart';
+import 'modules/register/sign_up.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,24 +38,23 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
+      title: 'تطبيق مهرة',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
         fontFamily: 'Tajawal',
       ),
-      home: Directionality(
-
-        textDirection: TextDirection.rtl,
-<<<<<<<<< Temporary merge branch 1
-
-        child: StoryyView(title: '',) 
-
-=========
-        child: Notifications() 
->>>>>>>>> Temporary merge branch 2
-      ),
-
+      home: (FirebaseAuth.instance.currentUser != null &&
+              FirebaseAuth.instance.currentUser!.emailVerified)
+          ? HomeScreen()
+          : OnboardingScreen(),
+      // تعيين اتجاه النص للتطبيق بالكامل
+      builder: (context, child) {
+        return Directionality(
+          textDirection: TextDirection.rtl, // تعيين اتجاه النص إلى اليمين لليسار
+          child: child!,
+        );
+      },
     );
   }
 }

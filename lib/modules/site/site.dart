@@ -16,7 +16,7 @@ class _SiteScreenState extends State<SiteScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 15,
+        toolbarHeight: 3,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(

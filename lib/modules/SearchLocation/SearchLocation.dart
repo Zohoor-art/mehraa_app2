@@ -27,7 +27,7 @@ class _SearchLocationState extends State<SearchLocation> {
     return Scaffold(
       backgroundColor: MyColor.lightprimaryColor,
       appBar: AppBar(
-        toolbarHeight: MediaQuery.of(context).size.height * .05,
+        toolbarHeight: 3,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(

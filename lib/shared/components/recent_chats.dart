@@ -1,11 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:mehra_app/models/message_model.dart';
-import 'package:mehra_app/shared/components/constants.dart';
-
 import '../../modules/chats/chat_room.dart';
 import '../theme/theme.dart';
-
 
 class RecentChats extends StatelessWidget {
   const RecentChats({
@@ -16,17 +13,6 @@ class RecentChats extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Container(
-          padding: EdgeInsets.only(top: 10, right: 20),
-          child: Row(
-            children: [
-              Text(
-                'الاخيرة',
-                // style: MyColor,
-              ),
-            ],
-          ),
-        ),
         ListView.builder(
           physics: ScrollPhysics(),
           shrinkWrap: true,
@@ -100,15 +86,13 @@ class RecentChats extends StatelessWidget {
                         SizedBox(
                           height: 10,
                         ),
-                        Text(recentChat.time, 
-                        style: MyTheme.bodyTextTime)
+                        Text(recentChat.time, style: MyTheme.bodyTextTime)
                       ],
                     ),
                   ],
                 ));
           },
         ),
-      
       ],
     );
   }

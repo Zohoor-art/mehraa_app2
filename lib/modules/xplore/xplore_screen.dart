@@ -9,7 +9,7 @@ class XploreScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xffFAF5FF),
       appBar: AppBar(
-        toolbarHeight: 15,
+        toolbarHeight: 3,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
