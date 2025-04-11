@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mehra_app/shared/components/constants.dart';
 
 ThemeData darkTheme = ThemeData(
   primarySwatch: Colors.pink,

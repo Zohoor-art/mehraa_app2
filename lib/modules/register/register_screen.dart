@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:mehra_app/modules/homePage/home_screen.dart';
 import 'package:mehra_app/modules/login/login_screen.dart';
+import 'package:mehra_app/modules/reels/home.dart';
 import 'package:mehra_app/modules/register/sign_up.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
@@ -60,7 +61,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   GradientButton(
                     onPressed: () {
-                      MaterialPageRoute(builder: (context) => HomePage());
+                      MaterialPageRoute(builder: (context) => HomeScreen());
                     },
                     text: 'المتابعة بدون تسجيل دخول',
                     width: 336,
