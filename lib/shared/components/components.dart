@@ -129,44 +129,46 @@ Widget GradientButton(
 
 Widget buildGoogleButton(
     {required String text, required VoidCallback onPressed}) {
-  return Container(
-    width: 346,
-    height: 75,
-    decoration: BoxDecoration(
-      color: Colors.white, // خلفية بيضاء
-      borderRadius: BorderRadius.circular(20),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.2), // ظل خفيف
-          spreadRadius: 1,
-          blurRadius: 7,
-          offset: Offset(0, 3), // موضع الظل
-        ),
-      ],
-    ),
-    child: TextButton(
-      onPressed: onPressed,
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Image.asset(
-              'assets/images/google.png', // مسار الأيقونة
-              width: 42, // عرض الأيقونة
-              height: 42, // ارتفاع الأيقونة
-            ),
-            SizedBox(width: 15),
-
-            // المسافة بين الأيقونة والنص
-            Text(
-              text,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 23,
-                fontWeight: FontWeight.w500, // جعل النص عريض
+  return Expanded(
+    child: Container(
+      width: 346,
+      height: 75,
+      decoration: BoxDecoration(
+        color: Colors.white, // خلفية بيضاء
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2), // ظل خفيف
+            spreadRadius: 1,
+            blurRadius: 7,
+            offset: Offset(0, 3), // موضع الظل
+          ),
+        ],
+      ),
+      child: TextButton(
+        onPressed: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Image.asset(
+                'assets/images/google.png', // مسار الأيقونة
+                width: 42, // عرض الأيقونة
+                height: 42, // ارتفاع الأيقونة
               ),
-            ),
-          ],
+              SizedBox(width: 15),
+    
+              // المسافة بين الأيقونة والنص
+              Text(
+                text,
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 23,
+                  fontWeight: FontWeight.w500, // جعل النص عريض
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     ),
