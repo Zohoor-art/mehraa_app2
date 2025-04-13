@@ -1,51 +1,47 @@
 plugins {
     id "com.android.application"
-    // START: FlutterFire Configuration
-    id 'com.google.gms.google-services'
-    // END: FlutterFire Configuration
-
-    // START: FlutterFire Configuration
-
-
     id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
-    id "dev.flutter.flutter-gradle-plugin"
+    id 'com.google.gms.google-services' // خدمات جوجل
+    id "dev.flutter.flutter-gradle-plugin" // إضافة Flutter Gradle Plugin
 }
 
 android {
-    namespace = "com.example.mehra_app"
-    compileSdk 35
-    ndkVersion = flutter.ndkVersion
+    namespace = "com.example.mehra_app" // مساحة الأسماء (Namespace)
+    compileSdk = 35 // إصدار Compile SDK
+
+    ndkVersion = "25.1.8937393" // تعيين إصدار NDK المطلوب
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_1_8 // تعيين توافق المصدر
+        targetCompatibility = JavaVersion.VERSION_1_8 // تعيين توافق الهدف
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
+        jvmTarget = JavaVersion.VERSION_1_8 // تعيين الهدف JVM لـ Kotlin
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.mehra_app"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdkVersion 23
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        applicationId = "com.example.mehra_app" // معرف التطبيق الفريد
+        minSdkVersion 23 // الحد الأدنى لإصدار SDK
+        targetSdk = 35 // يجب تعيين إصدار الهدف إلى 35 أو استخدام flutter.targetSdkVersion
+        versionCode = 1 // تعيين كود الإصدار (يفضل تحديثه عند كل إصدار جديد)
+        versionName = "1.0" // تعيين اسم الإصدار (يفضل تحديثه عند كل إصدار جديد)
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            signingConfig = signingConfigs.debug // التوقيع باستخدام المفاتيح الخاصة (تأكد من تعديلها للإصدارات النهائية)
         }
     }
 }
 
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:31.0.0') // استخدم أحدث إصدار
+    implementation 'com.google.firebase:firebase-messaging' // لإشعارات Firebase
+    implementation 'com.google.android.gms:play-services-auth:20.0.0'
+    // أضف اعتمادات أخرى كما تحتاج
+}
+
 flutter {
-    source = "../.."
+    source = "../.." // مصدر المشروع
 }
