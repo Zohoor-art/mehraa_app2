@@ -85,7 +85,7 @@ class _SignUpscreenState extends State<SignUp2screen> {
   Future<void> _saveUserData() async {
     if (_formKey.currentState?.validate() ?? false) {
       try {
-        // تخزين البيانات في Firestore
+// تخزين البيانات في Firestore
         await FirebaseFirestore.instance
             .collection('users')
             .doc(widget.userId)
@@ -162,14 +162,14 @@ class _SignUpscreenState extends State<SignUp2screen> {
   Future<void> _checkEmailVerification() async {
     User? user = FirebaseAuth.instance.currentUser;
 
-    // الانتظار حتى يتم التحقق من البريد الإلكتروني
+// الانتظار حتى يتم التحقق من البريد الإلكتروني
     while (user != null && !user.emailVerified) {
       await Future.delayed(Duration(seconds: 3)); // الانتظار لمدة 3 ثواني
       await user.reload(); // إعادة تحميل معلومات المستخدم
       user = FirebaseAuth.instance.currentUser; // تحديث المتغير
     }
 
-    // الانتقال إلى الصفحة الرئيسية بعد التحقق من البريد الإلكتروني
+// الانتقال إلى الصفحة الرئيسية بعد التحقق من البريد الإلكتروني
     Navigator.of(context).pushReplacement(MaterialPageRoute(
       builder: (context) => HomeScreen(),
     ));

@@ -10,9 +10,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart'; // إضافة مك�
 import 'package:mehra_app/firebase_options.dart';
 import 'package:mehra_app/modules/homePage/home_screen.dart';
 import 'package:mehra_app/modules/onbording/onboarding_screen.dart';
+
 import 'package:provider/provider.dart';
 
 import 'models/providers/providers.dart';
+
 
 
 void main() async {
