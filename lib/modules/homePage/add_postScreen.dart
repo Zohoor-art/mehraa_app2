@@ -2,9 +2,10 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mehra_app/modules/homePage/add_reels.dart'; // استيراد صفحة الريل
+import 'package:mehra_app/modules/homePage/add_reels.dart';
 import 'package:video_player/video_player.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mehra_app/models/firebase/firestore_methods.dart';
 import 'package:mehra_app/models/userModel.dart';
 import 'package:mehra_app/shared/components/constants.dart';
@@ -23,12 +24,26 @@ class _AddPostscreenState extends State<AddPostscreen> {
   VideoPlayerController? _controller;
   final TextEditingController _descriptionController = TextEditingController();
   bool _isLoading = false;
+  DocumentReference? _userRef; // سيحتوي على مرجع مستند المستخدم
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserReference();
+  }
 
   @override
   void dispose() {
     _descriptionController.dispose();
     _controller?.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchUserReference() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _userRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+    }
   }
 
   void postImage(String uid, String storename, String profileImage) async {
@@ -42,7 +57,9 @@ class _AddPostscreenState extends State<AddPostscreen> {
         uid,
         storename,
         profileImage,
-        videoPath: _videoPath, context: context,
+        videoPath: _videoPath,
+        userRef: _userRef, // إضافة مرجع المستخدم
+        context: context,
       );
 
       if (res == 'تم نشر الصورة بنجاح') {
@@ -91,25 +108,27 @@ class _AddPostscreenState extends State<AddPostscreen> {
     return null;
   }
 
-  Future<Users?> fetchUserDetails() async {
+  Future<Map<String, dynamic>> fetchUserDetails() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      return Users(
-        uid: user.uid,
-        email: user.email ?? '',
-        profileImage: user.photoURL,
-        contactNumber: '',
-        days: '',
-        description: '',
-        followers: [],
-        following: [],
-        hours: '',
-        location: '',
-        storeName: '',
-        workType: '',
-      );
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      
+      if (userDoc.exists) {
+        return {
+          'uid': user.uid,
+          'storeName': userDoc['storeName'] ?? 'متجر غير معروف',
+          'profileImage': userDoc['profileImage'] ?? 'https://img.icons8.com/material/344/user-male-circle--v1.png',
+        };
+      }
     }
-    return null;
+    return {
+      'uid': '',
+      'storeName': 'متجر غير معروف',
+      'profileImage': 'https://img.icons8.com/material/344/user-male-circle--v1.png',
+    };
   }
 
   selectImage(BuildContext context) async {
@@ -181,7 +200,7 @@ class _AddPostscreenState extends State<AddPostscreen> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Users?>(
+    return FutureBuilder<Map<String, dynamic>>(
       future: fetchUserDetails(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -192,10 +211,11 @@ class _AddPostscreenState extends State<AddPostscreen> {
           return Center(child: Text("Error: ${snapshot.error}"));
         }
 
-        final user = snapshot.data;
-        if (user == null) {
-          return Center(child: Text("No user found."));
-        }
+        final userData = snapshot.data ?? {
+          'uid': '',
+          'storeName': 'متجر غير معروف',
+          'profileImage': 'https://img.icons8.com/material/344/user-male-circle--v1.png',
+        };
 
         return _file == null && _videoPath == null
             ? Container(
@@ -217,7 +237,6 @@ class _AddPostscreenState extends State<AddPostscreen> {
                       Stack(
                         alignment: Alignment.center,
                         children: [
-                          // زر متدرج
                           Container(
                             width: 100,
                             height: 100,
@@ -237,7 +256,6 @@ class _AddPostscreenState extends State<AddPostscreen> {
                               icon: Icon(Icons.upload, size: 50, color: Colors.white),
                             ),
                           ),
-                          // نص فوق الزر
                           Positioned(
                             child: Text(
                               'رفع',
@@ -260,9 +278,9 @@ class _AddPostscreenState extends State<AddPostscreen> {
                   actions: [
                     TextButton(
                       onPressed: () => postImage(
-                        user.uid,
-                        user.storeName ?? 'Default Store Name',
-                        user.profileImage ?? '',
+                        userData['uid'],
+                        userData['storeName'],
+                        userData['profileImage'],
                       ),
                       child: Text('نشر'),
                     ),
@@ -281,11 +299,7 @@ class _AddPostscreenState extends State<AddPostscreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           CircleAvatar(
-                            backgroundImage: _file != null
-                                ? MemoryImage(_file!)
-                                : NetworkImage(
-                                    user.profileImage ?? 'https://img.icons8.com/material/344/user-male-circle--v1.png',
-                                  ),
+                            backgroundImage: NetworkImage(userData['profileImage']),
                           ),
                           Expanded(
                             child: Padding(
