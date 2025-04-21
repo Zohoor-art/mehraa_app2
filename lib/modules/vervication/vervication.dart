@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mehra_app/modules/signup2/sign_up2.dart';
 import 'package:mehra_app/modules/vervication/InputScreen.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 

@@ -1,9 +1,55 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:mehra_app/modules/notifications/NotificationItem.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 
-class Notifications extends StatelessWidget {
+class Notifications extends StatefulWidget {
   const Notifications({super.key});
+
+  @override
+  _NotificationsState createState() => _NotificationsState();
+}
+
+class _NotificationsState extends State<Notifications> {
+  final DatabaseReference _notificationsRef = FirebaseDatabase.instance.ref('notifications');
+  List<NotificationItem> notifications = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+  }
+
+  void _loadNotifications() {
+    _notificationsRef.onValue.listen((event) {
+      final snapshot = event.snapshot;
+      if (snapshot.exists) { // استخدام exists للتحقق إذا كان هناك قيمة
+        final data = snapshot.value as Map<dynamic, dynamic>;
+        
+        // تجميع الإشعارات
+        List<NotificationItem> loadedNotifications = [];
+        data.forEach((key, value) {
+          if (value is Map<dynamic, dynamic>) {
+            loadedNotifications.add(NotificationItem(
+              username: value['username'] ?? 'Unknown',
+              action: value['action'] ?? 'No Action',
+              time: value['time'] ?? 'Unknown Time',
+              avatarUrl: value['avatarUrl'] ?? 'assets/images/default_avatar.png',
+              showButton: value['showButton'] ?? false,
+            ));
+          }
+        });
+        setState(() {
+          notifications = loadedNotifications;
+        });
+      } else {
+        // في حالة عدم وجود بيانات
+        setState(() {
+          notifications = [];
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +74,7 @@ class Notifications extends StatelessWidget {
         children: [
           SizedBox(height: 10), // مسافة فوق الكارد الجديد
           Container(
-            width: MediaQuery.of(context).size.width * 0.9, // 90% من عرض الشاشة
+            width: MediaQuery.of(context).size.width * 0.9,
             height: 55,
             decoration: BoxDecoration(
               boxShadow: const [
@@ -39,17 +85,15 @@ class Notifications extends StatelessWidget {
                   spreadRadius: 1,
                 ),
               ],
-              color: Colors.white, // لون الخلفية
-              borderRadius: BorderRadius.circular(10), // زوايا مدورة
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
             ),
             alignment: Alignment.center,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    
-                      horizontal: 8.0,), // تباعد عن الحواف
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: IconButton(
                     icon: Icon(Icons.arrow_back, color: MyColor.blueColor),
                     onPressed: () {
@@ -69,8 +113,7 @@ class Notifications extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 15.0), // تباعد عن الحواف
+                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
                   child: Icon(
                     Icons.notifications,
                     size: 22,
@@ -81,77 +124,12 @@ class Notifications extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: ListView(
+            child: ListView.builder(
               padding: EdgeInsets.all(10),
-              children: [
-                NotificationItem(
-                  username: 'سارة',
-                  action: 'علق على قصتك',
-                  time: 'قبل 10 دقائق',
-                  avatarUrl: 'assets/images/1.jpg',
-                  showButton: true,
-                ),
-                NotificationItem(
-                  username: 'محمد',
-                  action: 'بدأ متابعتك',
-                  time: 'قبل 15 دقيقة',
-                  avatarUrl: 'assets/images/2.jpg',
-                  showButton: false,
-                ),
-                NotificationItem(
-                  username: 'ليلى',
-                  action: 'أعجب بتعليقك',
-                  time: 'قبل 30 دقيقة',
-                  avatarUrl: 'assets/images/3.jpg',
-                  showButton: true,
-                ), NotificationItem(
-                  username: 'ليلى',
-                  action: 'أعجب بتعليقك',
-                  time: 'قبل 30 دقيقة',
-                  avatarUrl: 'assets/images/4.jpg',
-                  showButton: true,
-                ), NotificationItem(
-                  username: 'ليلى',
-                  action: 'أعجب بتعليقك',
-                  time: 'قبل 30 دقيقة',
-                  avatarUrl: 'assets/images/5.jpg',
-                  showButton: true,
-                ),
-                NotificationItem(
-                  username: 'أحمد',
-                  action: 'أعجب بصورة لك',
-                  time: 'قبل 5 دقائق',
-                  avatarUrl: 'assets/images/4.jpg',
-                  showButton: false,
-                ),
-                 NotificationItem(
-                  username: 'ليلى',
-                  action: 'أعجب بتعليقك',
-                  time: 'قبل 30 دقيقة',
-                  avatarUrl: 'assets/images/3.jpg',
-                  showButton: true,
-                ), NotificationItem(
-                  username: 'ليلى',
-                  action: 'أعجب بتعليقك',
-                  time: 'قبل 30 دقيقة',
-                  avatarUrl: 'assets/images/3.jpg',
-                  showButton: true,
-                ),
-                 NotificationItem(
-                  username: 'ليلى',
-                  action: 'أعجب بتعليقك',
-                  time: 'قبل 30 دقيقة',
-                  avatarUrl: 'assets/images/3.jpg',
-                  showButton: true,
-                ), NotificationItem(
-                  username: 'ليلى',
-                  action: 'أعجب بتعليقك',
-                  time: 'قبل 30 دقيقة',
-                  avatarUrl: 'assets/images/3.jpg',
-                  showButton: true,
-                ),
-                // يمكنك إضافة المزيد من العناصر هنا
-              ],
+              itemCount: notifications.length,
+              itemBuilder: (context, index) {
+                return notifications[index];
+              },
             ),
           ),
         ],
