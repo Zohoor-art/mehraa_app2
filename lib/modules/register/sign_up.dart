@@ -213,7 +213,7 @@ class _SignUpscreenState extends State<SignUpscreen> {
                                   type: TextInputType.emailAddress,
                                   validate: (value) {
                                     if (value!.isEmpty) {
-                                      return 'يرجى إدخال  الايميل';
+                                      return 'يرجى إدخال الايميل';
                                     }
                                     return null;
                                   },

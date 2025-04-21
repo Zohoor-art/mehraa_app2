@@ -2,11 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:mehra_app/firebase_options.dart';
-import 'package:mehra_app/modules/Story/storyy_view.dart';
 import 'package:mehra_app/modules/homePage/home_screen.dart';
 import 'package:mehra_app/modules/onbording/onboarding_screen.dart';
-import 'package:mehra_app/modules/signup2/sign_up2.dart';
-import 'modules/register/sign_up.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

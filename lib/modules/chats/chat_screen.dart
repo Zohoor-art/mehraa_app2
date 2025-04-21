@@ -1,8 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:mehra_app/modules/chats/all_chats.dart';
-
-import '../../shared/components/recent_chats.dart';
+import 'recent_chats.dart';
 
 
 class ChatScreen extends StatelessWidget {

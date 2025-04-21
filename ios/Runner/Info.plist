@@ -48,10 +48,10 @@
 		<key>UIStatusBarHidden</key>
 		<false/>
 		<key>NSPhotoLibraryUsageDescription</key>
-	    <string>Photo Library Usage</string>
-	    <key>NSCameraLibraryUsageDescription</key>
-	    <string>Camera Library Usage</string>
-	    <key>NSCMicrophoneLibraryUsageDescription</key>
-	    <string>Mic Library Usage</string>
+		<string>Photo Library Usage</string>
+		<key>NSCameraLibraryUsageDescription</key>
+		<string>Camera Library Usage</string>
+		<key>NSCMicrophoneLibraryUsageDescription</key>
+		<string>Mic Library Usage</string>
 	</dict>
 </plist>
