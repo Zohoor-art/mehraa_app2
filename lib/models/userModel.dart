@@ -34,7 +34,7 @@ class Users {
         'contactNumber': contactNumber,
         'uid': uid,
         'days': days,
-        'descriptionl': description,
+        'description': description,
         'email': email,
         'followers': followers,
         'following': following,
@@ -47,20 +47,39 @@ class Users {
       };
 
   static Users fromSnap(DocumentSnapshot snap) {
-    var snapshot = snap.data() as Map<String, dynamic>;
-    return Users(
-      contactNumber: snapshot['contactNumber'],
-      uid: snapshot['uid'],
-      days: snapshot['days'],
-      description: snapshot['description'],
-      email: snapshot['email'],
-      followers: snapshot['followers'],
-      following: snapshot['following'],
-      hours: snapshot['hours'],
-      location: snapshot['location'],
-      profileImage: snapshot['profileImage'],
-      storeName: snapshot['storeName'],
-      workType: snapshot['workType'], 
-    );
-  }
+  var snapshot = snap.data() as Map<String, dynamic>;
+  return Users(
+    contactNumber: snapshot['contactNumber'] ?? '',
+    uid: snapshot['uid'] ?? '',
+    days: snapshot['days'] ?? '',
+    description: snapshot['description'] ?? '',
+    email: snapshot['email'] ?? '',
+    followers: snapshot['followers'] ?? [],
+    following: snapshot['following'] ?? [],
+    hours: snapshot['hours'] ?? '',
+    location: snapshot['location'] ?? '',
+    profileImage: snapshot['profileImage'] ?? '',
+    storeName: snapshot['storeName'] ?? '',
+    workType: snapshot['workType'] ?? '',
+  );
+}
+factory Users.fromFirestore(DocumentSnapshot doc) {
+  final data = doc.data() as Map<String, dynamic>;
+  return Users(
+    contactNumber: data['contactNumber'] ?? '',
+    uid: data['uid'] ?? '',
+    days: data['days'] ?? '',
+    description: data['description'] ?? '',
+    email: data['email'] ?? '',
+    followers: List.from(data['followers'] ?? []),
+    following: List.from(data['following'] ?? []),
+    hours: data['hours'] ?? '',
+    location: data['location'] ?? '',
+    profileImage: data['profileImage'] ?? '', // ✅ هذا أهم سطر
+    storeName: data['storeName'] ?? '',
+    workType: data['workType'] ?? '',
+  );
+}
+
+
 }

@@ -59,7 +59,7 @@ class _AddPostscreenState extends State<AddPostscreen> {
         profileImage,
         videoPath: _videoPath,
         userRef: _userRef, // إضافة مرجع المستخدم
-        context: context,
+        context: context, isVideo: true,
       );
 
       if (res == 'تم نشر الصورة بنجاح') {

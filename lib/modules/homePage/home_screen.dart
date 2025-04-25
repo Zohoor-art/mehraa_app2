@@ -111,18 +111,54 @@ class HomePage extends StatelessWidget {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        // Navigate to profile page
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  const ProfileScreen()), // انتقل إلى صفحة البروفايل
-                        );
-                      },
-                      child: const CircleAvatar(
-                        radius: 15, // Adjust size as needed
-                        backgroundImage: AssetImage('assets/images/5.jpg'),
-                      ),
+  final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+  if (currentUserId != null) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfileScreen(userId: currentUserId),
+      ),
+    );
+  }
+},
+
+                     child: FutureBuilder<DocumentSnapshot>(
+  future: FirebaseFirestore.instance
+      .collection('users')
+      .doc(FirebaseAuth.instance.currentUser?.uid)
+      .get(),
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const CircleAvatar(
+        radius: 15,
+        backgroundColor: Colors.grey,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
+
+    if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
+      return const CircleAvatar(
+        radius: 15,
+        backgroundColor: Colors.grey,
+        child: Icon(Icons.person, size: 15),
+      );
+    }
+
+    final userData = snapshot.data!.data() as Map<String, dynamic>;
+    final photoUrl = userData['profileImage'] as String?;
+
+    return CircleAvatar(
+      radius: 15,
+      backgroundImage: photoUrl != null && photoUrl.isNotEmpty
+          ? NetworkImage(photoUrl)
+          : null,
+      child: (photoUrl == null || photoUrl.isEmpty)
+          ? const Icon(Icons.person, size: 15)
+          : null,
+    );
+  },
+)
+
                     ),
                     const SizedBox(width: 8),
                     GestureDetector(
@@ -268,10 +304,13 @@ class HomePage extends StatelessWidget {
     final isOffline = snapshot.data!.metadata.isFromCache;
 
     try {
-      final posts = snapshot.data!.docs
-          .map((doc) => Post.fromSnap(doc))
-          .where((post) => post.postUrl.isNotEmpty)
-          .toList();
+    final posts = snapshot.data!.docs
+    .map((doc) => Post.fromSnap(doc))
+    .where((post) =>
+        (post.postUrl.isNotEmpty || (post.isVideo && post.videoUrl.isNotEmpty)) &&
+        post.isDeleted != true)
+    .toList();
+
 
       return Column(
         children: [
