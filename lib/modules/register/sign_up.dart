@@ -1,16 +1,14 @@
-
 import 'package:awesome_dialog/awesome_dialog.dart';
-
 import 'package:firebase_storage/firebase_storage.dart';
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mehra_app/modules/signup2/sign_up2.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import 'dart:io';
 
 class SignUpscreen extends StatefulWidget {
@@ -28,7 +26,7 @@ class _SignUpscreenState extends State<SignUpscreen> {
   bool isPassword = true;
   bool isLoading = false;
   String? imageUrl;
-  XFile? _imageFile; // تأكد من إضافة المتغير هنا
+  XFile? _imageFile;
 
   @override
   void initState() {
@@ -48,8 +46,7 @@ class _SignUpscreenState extends State<SignUpscreen> {
 
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? pickedFile =
-        await picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _imageFile = pickedFile;
@@ -64,36 +61,26 @@ class _SignUpscreenState extends State<SignUpscreen> {
       });
 
       try {
-        UserCredential userCredential =
-            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: emailController.text,
           password: passwordController.text,
         );
 
         if (_imageFile != null) {
-          final storageRef = FirebaseStorage.instance
-              .ref()
-              .child('profiles/${userCredential.user!.uid}.jpg');
+          final storageRef = FirebaseStorage.instance.ref().child('profiles/${userCredential.user!.uid}.jpg');
           await storageRef.putFile(File(_imageFile!.path));
           imageUrl = await storageRef.getDownloadURL();
         }
 
-        // تخزين بيانات المستخدم في Firestore
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userCredential.user!.uid)
-            .set({
+        await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
           'storeName': storeNameController.text,
           'email': emailController.text,
           'profileImage': imageUrl,
         });
 
-        // الانتقال إلى الصفحة التالية بعد إرسال رمز التحقق
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  SignUp2screen(userId: userCredential.user!.uid)),
+          MaterialPageRoute(builder: (context) => SignUp2screen(userId: userCredential.user!.uid)),
         );
       } catch (e) {
         print("Error: $e");
@@ -101,7 +88,7 @@ class _SignUpscreenState extends State<SignUpscreen> {
           context: context,
           dialogType: DialogType.error,
           animType: AnimType.scale,
-          title: 'حدث خطأ',
+          title: AppLocalizations.of(context)!.error,
           desc: e.toString(),
           btnOkOnPress: () {},
           btnOkColor: Colors.red,
@@ -116,16 +103,15 @@ class _SignUpscreenState extends State<SignUpscreen> {
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 15,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                MyColor.blueColor,
-                MyColor.purpleColor,
-              ],
+              colors: [MyColor.blueColor, MyColor.purpleColor],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
@@ -139,133 +125,108 @@ class _SignUpscreenState extends State<SignUpscreen> {
         },
         child: Stack(
           children: [
-            Container(
-              color: MyColor.lightprimaryColor,
-            ),
+            Container(color: MyColor.lightprimaryColor),
             Positioned(
               bottom: 0,
               left: 0,
               right: 0,
-              child: Image.asset(
-                'assets/bottom.png',
-                fit: BoxFit.cover,
-              ),
+              child: Image.asset('assets/bottom.png', fit: BoxFit.cover),
             ),
             Center(
               child: SingleChildScrollView(
-                child: Center(
-                  child: Container(
-                    width: MediaQuery.of(context).size.width * 0.90,
-                    height: MediaQuery.of(context).size.height * 0.70,
-                    child: Card(
-                      color: Colors.white,
-                      shadowColor: Color(0xFF000000),
-                      margin: EdgeInsets.only(bottom: 3.0),
-                      elevation: 5,
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Form(
-                          key: _formKey,
-                          child: Padding(
-                            padding: const EdgeInsets.only(
-                                top: 70.0, bottom: 40, right: 10, left: 10),
-                            child: Column(
-                              children: [
-                                Expanded(
-                                  child: Stack(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 60,
-                                        backgroundImage: _imageFile != null
-                                            ? FileImage(File(_imageFile!.path))
-                                            : AssetImage(
-                                                    'assets/images/profile.png')
-                                                as ImageProvider,
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.90,
+                  height: MediaQuery.of(context).size.height * 0.70,
+                  child: Card(
+                    color: Colors.white,
+                    shadowColor: const Color(0xFF000000),
+                    margin: const EdgeInsets.only(bottom: 3.0),
+                    elevation: 5,
+                    child: Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Form(
+                        key: _formKey,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 70.0, bottom: 40, right: 10, left: 10),
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: Stack(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 60,
+                                      backgroundImage: _imageFile != null
+                                          ? FileImage(File(_imageFile!.path))
+                                          : const AssetImage('assets/images/profile.png') as ImageProvider,
+                                    ),
+                                    Positioned(
+                                      bottom: -10,
+                                      left: 80,
+                                      child: IconButton(
+                                        onPressed: _pickImage,
+                                        icon: Icon(Icons.add_a_photo_rounded, color: MyColor.purpleColor),
                                       ),
-                                      Positioned(
-                                        bottom: -10,
-                                        left: 80,
-                                        child: IconButton(
-                                          onPressed: _pickImage,
-                                          icon: Icon(
-                                            Icons.add_a_photo_rounded,
-                                            color: MyColor.purpleColor,
-                                          ),
-                                        ),
-                                      )
-                                    ],
-                                  ),
+                                    )
+                                  ],
                                 ),
-                                SizedBox(height: 20),
-                                defultTextFormField(
-                                  controller: storeNameController,
-                                  label: 'اسم المتجر',
-                                  prefix: Icons.home,
-                                  type: TextInputType.text,
-                                  validate: (value) {
-                                    if (value!.isEmpty) {
-                                      return 'يرجى إدخال اسم المتجر';
-                                    }
-                                    return null;
-                                  },
+                              ),
+                              const SizedBox(height: 20),
+                              defultTextFormField(
+                                controller: storeNameController,
+                                label: local.storeName,
+                                prefix: Icons.home,
+                                type: TextInputType.text,
+                                validate: (value) {
+                                  if (value!.isEmpty) {
+                                    return local.enterStoreName;
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 20),
+                              defultTextFormField(
+                                controller: emailController,
+                                label: local.email,
+                                prefix: Icons.email,
+                                type: TextInputType.emailAddress,
+                                validate: (value) {
+                                  if (value!.isEmpty) {
+                                    return local.enterEmail;
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 20),
+                              defultTextFormField(
+                                controller: passwordController,
+                                type: TextInputType.visiblePassword,
+                                ispassword: isPassword,
+                                label: local.password,
+                                prefix: Icons.lock,
+                                suffix: isPassword ? Icons.visibility_off : Icons.visibility,
+                                suffixPressed: () {
+                                  setState(() {
+                                    isPassword = !isPassword;
+                                  });
+                                },
+                                validate: (value) {
+                                  if (value!.isEmpty) return local.enterPassword;
+                                  if (value.length < 8) return local.passwordTooShort;
+                                  if (!RegExp(r'[A-Z]').hasMatch(value)) return local.passwordNeedsUppercase;
+                                  if (!RegExp(r'[0-9]').hasMatch(value)) return local.passwordNeedsNumber;
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 20),
+                              Center(
+                                child: GradientButton(
+                                  onPressed: isLoading ? () {} : _submit,
+                                  text: isLoading ? local.loading : local.continueText,
+                                  width: 319,
+                                  height: 67,
                                 ),
-                                SizedBox(height: 20.0),
-                                defultTextFormField(
-                                  controller: emailController,
-                                  label: 'البريد الالكتروني',
-                                  prefix: Icons.email,
-                                  type: TextInputType.emailAddress,
-                                  validate: (value) {
-                                    if (value!.isEmpty) {
-                                      return 'يرجى إدخال  الايميل';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                SizedBox(height: 20.0),
-                                defultTextFormField(
-                                  controller: passwordController,
-                                  type: TextInputType.visiblePassword,
-                                  ispassword: isPassword,
-                                  validate: (value) {
-                                    if (value!.isEmpty) {
-                                      return 'يرجى إدخال كلمة المرور';
-                                    }
-                                    if (value.length < 8) {
-                                      return 'يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل';
-                                    }
-                                    if (!RegExp(r'[A-Z]').hasMatch(value)) {
-                                      return 'يجب أن تحتوي كلمة المرور على حرف كبير واحد على الأقل';
-                                    }
-                                    if (!RegExp(r'[0-9]').hasMatch(value)) {
-                                      return 'يجب أن تحتوي كلمة المرور على رقم واحد على الأقل';
-                                    }
-                                    return null;
-                                  },
-                                  label: 'كلمة المرور',
-                                  prefix: Icons.lock,
-                                  suffix: isPassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                  suffixPressed: () {
-                                    setState(() {
-                                      isPassword = !isPassword;
-                                    });
-                                  },
-                                ),
-                                SizedBox(height: 20),
-                                Center(
-                                  child: GradientButton(
-                                    onPressed: isLoading ? () {} : _submit,
-                                    text: isLoading
-                                        ? 'جارٍ التحميل...'
-                                        : 'المتابعة',
-                                    width: 319,
-                                    height: 67,
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),

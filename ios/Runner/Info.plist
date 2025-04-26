@@ -53,5 +53,13 @@
 	    <string>Camera Library Usage</string>
 	    <key>NSCMicrophoneLibraryUsageDescription</key>
 	    <string>Mic Library Usage</string>
+
+
+
+		<key>CFBundleLocalizations</key>
+		<array>
+   		<string>en</string>
+    	<string>ar</string>
+		</array>
 	</dict>
 </plist>

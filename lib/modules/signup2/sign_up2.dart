@@ -6,17 +6,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mehra_app/modules/homePage/home_screen.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SignUp2screen extends StatefulWidget {
-  final String userId; // استلام معرف المستخدم
+  final String userId;
 
   const SignUp2screen({super.key, required this.userId});
 
   @override
-  State<SignUp2screen> createState() => _SignUpscreenState();
+  State<SignUp2screen> createState() => _SignUp2screenState();
 }
 
-class _SignUpscreenState extends State<SignUp2screen> {
+class _SignUp2screenState extends State<SignUp2screen> {
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController descriptionController;
@@ -27,36 +28,13 @@ class _SignUpscreenState extends State<SignUp2screen> {
   String? selectedDays;
   String? selectedHours;
 
-  final List<String> workTypes = [
-    'الخياطة',
-    'الكيك',
-    'الكوافير',
-    'أعمال صغيرة أخرى'
-  ];
-
-  final List<String> hours = [
-    'من 8 صباحًا إلى 1 ظهرًا',
-    'من 1 ظهرًا إلى 8 مساءً',
-    'من 8 مساءً إلى منتصف الليل'
-  ];
-
-  final List<DayInWeek> days = [
-    DayInWeek("السبت", dayKey: "monday"),
-    DayInWeek("الأحد", dayKey: "sunday"),
-    DayInWeek("الاثنين", dayKey: "tuesday"),
-    DayInWeek("الثلاثاء", dayKey: "wednesday"),
-    DayInWeek("الأربعاء", dayKey: "thursday"),
-    DayInWeek("الخميس", dayKey: "friday"),
-    DayInWeek("الجمعة", dayKey: "saturday", isSelected: true),
-  ];
-
   @override
   void initState() {
     super.initState();
     descriptionController = TextEditingController();
     contactNumberController = TextEditingController();
     locationController = TextEditingController();
-    _fetchUserData(); // استرجاع بيانات المستخدم
+    _fetchUserData();
   }
 
   Future<void> _fetchUserData() async {
@@ -83,9 +61,10 @@ class _SignUpscreenState extends State<SignUp2screen> {
   }
 
   Future<void> _saveUserData() async {
+    final local = AppLocalizations.of(context)!;
+
     if (_formKey.currentState?.validate() ?? false) {
       try {
-        // تخزين البيانات في Firestore
         await FirebaseFirestore.instance
             .collection('users')
             .doc(widget.userId)
@@ -98,29 +77,23 @@ class _SignUpscreenState extends State<SignUp2screen> {
           'location': locationController.text,
         });
 
-        // إرسال كود التحقق إلى البريد الإلكتروني
         await _sendVerificationEmail();
 
-        // عرض رسالة النجاح باستخدام AwesomeDialog
         AwesomeDialog(
           context: context,
           dialogType: DialogType.success,
           animType: AnimType.scale,
-          title: 'نجاح',
-          desc:
-              'تم حفظ البيانات بنجاح وتم إرسال كود التحقق إلى بريدك الإلكتروني.',
-          btnOkOnPress: () {
-            // يمكن الانتقال إلى الصفحة الرئيسية هنا إذا أردت
-          },
+          title: local.verify,
+          desc: local.ok,
+          btnOkOnPress: () {},
           btnOkColor: MyColor.purpleColor,
         ).show();
       } catch (e) {
-        print("Error: $e");
         AwesomeDialog(
           context: context,
           dialogType: DialogType.error,
           animType: AnimType.scale,
-          title: 'حدث خطأ',
+          title: local.error,
           desc: e.toString(),
           btnOkOnPress: () {},
           btnOkColor: Colors.red,
@@ -130,6 +103,8 @@ class _SignUpscreenState extends State<SignUp2screen> {
   }
 
   Future<void> _sendVerificationEmail() async {
+    final local = AppLocalizations.of(context)!;
+
     try {
       User? user = FirebaseAuth.instance.currentUser;
       await user?.sendEmailVerification();
@@ -138,20 +113,18 @@ class _SignUpscreenState extends State<SignUp2screen> {
         context: context,
         dialogType: DialogType.info,
         animType: AnimType.scale,
-        title: 'تم إرسال كود التحقق',
-        desc: 'يرجى التحقق من بريدك الإلكتروني.',
+        title: local.verify,
+        desc: local.ok,
         btnOkOnPress: () async {
-          // الانتظار حتى يتحقق المستخدم من بريده الإلكتروني
           await _checkEmailVerification();
         },
       ).show();
     } catch (e) {
-      print("Error sending verification email: $e");
       AwesomeDialog(
         context: context,
         dialogType: DialogType.error,
         animType: AnimType.scale,
-        title: 'حدث خطأ',
+        title: local.error,
         desc: e.toString(),
         btnOkOnPress: () {},
         btnOkColor: Colors.red,
@@ -162,247 +135,181 @@ class _SignUpscreenState extends State<SignUp2screen> {
   Future<void> _checkEmailVerification() async {
     User? user = FirebaseAuth.instance.currentUser;
 
-    // الانتظار حتى يتم التحقق من البريد الإلكتروني
     while (user != null && !user.emailVerified) {
-      await Future.delayed(Duration(seconds: 3)); // الانتظار لمدة 3 ثواني
-      await user.reload(); // إعادة تحميل معلومات المستخدم
-      user = FirebaseAuth.instance.currentUser; // تحديث المتغير
+      await Future.delayed(Duration(seconds: 3));
+      await user.reload();
+      user = FirebaseAuth.instance.currentUser;
     }
 
-    // الانتقال إلى الصفحة الرئيسية بعد التحقق من البريد الإلكتروني
-    Navigator.of(context).pushReplacement(MaterialPageRoute(
-      builder: (context) => HomeScreen(),
-    ));
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => HomeScreen()),
+    );
   }
 
-  InputDecoration inputDecoration(String label, IconData prefixIcon) {
+  InputDecoration inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(prefixIcon, color: MyColor.blueColor),
+      prefixIcon: Icon(icon, color: MyColor.blueColor),
       border: OutlineInputBorder(
-        borderSide: BorderSide(color: MyColor.purpleColor, width: 2.0),
+        borderSide: BorderSide(color: MyColor.purpleColor),
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: MyColor.purpleColor, width: 2.0),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: MyColor.purpleColor, width: 2.0),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: Colors.red, width: 2.0),
+        borderSide: BorderSide(color: MyColor.purpleColor),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final local = AppLocalizations.of(context)!;
+
+    final List<DayInWeek> days = [
+      DayInWeek(local.sat, dayKey: "saturday"),
+      DayInWeek(local.sun, dayKey: "sunday"),
+      DayInWeek(local.mon, dayKey: "monday"),
+      DayInWeek(local.tue, dayKey: "tuesday"),
+      DayInWeek(local.wed, dayKey: "wednesday"),
+      DayInWeek(local.thu, dayKey: "thursday"),
+      DayInWeek(local.fri, dayKey: "friday", isSelected: true),
+    ];
+
+    final List<String> workTypes = [
+      local.tailoring,
+      local.cake,
+      local.hairdresser,
+      local.otherSmallBusiness,
+    ];
+
+    final List<String> hours = [
+      local.hoursMorning,
+      local.hoursAfternoon,
+      local.hoursEvening,
+    ];
+
     return Scaffold(
-        appBar: AppBar(
-          toolbarHeight: 15,
-          flexibleSpace: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [MyColor.blueColor, MyColor.purpleColor],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
+      appBar: AppBar(
+        toolbarHeight: 15,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [MyColor.blueColor, MyColor.purpleColor],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
             ),
           ),
         ),
-        resizeToAvoidBottomInset: false,
-        body: GestureDetector(
-          onTap: () {
-            FocusScope.of(context).unfocus();
-          },
-          child: Stack(
-            children: [
-              Container(
-                color: MyColor.lightprimaryColor,
-              ),
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Image.asset(
-                  'assets/bottom.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
-              Center(
-                child: SingleChildScrollView(
-                  child: Center(
-                    child: Container(
-                      width: MediaQuery.of(context).size.width * 0.90,
-                      height: MediaQuery.of(context).size.height * 0.75,
-                      child: Card(
-                        color: Colors.white,
-                        shadowColor: Color(0xFF000000),
-                        margin: EdgeInsets.only(bottom: 3.0),
-                        elevation: 5,
-                        child: Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Form(
-                            key: _formKey,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                  top: 10.0, bottom: 10, right: 10, left: 10),
-                              child: Column(
-                                children: [
-                                  Expanded(
-                                    child: defultTextFormField(
-                                      controller: descriptionController,
-                                      type: TextInputType.text,
-                                      validate: (value) {
-                                        if (value!.isEmpty) {
-                                          return 'يرجى إدخال وصف العمل';
-                                        }
-                                        return null;
-                                      },
-                                      label: 'وصف العمل',
-                                      prefix: Icons.description,
-                                    ),
-                                  ),
-                                  SizedBox(height: 20.0),
-                                  Expanded(
-                                    child: DropdownButtonFormField<String>(
-                                      value: selectedWorkType,
-                                      hint: Text('اختر نوع العمل'),
-                                      items: workTypes.map((String workType) {
-                                        return DropdownMenuItem<String>(
-                                          value: workType,
-                                          child: Text(workType),
-                                        );
-                                      }).toList(),
-                                      onChanged: (value) {
-                                        setState(() {
-                                          selectedWorkType = value;
-                                        });
-                                      },
-                                      validator: (value) {
-                                        if (value == null) {
-                                          return 'يرجى اختيار نوع العمل';
-                                        }
-                                        return null;
-                                      },
-                                      decoration: inputDecoration('نوع العمل',
-                                          Icons.business), // إضافة الديكور هنا
-                                    ),
-                                  ),
-                                  SizedBox(height: 10.0),
-                                  Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: SelectWeekDays(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.w500,
-                                        days: days,
-                                        border: false,
-                                        width:
-                                            MediaQuery.of(context).size.width /
-                                                1.4,
-                                        boxDecoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              MyColor.blueColor,
-                                              MyColor.purpleColor
-                                            ],
-                                            begin: Alignment.topCenter,
-                                            end: Alignment.centerRight,
-                                          ),
-                                          borderRadius:
-                                              BorderRadius.circular(30.0),
-                                        ),
-                                        onSelect: (values) {
-                                          print(values);
-                                          setState(() {
-                                            selectedDays = values.join(", ");
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: 10),
-                                  Expanded(
-                                    child: DropdownButtonFormField<String>(
-                                      value: selectedHours,
-                                      hint: Text('اختر الساعات'),
-                                      items: hours.map((String hour) {
-                                        return DropdownMenuItem<String>(
-                                          value: hour,
-                                          child: Text(hour),
-                                        );
-                                      }).toList(),
-                                      onChanged: (value) {
-                                        setState(() {
-                                          selectedHours = value;
-                                        });
-                                      },
-                                      validator: (value) {
-                                        if (value == null) {
-                                          return 'يرجى اختيار الساعات';
-                                        }
-                                        return null;
-                                      },
-                                      decoration: inputDecoration(
-                                          'الساعات',
-                                          Icons
-                                              .access_time), // إضافة الديكور هنا
-                                    ),
-                                  ),
-                                  SizedBox(height: 20.0),
-                                  Expanded(
-                                    child: defultTextFormField(
-                                      controller: contactNumberController,
-                                      label: 'رقم التواصل',
-                                      prefix: Icons.phone,
-                                      type: TextInputType.phone,
-                                      validate: (value) {
-                                        if (value!.isEmpty) {
-                                          return 'يرجى إدخال رقم تواصل';
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                  ),
-                                  SizedBox(height: 20.0),
-                                  Expanded(
-                                    child: defultTextFormField(
-                                      controller: locationController,
-                                      label: 'الموقع',
-                                      prefix: Icons.map,
-                                      type: TextInputType.text,
-                                      validate: (value) {
-                                        if (value!.isEmpty) {
-                                          return 'يرجى إدخال الموقع';
-                                        }
-                                        return null;
-                                      },
-                                    ),
-                                  ),
-                                  SizedBox(height: 20),
-                                  Expanded(
-                                    child: Center(
-                                      child: GradientButton(
-                                        onPressed:
-                                            _saveUserData, // استدعاء الدالة هنا
-                                        text: 'التحقق',
-                                        width: 319,
-                                        height: 67,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+      ),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Stack(
+          children: [
+            Container(color: MyColor.lightprimaryColor),
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Image.asset('assets/bottom.png', fit: BoxFit.cover),
+            ),
+            Center(
+              child: SingleChildScrollView(
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 0.90,
+                  padding: EdgeInsets.all(10),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        defultTextFormField(
+                          controller: descriptionController,
+                          type: TextInputType.text,
+                          label: local.description,
+                          prefix: Icons.description,
+                          validate: (value) =>
+                              value!.isEmpty ? local.enterDescription : null,
                         ),
-                      ),
+                        SizedBox(height: 10),
+                        DropdownButtonFormField<String>(
+                          value: selectedWorkType,
+                          hint: Text(local.selectWorkType),
+                          items: workTypes
+                              .map((e) =>
+                                  DropdownMenuItem(value: e, child: Text(e)))
+                              .toList(),
+                          onChanged: (value) =>
+                              setState(() => selectedWorkType = value),
+                          validator: (value) =>
+                              value == null ? local.mustSelectWorkType : null,
+                          decoration:
+                              inputDecoration(local.workType, Icons.business),
+                        ),
+                        SizedBox(height: 10),
+                        SelectWeekDays(
+                          days: days,
+                          border: false,
+                          boxDecoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                MyColor.blueColor,
+                                MyColor.purpleColor
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          onSelect: (values) {
+                            setState(() {
+                              selectedDays = values.join(", ");
+                            });
+                          },
+                        ),
+                        SizedBox(height: 10),
+                        DropdownButtonFormField<String>(
+                          value: selectedHours,
+                          hint: Text(local.selectHours),
+                          items: hours
+                              .map((e) =>
+                                  DropdownMenuItem(value: e, child: Text(e)))
+                              .toList(),
+                          onChanged: (value) =>
+                              setState(() => selectedHours = value),
+                          validator: (value) =>
+                              value == null ? local.mustSelectHours : null,
+                          decoration:
+                              inputDecoration(local.hours, Icons.access_time),
+                        ),
+                        SizedBox(height: 10),
+                        defultTextFormField(
+                          controller: contactNumberController,
+                          type: TextInputType.phone,
+                          label: local.contactNumber,
+                          prefix: Icons.phone,
+                          validate: (value) =>
+                              value!.isEmpty ? local.enterContactNumber : null,
+                        ),
+                        SizedBox(height: 10),
+                        defultTextFormField(
+                          controller: locationController,
+                          type: TextInputType.text,
+                          label: local.location,
+                          prefix: Icons.map,
+                          validate: (value) =>
+                              value!.isEmpty ? local.enterLocation : null,
+                        ),
+                        SizedBox(height: 20),
+                        GradientButton(
+                          onPressed: _saveUserData,
+                          text: local.verify,
+                          width: 319,
+                          height: 67,
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              )
-            ],
-          ),
-        ));
+              ),
+            )
+          ],
+        ),
+      ),
+    );
   }
 }

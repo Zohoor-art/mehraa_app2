@@ -8,6 +8,7 @@ import 'package:mehra_app/modules/reels/home.dart';
 import 'package:mehra_app/modules/register/sign_up.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -28,7 +29,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     checkUserLoggedIn();
   }
 
-  // التحقق مما إذا كان المستخدم قد سجل الدخول
   void checkUserLoggedIn() async {
     User? user = firebaseAuth.currentUser;
     if (user != null) {
@@ -36,29 +36,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  // تسجيل الدخول باستخدام حساب Google
   Future<UserCredential?> signInWithGoogle() async {
     try {
       setState(() {
-        isLoading = true; // بدء التحميل
+        isLoading = true;
       });
 
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
       if (googleUser == null) {
         print("User canceled the sign-in process.");
-        return null; // المستخدم ألغى العملية
+        return null;
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      // تسجيل الدخول مع Firebase
-      final UserCredential userCredential = await firebaseAuth.signInWithCredential(credential);
+      final UserCredential userCredential =
+          await firebaseAuth.signInWithCredential(credential);
 
-      // إضافة بيانات المستخدم إلى Firestore
       await firestore.collection('users').doc(userCredential.user?.uid).set({
         'uid': userCredential.user?.uid,
         'email': userCredential.user?.email,
@@ -67,21 +66,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
       });
 
       print("User ID: ${userCredential.user?.uid}");
-      return userCredential; 
+      return userCredential;
     } catch (e) {
       print("Error during Google Sign-In: ${e.toString()}");
-      // إظهار رسالة الخطأ للمستخدم
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text("خطأ"),
-          content: Text("فشل تسجيل الدخول، يرجى المحاولة مرة أخرى. \n${e.toString()}"),
+          title: Text(AppLocalizations.of(context)!.error),
+          content: Text(
+              "${AppLocalizations.of(context)!.loginFailed}\n${e.toString()}"),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text("حسناً"),
+              child: Text(AppLocalizations.of(context)!.ok),
             ),
           ],
         ),
@@ -89,95 +88,101 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return null;
     } finally {
       setState(() {
-        isLoading = false; // إنهاء التحميل
+        isLoading = false;
       });
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: MyColor.lightprimaryColor,
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 200),
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.5,
-              child: Column(
-                children: [
-                  GradientButton(
-           onPressed: () {
-                      MaterialPageRoute(builder: (context) => HomeScreen());
-                    },
+Widget build(BuildContext context) {
+  final local = AppLocalizations.of(context)!;
 
-                    text: 'المتابعة بدون تسجيل دخول',
-                    width: 336,
-                    height: 69,
-                    fontSize: 30,
-                  ),
-                  SizedBox(height: 60),
-                  GradientButton(
+  return Scaffold(
+    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    body: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 200),
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.5,
+            child: Column(
+              children: [
+                GradientButton(
+                  onPressed: () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (context) => HomeScreen()),
+                    );
+                  },
+                  text: local.followWithoutLogin,
+                  width: 336,
+                  height: 69,
+                  fontSize: 30,
+                ),
+                SizedBox(height: 60),
+                GradientButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SignUpscreen(),
+                      ),
+                    );
+                  },
+                  text: local.createBusinessAccount,
+                  width: 336,
+                  height: 69,
+                ),
+                SizedBox(height: 60),
+                buildGoogleButton(
+                  text: local.continueWithGoogle,
+                  onPressed: () async {
+                    if (!isLoading) {
+                      UserCredential? userCredential = await signInWithGoogle();
+                      if (userCredential != null) {
+                        Navigator.of(context).pushNamedAndRemoveUntil(
+                          "HomeScreen", (route) => false);
+                        print("User signed in successfully!");
+                      } else {
+                        print("Failed to sign in with Google.");
+                      }
+                    }
+                  },
+                ),
+                SizedBox(height: 20),
+                Expanded(
+                  child: TextButton(
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => SignUpscreen()),
+                        MaterialPageRoute(
+                          builder: (context) => LoginScreen(),
+                        ),
                       );
                     },
-                    text: 'انشاء حساب تجاري',
-                    width: 336,
-                    height: 69,
-                  ),
-                  SizedBox(height: 60),
-                  buildGoogleButton(
-                    text: 'المتابعة بحساب جوجل',
-                    onPressed: () async {
-                      if (!isLoading) {
-                        UserCredential? userCredential = await signInWithGoogle();
-                        if (userCredential != null) {
-                          Navigator.of(context).pushNamedAndRemoveUntil("HomeScreen", (route) => false);
-                          print("User signed in successfully!");
-                        } else {
-                          print("Failed to sign in with Google.");
-                        }
-                      }
-                    },
-                  ),
-                  SizedBox(height: 20),
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  LoginScreen()), // استبدل  باسم صفحتك
-                        );
-                      },
-                      child: Text(
-                        'لديك حساب! الدخول بالحساب',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.black,
-                        ),
+                    child: Text(
+                      local.alreadyHaveAccount,
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 20),
-          Expanded(
-            child: bottomImage(),
+        ),
+        SizedBox(height: 20),
+        Expanded(
+          child: bottomImage(),
+        ),
+        if (isLoading)
+          Center(
+            child: CircularProgressIndicator(),
           ),
-          if (isLoading) // عرض مؤشر التحميل إذا كانت حالة التحميل True
-            Center(
-              child: CircularProgressIndicator(),
-            ),
-        ],
-      ),
-    );
-  }
+      ],
+    ),
+  );
+}
 }
