@@ -21,6 +21,7 @@ class Post {
   final List<String> savedBy;
   final bool isVideo;
 
+
   const Post({
     required this.uid,
     required this.postId,
@@ -40,6 +41,7 @@ class Post {
     this.location = '',
     this.savedBy = const [],
     this.isVideo = false,
+
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
@@ -70,6 +72,7 @@ class Post {
         'postId': postId,
         'description': description,
         'datePublished': datePublished,
+n
         'postUrl': postUrl,
         'profileImage': profileImage,
         'likes': likes,
@@ -84,6 +87,7 @@ class Post {
         'location': location,
         'savedBy': savedBy,
         'isVideo': isVideo,
+
       };
 
   static Post fromSnap(DocumentSnapshot snap) {
@@ -164,6 +168,7 @@ class Post {
       location: location ?? this.location,
       savedBy: savedBy ?? this.savedBy,
       isVideo: isVideo ?? this.isVideo, // ✅ وهنا تمريره
+
     );
   }
 }

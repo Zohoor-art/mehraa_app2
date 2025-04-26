@@ -1,0 +1,117 @@
+{
+  "@@locale": "ar",
+  "followWithoutLogin": "المتابعة بدون تسجيل دخول",
+  "createBusinessAccount": "إنشاء حساب تجاري",
+  "continueWithGoogle": "المتابعة بحساب جوجل",
+  "alreadyHaveAccount": "لديك حساب! الدخول بالحساب",
+  "error": "خطأ",
+  "loginFailed": "فشل تسجيل الدخول، يرجى المحاولة مرة أخرى.",
+  "ok": "حسناً",
+  "storeName": "اسم المتجر",
+  "enterStoreName": "يرجى إدخال اسم المتجر",
+  "email": "البريد الإلكتروني",
+  "enterEmail": "يرجى إدخال البريد الإلكتروني",
+  "password": "كلمة المرور",
+  "enterPassword": "يرجى إدخال كلمة المرور",
+  "passwordTooShort": "يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل",
+  "passwordNeedsUppercase": "يجب أن تحتوي كلمة المرور على حرف كبير واحد على الأقل",
+  "passwordNeedsNumber": "يجب أن تحتوي كلمة المرور على رقم واحد على الأقل",
+  "continueText": "المتابعة",
+  "loading": "جارٍ التحميل...",
+  "description": "وصف العمل",
+  "enterDescription": "يرجى إدخال وصف العمل",
+  "workType": "نوع العمل",
+  "selectWorkType": "اختر نوع العمل",
+  "mustSelectWorkType": "يرجى اختيار نوع العمل",
+  "selectHours": "اختر الساعات",
+  "mustSelectHours": "يرجى اختيار الساعات",
+  "hours": "الساعات",
+  "contactNumber": "رقم التواصل",
+  "enterContactNumber": "يرجى إدخال رقم تواصل",
+  "location": "الموقع",
+  "enterLocation": "يرجى إدخال الموقع",
+  "verify": "التحقق",
+
+
+  "sat": "السبت",
+"sun": "الأحد",
+"mon": "الاثنين",
+"tue": "الثلاثاء",
+"wed": "الأربعاء",
+"thu": "الخميس",
+"fri": "الجمعة",
+
+"tailoring": "الخياطة",
+"cake": "الكيك",
+"hairdresser": "الكوافير",
+"otherSmallBusiness": "أعمال صغيرة أخرى",
+
+"hoursMorning": "من 8 صباحًا إلى 1 ظهرًا",
+"hoursAfternoon": "من 1 ظهرًا إلى 8 مساءً",
+"hoursEvening": "من 8 مساءً إلى منتصف الليل",
+
+"aboutAppName": "تطبيق مهرة",
+"aboutAppVersion": "الإصدار 1.0.0",
+"aboutLegal": "© 2025 جميع الحقوق محفوظة.",
+"aboutDescription": "تطبيق مهرة هو منصة اجتماعية للأسر المنتجة تجمع بين البساطة والخصوصية والتفاعل.\n\nشكراً لاستخدامكم تطبيقنا ❤️",
+
+"helpTitle": "المساعدة",
+"helpCenter": "مركز المساعدة",
+"reportProblem": "الإبلاغ عن مشكلة",
+"privacyPolicy": "سياسة الخصوصية",
+
+
+"privacyTitle": "الخصوصية",
+"loginToViewPrivacy": "الرجاء تسجيل الدخول لعرض إعدادات الخصوصية",
+"privateAccount": "اجعل الحساب خاصًا",
+"hideOnlineStatus": "إخفاء الحالة النشطة",
+"messagePermission": "من يمكنه إرسال الرسائل",
+"everyone": "الكل",
+"followersOnly": "المتابعين فقط",
+"noOne": "لا أحد",
+"hideStoriesFrom": "إخفاء القصص عن...",
+"noStoriesHidden": "لم تقم بإخفاء القصص عن أي شخص",
+"blockedUsers": "المستخدمون المحظورون",
+"noBlockedUsers": "لا يوجد مستخدمون محظورون",
+"blockedCount": "عدد المحظورين: {count}",
+"unblock": "إلغاء الحظر",
+
+
+
+  "settings": "الإعدادات",
+  "appearance": "المظهر",
+  "darkModeOn": "تم تفعيل الوضع الداكن",
+  "darkModeOff": "تم تفعيل الوضع الفاتح",
+  "privacy": "الخصوصية",
+  "language": "اللغة",
+  "email": "البريد الإلكتروني",
+  "unknown": "غير معروف",
+  "notLoggedIn": "غير مسجل",
+  "help": "المساعدة",
+  "about": "حول",
+  "logout": "تسجيل الخروج",
+
+
+  "email": "البريد الالكتروني",
+  "password": "كلمة المرور",
+  "login": "الدخول",
+  "noAccount": "ليس لديك حساب! انشاء حساب",
+  "enterEmail": "يرجى إدخال الايميل",
+  "enterPassword": "يرجى إدخال كلمة المرور",
+  "passwordTooShort": "يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل",
+  "passwordUppercase": "يجب أن تحتوي كلمة المرور على حرف كبير واحد على الأقل",
+  "passwordNumber": "يجب أن تحتوي كلمة المرور على رقم واحد على الأقل",
+  "error": "خطأ",
+  "errorOccurred": "حدث خطأ",
+  "userNotFound": "لا يوجد مستخدم مسجل بهذا البريد الإلكتروني.",
+  "wrongPassword": "كلمة المرور غير صحيحة."
+}
+
+
+
+
+
+
+
+
+

@@ -196,52 +196,59 @@ class SettingTile extends StatelessWidget {
   final IconData icon;
   final Widget trailing;
   final CrossAxisAlignment alignment;
+  final VoidCallback? onTap; // أضفنا هذا السطر
 
-  SettingTile(
-      {required this.title,
-      required this.icon,
-      required this.trailing,
-      required this.alignment});
+  SettingTile({
+    required this.title,
+    required this.icon,
+    required this.trailing,
+    required this.alignment,
+    this.onTap, // وأضفنا هذا
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 8.0),
-        padding: EdgeInsets.all(16.0),
-        height: 70,
-        decoration: BoxDecoration(
-          color: MyColor.backcardsetting,
-          borderRadius: BorderRadius.circular(8.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey,
-              blurRadius: 7.0,
-              offset: Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: Color(0xFF5E4B8A)), // لون الأيقونة
-                SizedBox(width: 16.0),
-                Text(
-                  title,
-                  style: TextStyle(fontSize: 16, color: Color(0xFF333333)),
-                ),
-              ],
-            ),
-            trailing,
-          ],
+      child: InkWell(
+        onTap: onTap, // هذه اللي تفعل الضغط
+        child: Container(
+          margin: EdgeInsets.symmetric(vertical: 8.0),
+          padding: EdgeInsets.all(16.0),
+          height: 70,
+          decoration: BoxDecoration(
+            color: MyColor.backcardsetting,
+            borderRadius: BorderRadius.circular(8.0),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey,
+                blurRadius: 7.0,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, color: Color(0xFF5E4B8A)),
+                  SizedBox(width: 16.0),
+                  Text(
+                    title,
+                    style: TextStyle(fontSize: 16, color: Color(0xFF333333)),
+                  ),
+                ],
+              ),
+              trailing,
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
 
 Widget defultTextFormField({
   required TextEditingController controller,
@@ -335,3 +342,4 @@ Widget headingTitle()=> Padding(
           onPressed: () {}, text: 'إرسال', height: 38, width: 101),
     );
   }
+  
