@@ -13,6 +13,10 @@ import 'package:mehra_app/modules/signup2/sign_up2.dart';
 import 'package:mehra_app/modules/xplore/xplore_screen.dart';
 import 'package:mehra_app/shared/theme/theme.dart';
 import 'package:mehra_app/shared/themes.dart' show lightTheme;
+import 'package:flutter_screenutil/flutter_screenutil.dart'; // إضافة مكتبة ScreenUtil
+import 'package:mehra_app/firebase_options.dart';
+import 'package:mehra_app/modules/homePage/home_screen.dart';
+import 'package:mehra_app/modules/onbording/onboarding_screen.dart';
 
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
@@ -20,6 +24,7 @@ import 'dart:ui';
 import 'package:intl/intl.dart' as intl;
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:mehra_app/shared/theme/theme.dart' as custom_theme;
+
 
 
 

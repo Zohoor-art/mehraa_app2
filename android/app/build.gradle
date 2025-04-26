@@ -1,12 +1,13 @@
 plugins {
     id "com.android.application"
     id "kotlin-android"
-    id 'com.google.gms.google-services' // خدمات جوجل
+    id "com.google.gms.google-services" // خدمات جوجل
     id "dev.flutter.flutter-gradle-plugin" // إضافة Flutter Gradle Plugin
 }
 
 android {
-    namespace = "com.example.mehra_app" // مساحة الأسماء (Namespace)
+    namespace = "com.example.mehra_app" // تأكد من أن هذا هو الاسم الصحيح لتطبيقك
+
     compileSdk = 35 // إصدار Compile SDK
 
     ndkVersion = "25.1.8937393" // تعيين إصدار NDK المطلوب

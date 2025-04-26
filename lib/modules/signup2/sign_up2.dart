@@ -65,6 +65,8 @@ class _SignUp2screenState extends State<SignUp2screen> {
 
     if (_formKey.currentState?.validate() ?? false) {
       try {
+
+// تخزين البيانات في Firestore
         await FirebaseFirestore.instance
             .collection('users')
             .doc(widget.userId)
@@ -135,15 +137,21 @@ class _SignUp2screenState extends State<SignUp2screen> {
   Future<void> _checkEmailVerification() async {
     User? user = FirebaseAuth.instance.currentUser;
 
+
+// الانتظار حتى يتم التحقق من البريد الإلكتروني
+
     while (user != null && !user.emailVerified) {
       await Future.delayed(Duration(seconds: 3));
       await user.reload();
       user = FirebaseAuth.instance.currentUser;
     }
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => HomeScreen()),
-    );
+
+// الانتقال إلى الصفحة الرئيسية بعد التحقق من البريد الإلكتروني
+    Navigator.of(context).pushReplacement(MaterialPageRoute(
+      builder: (context) => HomeScreen(),
+    ));
+
   }
 
   InputDecoration inputDecoration(String label, IconData icon) {

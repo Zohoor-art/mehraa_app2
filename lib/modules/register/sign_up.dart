@@ -166,9 +166,77 @@ class _SignUpscreenState extends State<SignUpscreen> {
                                         onPressed: _pickImage,
                                         icon: Icon(Icons.add_a_photo_rounded, color: MyColor.purpleColor),
                                       ),
-                                    )
-                                  ],
+                       Positioned(
+                                        bottom: -10,
+                                        left: 80,
+                                        child: IconButton(
+                                          onPressed: _pickImage,
+                                          icon: Icon(
+                                            Icons.add_a_photo_rounded,
+                                            color: MyColor.purpleColor,
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
                                 ),
+                                SizedBox(height: 20),
+                                defultTextFormField(
+                                  controller: storeNameController,
+                                  label: 'اسم المتجر',
+                                  prefix: Icons.home,
+                                  type: TextInputType.text,
+                                  validate: (value) {
+                                    if (value!.isEmpty) {
+                                      return 'يرجى إدخال اسم المتجر';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                SizedBox(height: 20.0),
+                                defultTextFormField(
+                                  controller: emailController,
+                                  label: 'البريد الالكتروني',
+                                  prefix: Icons.email,
+                                  type: TextInputType.emailAddress,
+                                  validate: (value) {
+                                    if (value!.isEmpty) {
+                                      return 'يرجى إدخال الايميل';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                SizedBox(height: 20.0),
+                                defultTextFormField(
+                                  controller: passwordController,
+                                  type: TextInputType.visiblePassword,
+                                  ispassword: isPassword,
+                                  validate: (value) {
+                                    if (value!.isEmpty) {
+                                      return 'يرجى إدخال كلمة المرور';
+                                    }
+                                    if (value.length < 8) {
+                                      return 'يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل';
+                                    }
+                                    if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                                      return 'يجب أن تحتوي كلمة المرور على حرف كبير واحد على الأقل';
+                                    }
+                                    if (!RegExp(r'[0-9]').hasMatch(value)) {
+                                      return 'يجب أن تحتوي كلمة المرور على رقم واحد على الأقل';
+                                    }
+                                    return null;
+                                  },
+                                  label: 'كلمة المرور',
+                                  prefix: Icons.lock,
+                                  suffix: isPassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  suffixPressed: () {
+                                    setState(() {
+                                      isPassword = !isPassword;
+                                    });
+                                  },
+                ),
                               ),
                               const SizedBox(height: 20),
                               defultTextFormField(

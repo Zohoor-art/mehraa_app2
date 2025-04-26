@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../shared/components/recent_chats.dart';
+import 'recent_chats.dart';
 
 
 class ChatScreen extends StatelessWidget {

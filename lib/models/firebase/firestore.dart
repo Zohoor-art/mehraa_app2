@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mehra_app/models/post.dart';
 import 'package:mehra_app/models/userModel.dart';
 import 'package:mehra_app/shared/utils/exception.dart';
 import 'package:uuid/uuid.dart';
@@ -49,27 +50,40 @@ class Firebase_Firestor {
       throw exceptions(e.message.toString());
     }
   }
-
-  Future<bool> CreatePost({
-    required String postImage,
-    required String caption,
-    required String location,
-  }) async {
-    var uid = Uuid().v4();
-    DateTime data = DateTime.now();
-    Users user = await getUser();
-    await _firebaseFirestore.collection('posts').doc(uid).set({
-      'postImage': postImage,
-      'username': user.storeName,
-      'profileImage': user.profileImage,
-      'caption': caption,
-      'location': location,
-      'uid': _auth.currentUser!.uid,
-      'postId': uid,
-      'like': [],
-      'time': data,
+  Stream<List<Post>> getPosts() {
+    return _firebaseFirestore
+        .collection('posts')
+        .orderBy('datePublished', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) => Post.fromSnap(doc)).toList();
     });
-    return true;
+  }
+
+  // جلب منشورات مستخدم معين
+  Stream<List<Post>> getUserPosts(String uid) {
+    return _firebaseFirestore
+        .collection('posts')
+        .where('uid', isEqualTo: uid)
+        .orderBy('datePublished', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) => Post.fromSnap(doc)).toList();
+    });
+  }
+
+  // إضافة إعجاب
+  Future<void> likePost(String postId, String userId) async {
+    await _firebaseFirestore.collection('posts').doc(postId).update({
+      'likes': FieldValue.arrayUnion([userId])
+    });
+  }
+
+  // إزالة إعجاب
+  Future<void> unlikePost(String postId, String userId) async {
+    await _firebaseFirestore.collection('posts').doc(postId).update({
+      'likes': FieldValue.arrayRemove([userId])
+    });
   }
 
 //   Future<bool> CreateReels({
