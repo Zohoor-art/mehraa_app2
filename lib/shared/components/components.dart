@@ -69,7 +69,7 @@ Widget bottomImage() => Stack(
         Image(
           image: AssetImage('assets/bottom.png'),
           width: double.infinity,
-          fit: BoxFit.cover,
+          fit: BoxFit.fill,
         ),
         Padding(
           padding: const EdgeInsets.all(20),
@@ -86,13 +86,13 @@ Widget bottomImage() => Stack(
       ],
     );
 
-Widget GradientButton(
-    {required VoidCallback onPressed,
-    required text,
-   fontSize,
-    double? width,
-    double? height,}) {
-  var fontsize;
+Widget GradientButton({
+  required VoidCallback onPressed,
+  required String text,
+  double? fontSize , // قيمة افتراضية لحجم الخط
+  double? width,
+  double? height,
+}) {
   return Container(
     width: width,
     height: height,
@@ -108,27 +108,31 @@ Widget GradientButton(
       borderRadius: BorderRadius.circular(12),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.2), // ظل خفيف
+          color: Colors.black.withOpacity(0.2),
           spreadRadius: 1,
           blurRadius: 7,
-          offset: Offset(0, 3), // موضع الظل
+          offset: Offset(0, 3),
         ),
       ],
     ),
     child: TextButton(
       onPressed: onPressed,
       child: Text(
-        textAlign: TextAlign.center,
         text,
+        textAlign: TextAlign.center,
         style: TextStyle(
-            color: Colors.white,fontSize: fontsize, fontFamily: 'Tajawal'),
+          color: Colors.white,
+          fontSize: fontSize, // استخدام قيمة fontSize الممررة
+          fontFamily: 'Tajawal',
+        ),
       ),
     ),
   );
 }
-
 Widget buildGoogleButton(
-    {required String text, required VoidCallback onPressed}) {
+    {required String text,  
+    double? fontSize , // قيمة افتراضية لحجم الخط
+ required VoidCallback onPressed}) {
   return Expanded(
     child: Container(
       width: 346,
@@ -148,7 +152,7 @@ Widget buildGoogleButton(
       child: TextButton(
         onPressed: onPressed,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(vertical: 3,horizontal: 10),
           child: Row(
             children: [
               Image.asset(
@@ -156,14 +160,14 @@ Widget buildGoogleButton(
                 width: 42, // عرض الأيقونة
                 height: 42, // ارتفاع الأيقونة
               ),
-              SizedBox(width: 15),
+              SizedBox(width: 10),
     
               // المسافة بين الأيقونة والنص
               Text(
                 text,
                 style: TextStyle(
                   color: Colors.black,
-                  fontSize: 23,
+                  fontSize: 20,
                   fontWeight: FontWeight.w500, // جعل النص عريض
                 ),
               ),
@@ -175,21 +179,7 @@ Widget buildGoogleButton(
   );
 }
 
-Widget smooth_page_indicator() => Center(
-      child: SmoothPageIndicator(
-        controller: boardController,
-        effect: const ExpandingDotsEffect(
-          dotColor: Color(0xFFC4BCBC),
-          activeDotColor: Color(0xFF4423B1),
-          dotHeight: 10,
-          dotWidth: 10,
-          expansionFactor: 2,
-          paintStyle: PaintingStyle.fill,
-          spacing: 5.0,
-        ),
-        count: boarding.length,
-      ),
-    );
+
 
 class SettingTile extends StatelessWidget {
   final String title;

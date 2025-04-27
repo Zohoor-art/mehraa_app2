@@ -1,14 +1,17 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mehra_app/modules/signup2/sign_up2.dart';
+import 'package:mehra_app/models/firebase/auth_methods.dart';
+import 'package:mehra_app/modules/register/email_verification_screen.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'dart:io';
 
 class SignUpscreen extends StatefulWidget {
   const SignUpscreen({super.key});
@@ -24,8 +27,8 @@ class _SignUpscreenState extends State<SignUpscreen> {
   late TextEditingController passwordController;
   bool isPassword = true;
   bool isLoading = false;
-  String? imageUrl;
   XFile? _imageFile;
+  Uint8List? _imageBytes;
 
   @override
   void initState() {
@@ -44,65 +47,66 @@ class _SignUpscreenState extends State<SignUpscreen> {
   }
 
   Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
       setState(() {
         _imageFile = pickedFile;
+        _imageBytes = bytes;
       });
     }
   }
 
-  Future<void> _submit() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        isLoading = true;
-      });
+  Future<void> _submitForm() async {
+    if (_formKey.currentState!.validate() && _imageBytes != null) {
+      setState(() => isLoading = true);
 
-      try {
-        UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: emailController.text,
-          password: passwordController.text,
-        );
+      final authMethods = AuthMethods();
+      final result = await authMethods.startSignUpProcess(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+        storeName: storeNameController.text.trim(),
+        file: _imageBytes!,
+      );
 
-        if (_imageFile != null) {
-          final storageRef = FirebaseStorage.instance.ref().child('profiles/${userCredential.user!.uid}.jpg');
-          await storageRef.putFile(File(_imageFile!.path));
-          imageUrl = await storageRef.getDownloadURL();
-        }
+      setState(() => isLoading = false);
 
-        await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
-          'storeName': storeNameController.text,
-          'email': emailController.text,
-          'profileImage': imageUrl,
-        });
-
+      if (result['success'] == true) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => SignUp2screen(userId: userCredential.user!.uid)),
+          MaterialPageRoute(
+            builder: (context) => EmailVerificationScreen(
+              userId: result['userId'],
+              email: emailController.text.trim(),
+              storeName: storeNameController.text.trim(),
+              profileImage: result['profileImage'],
+            ),
+          ),
         );
-      } catch (e) {
-        print("Error: $e");
-        AwesomeDialog(
-          context: context,
-          dialogType: DialogType.error,
-          animType: AnimType.scale,
-          title: AppLocalizations.of(context)!.error,
-          desc: e.toString(),
-          btnOkOnPress: () {},
-          btnOkColor: Colors.red,
-        ).show();
-      } finally {
-        setState(() {
-          isLoading = false;
-        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result['message']),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
+    } else if (_imageBytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('الرجاء اختيار صورة للملف الشخصي'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final local = AppLocalizations.of(context)!;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 350;
 
     return Scaffold(
       appBar: AppBar(
@@ -117,7 +121,7 @@ class _SignUpscreenState extends State<SignUpscreen> {
           ),
         ),
       ),
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: Stack(
@@ -127,104 +131,120 @@ class _SignUpscreenState extends State<SignUpscreen> {
               bottom: 0,
               left: 0,
               right: 0,
-              child: Image.asset('assets/bottom.png', fit: BoxFit.cover),
+              child: Image.asset(
+                'assets/bottom.png',
+                fit: BoxFit.cover,
+                width: screenWidth,
+              ),
             ),
-            Center(
+            Align(
+              alignment: Alignment.bottomCenter,
               child: SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  top: screenHeight * 0.1,
+                ),
                 child: Container(
-                  width: MediaQuery.of(context).size.width * 0.90,
-                  height: MediaQuery.of(context).size.height * 0.70,
+                  width: isSmallScreen ? screenWidth * 0.95 : screenWidth * 0.9,
+                  margin: EdgeInsets.only(bottom: screenHeight * 0.12),
                   child: Card(
                     color: Colors.white,
                     shadowColor: const Color(0xFF000000),
-                    margin: const EdgeInsets.only(bottom: 3.0),
                     elevation: 5,
                     child: Padding(
-                      padding: const EdgeInsets.all(10.0),
+                      padding: EdgeInsets.all(isSmallScreen ? 12.0 : 16.0),
                       child: Form(
                         key: _formKey,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 70.0, bottom: 40, right: 10, left: 10),
-                          child: Column(
-                            children: [
-                              Expanded(
-                                child: Stack(
-                                  clipBehavior: Clip.none,
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 60,
-                                      backgroundImage: _imageFile != null
-                                          ? FileImage(File(_imageFile!.path))
-                                          : const AssetImage('assets/images/profile.png') as ImageProvider,
-                                    ),
-                                    Positioned(
-                                      bottom: -10,
-                                      left: 80,
-                                      child: IconButton(
-                                        onPressed: _pickImage,
-                                        icon: Icon(
-                                          Icons.add_a_photo_rounded,
-                                          color: MyColor.purpleColor,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(height: screenHeight * 0.02),
+                            Stack(
+                              alignment: Alignment.bottomRight,
+                              children: [
+                                CircleAvatar(
+                                  radius: isSmallScreen ? 50 : 60,
+                                  backgroundImage: _imageFile != null
+                                      ? FileImage(File(_imageFile!.path))
+                                      : const AssetImage('assets/images/profile.png') as ImageProvider,
                                 ),
-                              ),
-                              SizedBox(height: 20),
-                              defultTextFormField(
-                                controller: storeNameController,
-                                label: local.storeName,
-                                prefix: Icons.home,
-                                type: TextInputType.text,
-                                validate: (value) {
-                                  if (value!.isEmpty) return local.enterStoreName;
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: 20),
-                              defultTextFormField(
-                                controller: emailController,
-                                label: local.email,
-                                prefix: Icons.email,
-                                type: TextInputType.emailAddress,
-                                validate: (value) {
-                                  if (value!.isEmpty) return local.enterEmail;
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: 20),
-                              defultTextFormField(
-                                controller: passwordController,
-                                type: TextInputType.visiblePassword,
-                                ispassword: isPassword,
-                                label: local.password,
-                                prefix: Icons.lock,
-                                suffix: isPassword ? Icons.visibility_off : Icons.visibility,
-                                suffixPressed: () {
-                                  setState(() {
-                                    isPassword = !isPassword;
-                                  });
-                                },
-                                validate: (value) {
-                                  if (value!.isEmpty) return local.enterPassword;
-                                  if (value.length < 8) return local.passwordTooShort;
-                                  if (!RegExp(r'[A-Z]').hasMatch(value)) return local.passwordNeedsUppercase;
-                                  if (!RegExp(r'[0-9]').hasMatch(value)) return local.passwordNeedsNumber;
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: 20),
-                              Center(
-                                child: GradientButton(
-                                  onPressed: isLoading ? () {} : _submit,
-                                  text: isLoading ? local.loading : local.continueText,
-                                  width: 319,
-                                  height: 67,
+                                IconButton(
+                                  onPressed: _pickImage,
+                                  icon: Icon(
+                                    Icons.add_a_photo_rounded,
+                                    color: MyColor.purpleColor,
+                                    size: isSmallScreen ? 24 : 28,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
+                              ],
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                            defultTextFormField(
+                              controller: storeNameController,
+                              label: 'اسم المتجر',
+                              prefix: Icons.home,
+                              type: TextInputType.text,
+                              validate: (value) {
+                                if (value!.isEmpty) {
+                                  return 'يرجى ادخال اسم المتجر';
+                                }
+                                return null;
+                              },
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                            defultTextFormField(
+                              controller: emailController,
+                              label: 'البريد الالكتروني',
+                              prefix: Icons.email,
+                              type: TextInputType.emailAddress,
+                              validate: (value) {
+                                if (value!.isEmpty) {
+                                  return 'يرجى ادخال البريد الالكتروني';
+                                }
+                                if (!value.contains('@') || !value.contains('.')) {
+                                  return 'البريد الإلكتروني غير صالح';
+                                }
+                                return null;
+                              },
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                            defultTextFormField(
+                              controller: passwordController,
+                              type: TextInputType.visiblePassword,
+                              ispassword: isPassword,
+                              label: 'كلمة المرور',
+                              prefix: Icons.lock,
+                              suffix: isPassword ? Icons.visibility_off : Icons.visibility,
+                              suffixPressed: () {
+                                setState(() {
+                                  isPassword = !isPassword;
+                                });
+                              },
+                              validate: (value) {
+                                if (value!.isEmpty) {
+                                  return 'يرجى إدخال كلمة المرور';
+                                }
+                                if (value.length < 8) {
+                                  return 'يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل';
+                                }
+                                if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                                  return 'يجب أن تحتوي كلمة المرور على حرف كبير واحد على الأقل';
+                                }
+                                if (!RegExp(r'[0-9]').hasMatch(value)) {
+                                  return 'يجب أن تحتوي كلمة المرور على رقم واحد على الأقل';
+                                }
+                                return null;
+                              },
+                            ),
+                            SizedBox(height: screenHeight * 0.03),
+                            GradientButton(
+                              onPressed: _submitForm,
+                              text: isLoading ? 'جارٍ التحميل...' : 'المتابعة',
+                              width: isSmallScreen ? screenWidth * 0.8 : 319,
+                              height: isSmallScreen ? 50 : 67,
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                          ],
                         ),
                       ),
                     ),

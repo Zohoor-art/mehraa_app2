@@ -1,7 +1,7 @@
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:mehra_app/modules/chats/call_screen.dart';
 import 'package:mehra_app/modules/chats/chat_screen.dart';
-import 'package:mehra_app/modules/chats/index.dart';
 import 'package:mehra_app/modules/chats/order_notifcations.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -299,7 +299,7 @@ class _ChatsPageState extends State<ChatsPage> with TickerProviderStateMixin {
                   // محتوى الدردشات
                   ChatScreen(),
                   // محتوى المكالمات
-                  IndexPage(),
+                  CallScreen(),
                   // محتوى الطلبات
                   OrderNotifications()
                 ],

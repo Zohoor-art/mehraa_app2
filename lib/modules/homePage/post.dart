@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:mehra_app/models/post.dart';
+import 'package:mehra_app/models/userModel.dart';
+import 'package:mehra_app/modules/chats/chat_room.dart';
 import 'package:mehra_app/modules/comments/comments.dart';
 import 'package:mehra_app/modules/profile/profile_screen.dart';
 import 'package:mehra_app/modules/rating/rating.dart';
@@ -146,6 +148,55 @@ void checkIfFollowing() async {
  
 
 
+// داخل _PostWidgetState
+  Future<void> _createOrderAndOpenChat() async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null || _userData == null) return;
+
+      // 1. التحقق من أن المستخدم الحالي ليس صاحب المنشور
+      if (currentUser.uid == widget.post.uid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('لا يمكنك طلب منتجك الخاص')),
+        );
+        return;
+      }
+
+      // 2. إنشاء الطلب في جدول orders الخاص بصاحب المنشور
+      final orderRef = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.post.uid)
+          .collection('orders')
+          .add({
+        'productDescription': widget.post.description,
+        'productImage': widget.post.postUrl,
+        'buyerId': currentUser.uid,
+        'sellerId': widget.post.uid,
+        'createdAt': FieldValue.serverTimestamp(),
+        'status': 'pending',
+        'postId': widget.post.postId,
+      });
+
+      // 3. فتح صفحة المحادثة مع إرسال الرسالة التلقائية
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatRoom(
+            userId: widget.post.uid,
+            userName: _userData?['storeName'] ??
+                _userData?['displayName'] ??
+                'مستخدم',
+            orderId: orderRef.id, // إرسال معرف الطلب
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('حدث خطأ أثناء إنشاء الطلب: ${e.toString()}')),
+      );
+    }
+  }
+
   @override
   void dispose() {
     if (widget.post.videoUrl.isNotEmpty) {
@@ -170,6 +221,7 @@ void checkIfFollowing() async {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Section
+
       Padding(
   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // حواف بسيطة
   child: Row(
@@ -272,6 +324,7 @@ void checkIfFollowing() async {
 ),
 SizedBox(height: 5.0,),
 _buildPostContent(),
+
           // Interaction Buttons
           Padding(
             padding: const EdgeInsets.only(top: 10),
@@ -282,9 +335,9 @@ _buildPostContent(),
                 _buildInteractionButton(
                   icon: SvgPicture.asset(
                     isLiked
-            ? 'assets/images/fillHeart.svg'
-            : 'assets/images/heartEmp.svg',
-                    color: isLiked ? Colors.deepPurple :  Colors.deepPurple,
+                        ? 'assets/images/fillHeart.svg'
+                        : 'assets/images/heartEmp.svg',
+                    color: isLiked ? Colors.deepPurple : Colors.deepPurple,
                     width: 25,
                     height: 25,
                   ),
@@ -292,6 +345,7 @@ _buildPostContent(),
                   onPressed: widget.onLike,
                 ),
                 SizedBox(width: 15),
+
             StreamBuilder<QuerySnapshot>(
   stream: FirebaseFirestore.instance
       .collection('posts')
@@ -350,20 +404,21 @@ SizedBox(width: 16),
       ),
     );
   },
+
                 ),
                 SizedBox(width: 16),
-            
                 _buildInteractionButton(
                   icon: SvgPicture.asset(
                     isSaved
-            ? 'assets/images/fill_save.svg'
-            : 'assets/images/save.svg',
+                        ? 'assets/images/fill_save.svg'
+                        : 'assets/images/save.svg',
                     color: isSaved ? Colors.deepPurple : Colors.deepPurple,
                     width: 25,
                     height: 25,
                     
                   ),
-                  countText: '', // زر الحفظ غالبًا ما يحتاج عدد، لكن تقدر تضيف إذا عندك
+                  countText:
+                      '', // زر الحفظ غالبًا ما يحتاج عدد، لكن تقدر تضيف إذا عندك
                   onPressed: widget.onSave,
                 ),
               ],
@@ -392,7 +447,8 @@ SizedBox(width: 16),
               child: Wrap(
                 spacing: 8,
                 runSpacing: 4,
-                children: widget.post.tags.map((tag) => _buildTag(tag)).toList(),
+                children:
+                    widget.post.tags.map((tag) => _buildTag(tag)).toList(),
               ),
             ),
 
@@ -445,6 +501,7 @@ SizedBox(width: 16),
     );
   }
 
+
  Widget _buildPostContent() {
   if (_isDeleting) {
     return Container(
@@ -491,13 +548,15 @@ SizedBox(width: 16),
           ),
           child: Stack(
             alignment: Alignment.bottomRight,
+
             children: [
-              if (widget.post.postUrl.isNotEmpty &&
-                  widget.post.videoUrl.isEmpty)
-                _buildShoppingCartButton(),
+              CircularProgressIndicator(),
+              SizedBox(height: 8),
+              Text('جاري حذف المنشور...'),
             ],
           ),
         ),
+
       ),
     );
   }
@@ -546,9 +605,40 @@ SizedBox(width: 16),
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
+
           ),
-        ],
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [Colors.pink, Colors.deepPurple],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Center(
+                  child: IconButton(
+                    onPressed: _createOrderAndOpenChat,
+                    icon: Icon(Icons.shopping_cart,
+                        color: Colors.white, size: 16),
+                  ),
+                ),
+              ),
+              SizedBox(width: 8),
+              Text(
+                'طلب المنتج',
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
+        ),
       ),
+
     ),
   );
 }
@@ -577,9 +667,11 @@ SizedBox(width: 16),
               countText,
               style: TextStyle(color: Colors.black, fontSize: 17),
             ),
+
           ],
-        ],
+        ),
       ),
+
     ),
   );
 }
@@ -610,6 +702,7 @@ void _showReviewDialog() {
     ),
   );
 }
+
 
 
   Widget _buildDescription() {
@@ -806,5 +899,20 @@ Widget _buildOptionTile(IconData icon, String title, VoidCallback onTap) {
 
   String _formatDate(Timestamp timestamp) {
     return '${timestamp.toDate().day}/${timestamp.toDate().month}/${timestamp.toDate().year}';
+  }
+
+  void _openChatWithPostOwner() {
+    if (_userData == null) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatRoom(
+          userId: widget.post.uid,
+          userName:
+              _userData?['storeName'] ?? _userData?['displayName'] ?? 'مستخدم',
+        ),
+      ),
+    );
   }
 }
