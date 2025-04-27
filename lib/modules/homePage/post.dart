@@ -601,7 +601,7 @@ void _showReviewDialog() {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>RatingCard(),
+                builder: (context) =>RatingCard(uid:widget.post.uid,),
               ),
             );
           },
@@ -698,36 +698,41 @@ void _showReviewDialog() {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildActionIcon(Icons.link, 'نسخ الرابط', [Color(0xFFE91E63), Color(0xFF4A148C)], () {
+                   PostActions.copyLink(context, widget.post.postId);
                   Navigator.pop(context);
-                  PostActions.copyLink(context, widget.post.postId);
                 }),
                 _buildActionIcon(Icons.share, 'مشاركة', [Color(0xFFE91E63), Color(0xFF4A148C)], () {
-                  Navigator.pop(context);
+                  
                   PostActions.sharePost(widget.post.postId, widget.post.shareCount);
+                  Navigator.pop(context);
                 }),
                 _buildActionIcon(Icons.report, 'إبلاغ', [Color(0xFFBD4037), Color(0xFFED1404)], () {
-                  Navigator.pop(context);
+                  
                   PostActions.reportPost(context, widget.post.postId);
+                  Navigator.pop(context);
                 }),
               ],
             ),
             SizedBox(height: 24),
             if (isFollowing)
   _buildOptionTile(Icons.person_remove, 'إلغاء المتابعة', () async {
-    Navigator.pop(context);
+   
     await PostActions.unfollowUser(context, widget.post.uid);
+     Navigator.pop(context);
     setState(() {
       isFollowing = false; // عشان يرجع يظهر زر المتابعة
     });
   }),
 
             _buildOptionTile(Icons.visibility_off, 'إخفاء', () {
-              Navigator.pop(context);
+              
               PostActions.hidePost(context, widget.post.postId);
+              Navigator.pop(context);
             }),
             _buildOptionTile(Icons.person, 'عن هذا الحساب', () {
-              Navigator.pop(context);
+              
               PostActions.goToUserProfile(context, widget.post.uid);
+              Navigator.pop(context);
             }),
             SizedBox(height: 12),
           ],
@@ -762,8 +767,8 @@ Widget _buildOptionTile(IconData icon, String title, VoidCallback onTap) {
     leading: Icon(icon, color: Colors.purple),
     title: Text(title, textAlign: TextAlign.right),
     onTap: () {
-      Navigator.pop(context);
       onTap();
+      Navigator.pop(context);
     },
   );
 }

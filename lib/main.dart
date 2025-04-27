@@ -108,7 +108,7 @@ themeMode: userProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
         textDirection: languageProvider.selectedLanguage == 'العربية'
             ? TextDirection.rtl
             : TextDirection.ltr,
-        child:  XploreBody(),//widget.child ??
+        child:  HomeScreen(),//widget.child ??
       ),
     );
   }

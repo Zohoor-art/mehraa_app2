@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
+import 'package:mehra_app/modules/profile/profile_screen.dart';
 import 'package:share_plus/share_plus.dart';
 
 class PostActions {
@@ -86,7 +87,13 @@ static Future<void> hidePost(BuildContext context, String postId) async {
 }
 
 
-  static void goToUserProfile(BuildContext context, String userId) {
-    Navigator.pushNamed(context, '/userProfile', arguments: userId);
-  }
+ static void goToUserProfile(BuildContext context, String userId) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => ProfileScreen(userId: userId),
+    ),
+  );
+}
+
 }
