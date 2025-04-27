@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/> <!-- إذن الإشعارات -->
 
+
     <application
         android:label="mehra_app"
         android:name="${applicationName}"
@@ -29,7 +30,7 @@
 
         <service
             android:name="com.google.firebase.messaging.FirebaseMessagingService"
-            android:exported="false"> <!-- تحقق من أنه صحيح حسب استخدامك -->
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>
@@ -40,10 +41,17 @@
             android:value="2"/>
     </application>
 
+    <!-- ضروري للسماح بفتح الروابط -->
     <queries>
         <intent>
-            <action android:name="android.intent.action.PROCESS_TEXT"/>
-            <data android:mimeType="text/plain"/>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="http" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
         </intent>
     </queries>
 </manifest>

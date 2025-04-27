@@ -23,7 +23,8 @@ android {
 
     defaultConfig {
         applicationId = "com.example.mehra_app" // معرف التطبيق الفريد
-        minSdkVersion 23 // الحد الأدنى لإصدار SDK
+ 
+         minSdkVersion 24 // الحد الأدنى لإصدار SDK
         targetSdk = 35 // يجب تعيين إصدار الهدف إلى 35 أو استخدام flutter.targetSdkVersion
         versionCode = 1 // تعيين كود الإصدار (يفضل تحديثه عند كل إصدار جديد)
         versionName = "1.0" // تعيين اسم الإصدار (يفضل تحديثه عند كل إصدار جديد)

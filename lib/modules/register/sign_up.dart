@@ -1,11 +1,17 @@
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mehra_app/models/firebase/auth_methods.dart';
 import 'package:mehra_app/modules/register/email_verification_screen.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
-import 'dart:io';
-import 'dart:typed_data';
 
 class SignUpscreen extends StatefulWidget {
   const SignUpscreen({super.key});
@@ -160,8 +166,7 @@ class _SignUpscreenState extends State<SignUpscreen> {
                                   radius: isSmallScreen ? 50 : 60,
                                   backgroundImage: _imageFile != null
                                       ? FileImage(File(_imageFile!.path))
-                                      : const AssetImage('assets/images/profile.png')
-                                          as ImageProvider,
+                                      : const AssetImage('assets/images/profile.png') as ImageProvider,
                                 ),
                                 IconButton(
                                   onPressed: _pickImage,
@@ -209,9 +214,7 @@ class _SignUpscreenState extends State<SignUpscreen> {
                               ispassword: isPassword,
                               label: 'كلمة المرور',
                               prefix: Icons.lock,
-                              suffix: isPassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
+                              suffix: isPassword ? Icons.visibility_off : Icons.visibility,
                               suffixPressed: () {
                                 setState(() {
                                   isPassword = !isPassword;

@@ -1,0 +1,121 @@
+{
+  "@@locale": "en",
+  "followWithoutLogin": "Continue without login",
+  "createBusinessAccount": "Create business account",
+  "continueWithGoogle": "Continue with Google",
+  "alreadyHaveAccount": "Already have an account? Sign in",
+  "error": "Error",
+  "loginFailed": "Login failed, please try again.",
+  "ok": "OK",
+  "storeName": "Store Name",
+  "enterStoreName": "Please enter store name",
+  "email": "Email",
+  "enterEmail": "Please enter email",
+  "password": "Password",
+  "enterPassword": "Please enter password",
+  "passwordTooShort": "Password must be at least 8 characters",
+  "passwordNeedsUppercase": "Password must contain at least one uppercase letter",
+  "passwordNeedsNumber": "Password must contain at least one number",
+  "continueText": "Continue",
+  "loading": "Loading...",
+  "description": "Work Description",
+  "enterDescription": "Please enter work description",
+  "workType": "Work Type",
+  "selectWorkType": "Select work type",
+  "mustSelectWorkType": "Please select work type",
+  "selectHours": "Select hours",
+  "mustSelectHours": "Please select hours",
+  "hours": "Working Hours",
+  "contactNumber": "Contact Number",
+  "enterContactNumber": "Please enter contact number",
+  "location": "Location",
+  "enterLocation": "Please enter location",
+  "verify": "Verify",
+
+  "sat": "Saturday",
+"sun": "Sunday",
+"mon": "Monday",
+"tue": "Tuesday",
+"wed": "Wednesday",
+"thu": "Thursday",
+"fri": "Friday",
+
+
+"tailoring": "Tailoring",
+"cake": "Cake",
+"hairdresser": "Hairdresser",
+"otherSmallBusiness": "Other small business",
+
+"hoursMorning": "8 AM to 1 PM",
+"hoursAfternoon": "1 PM to 8 PM",
+"hoursEvening": "8 PM to midnight",
+
+"aboutAppName": "Mouhrah App",
+"aboutAppVersion": "Version 1.0.0",
+"aboutLegal": "© 2025 All rights reserved.",
+"aboutDescription": "Mouhrah is a social platform for productive families that combines simplicity, privacy, and interaction.\n\nThank you for using our app ❤️",
+
+
+"helpTitle": "Help",
+"helpCenter": "Help Center",
+"reportProblem": "Report a Problem",
+"privacyPolicy": "Privacy Policy",
+
+
+"privacyTitle": "Privacy",
+"loginToViewPrivacy": "Please log in to view privacy settings",
+"privateAccount": "Make account private",
+"hideOnlineStatus": "Hide online status",
+"messagePermission": "Who can send messages",
+"everyone": "Everyone",
+"followersOnly": "Followers only",
+"noOne": "No one",
+"hideStoriesFrom": "Hide stories from...",
+"noStoriesHidden": "You haven’t hidden stories from anyone",
+"blockedUsers": "Blocked users",
+"noBlockedUsers": "No users blocked",
+"blockedCount": "Blocked count: {count}",
+"unblock": "Unblock",
+
+
+  "settings": "Settings",
+  "appearance": "Appearance",
+  "darkModeOn": "Dark mode activated",
+  "darkModeOff": "Light mode activated",
+  "privacy": "Privacy",
+  "language": "Language",
+  "email": "Email",
+  "unknown": "Unknown",
+  "notLoggedIn": "Not logged in",
+  "help": "Help",
+  "about": "About",
+    "logout": "Log Out",
+
+
+    
+  "email": "Email",
+  "password": "Password",
+  "login": "Login",
+  "noAccount": "Don't have an account? Register",
+  "enterEmail": "Please enter your email",
+  "enterPassword": "Please enter your password",
+  "passwordTooShort": "Password must be at least 8 characters",
+  "passwordUppercase": "Password must contain at least one uppercase letter",
+  "passwordNumber": "Password must contain at least one number",
+  "error": "Error",
+  "errorOccurred": "An error occurred",
+  "userNotFound": "No user found with this email.",
+  "wrongPassword": "Incorrect password."
+
+}
+
+
+
+
+
+
+
+
+
+
+

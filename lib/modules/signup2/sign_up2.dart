@@ -5,6 +5,7 @@ import 'package:mehra_app/models/firebase/auth_methods.dart';
 import 'package:mehra_app/modules/homePage/home_screen.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SignUp2screen extends StatefulWidget {
   final String userId;
@@ -122,13 +123,13 @@ class _SignUp2screenState extends State<SignUp2screen> {
     final isSmallScreen = screenWidth < 400;
 
     final List<DayInWeek> days = [
-      DayInWeek("السبت", dayKey: "monday"),
+      DayInWeek("السبت", dayKey: "saturday"),
       DayInWeek("الأحد", dayKey: "sunday"),
-      DayInWeek("الاثنين", dayKey: "tuesday"),
-      DayInWeek("الثلاثاء", dayKey: "wednesday"),
-      DayInWeek("الأربعاء", dayKey: "thursday"),
-      DayInWeek("الخميس", dayKey: "friday"),
-      DayInWeek("الجمعة", dayKey: "saturday", isSelected: true),
+      DayInWeek("الاثنين", dayKey: "monday"),
+      DayInWeek("الثلاثاء", dayKey: "tuesday"),
+      DayInWeek("الأربعاء", dayKey: "wednesday"),
+      DayInWeek("الخميس", dayKey: "thursday"),
+      DayInWeek("الجمعة", dayKey: "friday", isSelected: true),
     ];
 
     final List<String> workTypes = [
@@ -298,7 +299,9 @@ class _SignUp2screenState extends State<SignUp2screen> {
                             SizedBox(height: isSmallScreen ? 16 : 24),
                             GradientButton(
                               onPressed: _completeRegistration,
-                              text: isLoading ? 'جارٍ التسجيل...' : 'إكمال التسجيل',
+                              text: isLoading
+                                  ? 'جارٍ التسجيل...'
+                                  : 'إكمال التسجيل',
                               width: isSmallScreen ? screenWidth * 0.8 : 319,
                               height: isSmallScreen ? 50 : 67,
                             ),

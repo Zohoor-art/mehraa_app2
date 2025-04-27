@@ -1,6 +1,7 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:mehra_app/modules/homePage/home_screen.dart';
 import 'package:mehra_app/modules/register/register_screen.dart';
 import 'package:mehra_app/shared/components/components.dart';
@@ -34,11 +35,59 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 350;
+     final local = AppLocalizations.of(context)!;
+
+  Future<void> _login() async {
+    final local = AppLocalizations.of(context)!;
+
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        isLoading = true;
+      });
+
+      try {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
+        );
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      } on FirebaseAuthException catch (e) {
+        String message = local.errorOccurred;
+
+        if (e.code == 'user-not-found') {
+          message = local.userNotFound;
+        } else if (e.code == 'wrong-password') {
+          message = local.wrongPassword;
+        }
+
+        AwesomeDialog(
+          context: context,
+          dialogType: DialogType.error,
+          animType: AnimType.scale,
+          title: local.error,
+          desc: message,
+          btnOkOnPress: () {},
+          btnOkColor: Colors.red,
+        ).show();
+      } finally {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+
 
     return Scaffold(
       appBar: AppBar(
@@ -71,6 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             Center( // تم إضافة Center هنا لجعل المحتوى في المنتصف
               child: SingleChildScrollView(
+
                 padding: EdgeInsets.only(
                   bottom: MediaQuery.of(context).viewInsets.bottom,
                 ),
@@ -164,6 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ],
+
                         ),
                       ),
                     ),

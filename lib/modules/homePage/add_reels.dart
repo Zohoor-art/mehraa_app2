@@ -34,7 +34,8 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
     _controller = VideoPlayerController.file(File(widget.videoPath))
       ..initialize().then((_) {
         setState(() {});
-        _controller.play(); // تشغيل الفيديو تلقائياً عند التهيئة
+        _controller.play();
+        _controller.setLooping(true);
       });
   }
 
@@ -84,20 +85,37 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
     }
 
     setState(() => _isLoading = true);
-    
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        content: Row(
+          children: const [
+            CircularProgressIndicator(),
+            SizedBox(width: 20),
+            Text("جاري نشر المنشور..."),
+          ],
+        ),
+      ),
+    );
+
     try {
       final userData = await _fetchUserDetails();
-      
+
       String res = await FirestoreMethods().uploadPost(
         _descriptionController.text,
-        Uint8List(0), // لا نحتاج لصورة مصغرة هنا
+        Uint8List(0),
         userData['uid'],
         userData['storeName'],
         userData['profileImage'],
         videoPath: widget.videoPath,
         userRef: _userRef,
         context: context,
+        isVideo: true,
       );
+
+      Navigator.pop(context); // إغلاق Dialog
 
       if (res.contains('بنجاح')) {
         showSnackBar('تم نشر الريل بنجاح', context);
@@ -109,10 +127,9 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
       } else {
         showSnackBar(res, context);
       }
-    } on FirebaseException catch (e) {
-      showSnackBar('خطأ في النشر: ${e.message}', context);
     } catch (e) {
-      showSnackBar('حدث خطأ غير متوقع: $e', context);
+      Navigator.pop(context); // إغلاق Dialog عند الخطأ
+      showSnackBar('حدث خطأ: $e', context);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -126,15 +143,18 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
       appBar: AppBar(
         title: const Text('إنشاء ريل'),
         actions: [
-          TextButton(
-            onPressed: _uploadReel,
-            child: const Text(
-              'نشر',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: ElevatedButton.icon(
+              onPressed: _uploadReel,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
+              icon: const Icon(Icons.upload, color: Colors.white),
+              label: const Text('نشر', style: TextStyle(color: Colors.white)),
             ),
           ),
         ],
@@ -147,34 +167,33 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
             children: [
               if (_isLoading) const LinearProgressIndicator(),
               const SizedBox(height: 20),
-              
-              // معاينة الفيديو
+
+              // عرض الفيديو بشكل أنيق
               if (_controller.value.isInitialized)
-                AspectRatio(
-                  aspectRatio: 9/16,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      VideoPlayer(_controller),
-                      if (!_controller.value.isPlaying)
-                        IconButton(
-                          icon: const Icon(
-                            Icons.play_arrow,
-                            size: 50,
-                            color: Colors.white,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: AspectRatio(
+                    aspectRatio: 9 / 16,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        VideoPlayer(_controller),
+                        if (!_controller.value.isPlaying)
+                          IconButton(
+                            icon: const Icon(Icons.play_arrow, size: 50, color: Colors.white),
+                            onPressed: () {
+                              setState(() {
+                                _controller.play();
+                              });
+                            },
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _controller.play();
-                            });
-                          },
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              
+
               const SizedBox(height: 20),
-              
+
               // حقل الوصف
               TextField(
                 controller: _descriptionController,
@@ -187,10 +206,10 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
                 ),
                 maxLines: 3,
               ),
-              
+
               const SizedBox(height: 20),
-              
-              // معلومات الفيديو
+
+              // معلومات عن الفيديو
               if (_controller.value.isInitialized)
                 Row(
                   children: [
