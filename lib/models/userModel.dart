@@ -111,13 +111,13 @@ class Users {
     required this.following,
     required this.hours,
     required this.location,
-     required this.profileImage,
+    required this.profileImage,
     required this.storeName,
     required this.workType,
-   
   });
 
   Map<String, dynamic> toJson() => {
+
         'contactNumber': contactNumber,
         'uid': uid,
         'days': days,
@@ -170,3 +170,4 @@ factory Users.fromFirestore(DocumentSnapshot doc) {
 
 
 }
+
