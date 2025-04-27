@@ -21,6 +21,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   Users? currentUser;
+  double averageRating = 0;
   bool isLoading = true;
   int followersCount = 0;
   int followingCount = 0;
@@ -38,7 +39,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     fetchUserData();
     fetchFollowersAndFollowingCount();
+     fetchRating();
   }
+  Future<void> fetchRating() async {
+    try {
+      DocumentSnapshot snapshot = await FirebaseFirestore.instance
+          .collection('storeRatings')
+          .doc(widget.userId)
+          .get();
+
+      if (snapshot.exists) {
+        setState(() {
+          averageRating = (snapshot['averageRating'] ?? 0) / 25; // نحول من 100 الى 4 نجوم
+        });
+      }
+    } catch (e) {
+      print('Error fetching rating: $e');
+    }
+  }
+
 
   Future<void> fetchUserData() async {
     final snap = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
@@ -282,32 +301,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 10),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Text('التقييم', style: TextStyle(fontSize: 16)),
-                      const SizedBox(width: 5),
-                      ...List.generate(5, (index) => Icon(index < 4 ? Icons.star : Icons.star_border, color: Colors.amber)),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      GradientButton(
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => RatingsListPage())),
-                        text: 'تفاصيل', width: 70, height: 35, fontSize: 10,
-                      ),
-                      const SizedBox(width: 10),
-                      GradientButton(
-                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => RatingCard())),
-                        text: 'تقييم', width: 70, height: 35, fontSize: 10,
-                      ),
-                    ],
-                  ),
-                ],
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              const Text('التقييم', style: TextStyle(fontSize: 16)),
+              const SizedBox(width: 5),
+              ...List.generate(5, (index) => Icon(
+                index < averageRating ? Icons.star : Icons.star_border,
+                color: Colors.amber,
+              )),
+            ],
+          ),
+          Row(
+            children: [
+              GradientButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => RatingsListPage(userId: widget.userId)),
+                ),
+                text: 'تفاصيل',
+                width: 70,
+                height: 35,
+                fontSize: 10,
               ),
+              const SizedBox(width: 10),
+              GradientButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => RatingCard(uid: widget.userId)),
+                ),
+                text: 'تقييم',
+                width: 70,
+                height: 35,
+                fontSize: 10,
+              ),
+            ],
+          ),
+        ],
+      ),
             ),
             const SizedBox(height: 10),
             TabBar(tabs: tabs),

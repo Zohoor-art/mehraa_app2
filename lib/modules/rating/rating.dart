@@ -1,14 +1,18 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 
 class RatingCard extends StatefulWidget {
+  final String uid; // معرف المتجر اللي بنقيمه
+
+  const RatingCard({Key? key, required this.uid}) : super(key: key);
+
   @override
   _RatingCardState createState() => _RatingCardState();
 }
 
 class _RatingCardState extends State<RatingCard> {
-  // تخزين حالة النجوم لكل صف تقييم
   List<List<bool>> starRatings = [
     [false, false, false, false], // جودة المنتج
     [false, false, false, false], // أسلوب التعامل
@@ -17,8 +21,40 @@ class _RatingCardState extends State<RatingCard> {
 
   void toggleStar(int rowIndex, int colIndex) {
     setState(() {
-      starRatings[rowIndex][colIndex] = !starRatings[rowIndex][colIndex]; // تغيير حالة النجمة عند النقر
+      for (int i = 0; i <= 3; i++) {
+        starRatings[rowIndex][i] = i <= colIndex; 
+      }
     });
+  }
+
+  Future<void> submitRatings() async {
+    try {
+      int productQuality = (starRatings[0].where((star) => star).length) * 25;
+      int interactionStyle = (starRatings[1].where((star) => star).length) * 25;
+      int commitment = (starRatings[2].where((star) => star).length) * 25;
+
+      int averageRating = ((productQuality + interactionStyle + commitment) / 3).round();
+
+      await FirebaseFirestore.instance.collection('storeRatings').doc(widget.uid).set({
+        'productQuality': productQuality,
+        'interactionStyle': interactionStyle,
+        'commitment': commitment,
+        'averageRating': averageRating,
+        'timestamp': FieldValue.serverTimestamp(),
+        'totalRatings': FieldValue.increment(1), // زيادة عدد التقييمات
+      }, SetOptions(merge: true)); // دمج البيانات مع البيانات الموجودة بالفعل
+      
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تم حفظ تقييمك بنجاح ✅')),
+      );
+
+      Navigator.of(context).pop(); // يرجع المستخدم بعد الحفظ
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('حدث خطأ أثناء الحفظ ❌')),
+      );
+    }
   }
 
   @override
@@ -37,11 +73,10 @@ class _RatingCardState extends State<RatingCard> {
               end: Alignment.centerRight,
             ),
           ),
-          
         ),
         leading: IconButton(
           onPressed: () {
-            Navigator.of(context).pop(); // العودة للصفحة السابقة
+            Navigator.of(context).pop();
           },
           icon: Icon(
             Icons.arrow_back_ios_new_rounded,
@@ -53,12 +88,12 @@ class _RatingCardState extends State<RatingCard> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: bottomImage(), // الصورة في الخلفية
+            child: bottomImage(),
           ),
           Center(
             child: Column(
               children: [
-                const SizedBox(height: 20), // المسافة بين الكونتينر والصورة
+                const SizedBox(height: 20),
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 70),
@@ -85,10 +120,8 @@ class _RatingCardState extends State<RatingCard> {
                             child: GradientButton(
                               height: 150,
                               width: MediaQuery.of(context).size.width * 0.85,
-                              onPressed: () {
-                                // وظيفة الزر
-                              },
-                              text: 'تذكر  أن \nقطع الرقاب ولاقطع الارزاق \nلذا راع الله في تقييمك'
+                              onPressed: () {},
+                              text: 'تذكر  أن \nقطع الرقاب ولاقطع الارزاق \nلذا راع الله في تقييمك',
                             ),
                           ),
                           const SizedBox(height: 40),
@@ -125,14 +158,88 @@ class _RatingCardState extends State<RatingCard> {
                                 GradientButton(
                                   height: 46,
                                   width: 285,
-                                  onPressed: () {},
-                                  text: 'تاكيد',
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(15),
+                                        ),
+                                        title: Row(
+                                          children: [
+                                            Icon(Icons.check_circle, color: Colors.green),
+                                            SizedBox(width: 10),
+                                            Text('تأكيد التقييم'),
+                                          ],
+                                        ),
+                                        content: Text('هل أنت متأكد أنك تريد حفظ هذا التقييم؟'),
+                                        actionsAlignment: MainAxisAlignment.spaceBetween,
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context); // يغلق الديالوق
+                                              submitRatings(); // يحفظ التقييم
+                                            },
+                                            child: Text('نعم', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context); // يغلق الديالوق بدون حفظ
+                                            },
+                                            child: Text('لا', style: TextStyle(color: Colors.red)),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                  text: 'تأكيد',
                                 ),
                                 const SizedBox(height: 25),
                                 GradientButton(
                                   height: 46,
                                   width: 285,
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(15),
+                                        ),
+                                        title: Row(
+                                          children: [
+                                            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                                            SizedBox(width: 10),
+                                            Text('تراجع عن التقييم'),
+                                          ],
+                                        ),
+                                        content: Text('ماذا تريد أن تفعل؟'),
+                                        actionsAlignment: MainAxisAlignment.spaceBetween,
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context); // يغلق الديالوق
+                                              setState(() {
+                                                // يرجع النجوم كلها فاضية
+                                                starRatings = [
+                                                  [false, false, false, false],
+                                                  [false, false, false, false],
+                                                  [false, false, false, false],
+                                                ];
+                                              });
+                                            },
+                                            child: Text('تراجع عن التقييم', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(context); // يغلق الديالوق
+                                              Navigator.of(context).pop(); // يرجع للصفحة السابقة
+                                            },
+                                            child: Text('خروج', style: TextStyle(color: Colors.red)),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
                                   text: 'تراجع',
                                 ),
                               ],
@@ -151,7 +258,6 @@ class _RatingCardState extends State<RatingCard> {
     );
   }
 
-  // بناء صف التقييم
   Row buildRatingRow(String label, int rowIndex) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

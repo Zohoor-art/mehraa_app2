@@ -8,7 +8,6 @@ import 'package:mehra_app/modules/signup2/sign_up2.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-
 import 'dart:io';
 
 class SignUpscreen extends StatefulWidget {
@@ -120,9 +119,7 @@ class _SignUpscreenState extends State<SignUpscreen> {
       ),
       resizeToAvoidBottomInset: false,
       body: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-        },
+        onTap: () => FocusScope.of(context).unfocus(),
         child: Stack(
           children: [
             Container(color: MyColor.lightprimaryColor),
@@ -152,6 +149,7 @@ class _SignUpscreenState extends State<SignUpscreen> {
                             children: [
                               Expanded(
                                 child: Stack(
+                                  clipBehavior: Clip.none,
                                   children: [
                                     CircleAvatar(
                                       radius: 60,
@@ -164,107 +162,38 @@ class _SignUpscreenState extends State<SignUpscreen> {
                                       left: 80,
                                       child: IconButton(
                                         onPressed: _pickImage,
-                                        icon: Icon(Icons.add_a_photo_rounded, color: MyColor.purpleColor),
-                                      ),
-                       Positioned(
-                                        bottom: -10,
-                                        left: 80,
-                                        child: IconButton(
-                                          onPressed: _pickImage,
-                                          icon: Icon(
-                                            Icons.add_a_photo_rounded,
-                                            color: MyColor.purpleColor,
-                                          ),
+                                        icon: Icon(
+                                          Icons.add_a_photo_rounded,
+                                          color: MyColor.purpleColor,
                                         ),
-                                      )
-                                    ],
-                                  ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                SizedBox(height: 20),
-                                defultTextFormField(
-                                  controller: storeNameController,
-                                  label: 'اسم المتجر',
-                                  prefix: Icons.home,
-                                  type: TextInputType.text,
-                                  validate: (value) {
-                                    if (value!.isEmpty) {
-                                      return 'يرجى إدخال اسم المتجر';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                SizedBox(height: 20.0),
-                                defultTextFormField(
-                                  controller: emailController,
-                                  label: 'البريد الالكتروني',
-                                  prefix: Icons.email,
-                                  type: TextInputType.emailAddress,
-                                  validate: (value) {
-                                    if (value!.isEmpty) {
-                                      return 'يرجى إدخال الايميل';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                SizedBox(height: 20.0),
-                                defultTextFormField(
-                                  controller: passwordController,
-                                  type: TextInputType.visiblePassword,
-                                  ispassword: isPassword,
-                                  validate: (value) {
-                                    if (value!.isEmpty) {
-                                      return 'يرجى إدخال كلمة المرور';
-                                    }
-                                    if (value.length < 8) {
-                                      return 'يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل';
-                                    }
-                                    if (!RegExp(r'[A-Z]').hasMatch(value)) {
-                                      return 'يجب أن تحتوي كلمة المرور على حرف كبير واحد على الأقل';
-                                    }
-                                    if (!RegExp(r'[0-9]').hasMatch(value)) {
-                                      return 'يجب أن تحتوي كلمة المرور على رقم واحد على الأقل';
-                                    }
-                                    return null;
-                                  },
-                                  label: 'كلمة المرور',
-                                  prefix: Icons.lock,
-                                  suffix: isPassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                  suffixPressed: () {
-                                    setState(() {
-                                      isPassword = !isPassword;
-                                    });
-                                  },
-                ),
                               ),
-                              const SizedBox(height: 20),
+                              SizedBox(height: 20),
                               defultTextFormField(
                                 controller: storeNameController,
                                 label: local.storeName,
                                 prefix: Icons.home,
                                 type: TextInputType.text,
                                 validate: (value) {
-                                  if (value!.isEmpty) {
-                                    return local.enterStoreName;
-                                  }
+                                  if (value!.isEmpty) return local.enterStoreName;
                                   return null;
                                 },
                               ),
-                              const SizedBox(height: 20),
+                              SizedBox(height: 20),
                               defultTextFormField(
                                 controller: emailController,
                                 label: local.email,
                                 prefix: Icons.email,
                                 type: TextInputType.emailAddress,
                                 validate: (value) {
-                                  if (value!.isEmpty) {
-                                    return local.enterEmail;
-                                  }
+                                  if (value!.isEmpty) return local.enterEmail;
                                   return null;
                                 },
                               ),
-                              const SizedBox(height: 20),
+                              SizedBox(height: 20),
                               defultTextFormField(
                                 controller: passwordController,
                                 type: TextInputType.visiblePassword,
@@ -285,7 +214,7 @@ class _SignUpscreenState extends State<SignUpscreen> {
                                   return null;
                                 },
                               ),
-                              const SizedBox(height: 20),
+                              SizedBox(height: 20),
                               Center(
                                 child: GradientButton(
                                   onPressed: isLoading ? () {} : _submit,

@@ -72,7 +72,6 @@ class Post {
         'postId': postId,
         'description': description,
         'datePublished': datePublished,
-n
         'postUrl': postUrl,
         'profileImage': profileImage,
         'likes': likes,
