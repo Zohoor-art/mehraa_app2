@@ -16,6 +16,7 @@ class FirestoreMethods {
   String storename,
   String profileImage, {
   String? videoPath,
+  required bool isVideo,
   DocumentReference? userRef,
   required BuildContext context,
 }) async {
@@ -49,7 +50,8 @@ class FirestoreMethods {
       'profileImage': profileImage,
       'storeName': storename,
       'likes': [],
-      'userRef': userRef, // Add user reference
+      'userRef': userRef,
+      'isVideo': isVideo, // Add user reference
     };
 
     // Remove null or empty fields

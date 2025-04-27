@@ -1,19 +1,30 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/material.dart';
-
-import 'package:mehra_app/firebase_options.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:mehra_app/modules/register/register_screen.dart';
-import 'package:mehra_app/modules/homePage/home_screen.dart'; // تأكد من استيراد HomeScreen
-
+import 'package:mehra_app/modules/register/sign_up.dart';
+import 'package:mehra_app/modules/settings/Settings.dart';
+import 'package:mehra_app/modules/settings/UserProvider.dart';
+import 'package:mehra_app/modules/settings/language_provider.dart';
+import 'package:mehra_app/modules/signup2/sign_up2.dart';
+import 'package:mehra_app/modules/xplore/xplore_screen.dart';
+import 'package:mehra_app/shared/theme/theme.dart';
+import 'package:mehra_app/shared/themes.dart' show lightTheme;
 import 'package:flutter_screenutil/flutter_screenutil.dart'; // إضافة مكتبة ScreenUtil
 import 'package:mehra_app/firebase_options.dart';
 import 'package:mehra_app/modules/homePage/home_screen.dart';
 import 'package:mehra_app/modules/onbording/onboarding_screen.dart';
 
 import 'package:provider/provider.dart';
+import 'firebase_options.dart';
+import 'dart:ui';
+import 'package:intl/intl.dart' as intl;
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:mehra_app/shared/theme/theme.dart' as custom_theme;
 
-import 'models/providers/providers.dart';
 
 
 
@@ -27,14 +38,29 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
-        // مزودات أخرى إذا لزم الأمر
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ],
-      child: MyApp(),
+      child: ScreenUtilInit(
+        designSize: const Size(375, 812),
+        minTextAdapt: true,
+        splitScreenMode: false,
+
+        // ✅ تمرير الـ child هنا بالشكل الصحيح
+        builder: (context, child) {
+          return MyApp(child: child);
+        },
+
+        // ✅ الـ child اللي راح يُمرر إلى MyApp
+        child: SettingsPage(),
+      ),
     ),
   );
 }
 
 class MyApp extends StatefulWidget {
+  final Widget? child;
+  const MyApp({Key? key, this.child}) : super(key: key);
+
   @override
   State<MyApp> createState() => _MyAppState();
 }
@@ -43,46 +69,47 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    // مراقبة حالة تسجيل دخول المستخدم
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       if (user == null) {
-        print('====================User is currently signed out!');
+        print(intl.Intl.message('المستخدم غير مسجل الدخول!'));
       } else {
-        print('=======================User is signed in!');
+        print(intl.Intl.message('المستخدم مسجل الدخول!'));
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context);
+    final languageProvider = Provider.of<LanguageProvider>(context);
 
-    return ScreenUtilInit( // تهيئة ScreenUtil
-      designSize: const Size(375, 812), // حجم التصميم الأساسي
-      minTextAdapt: true,
-      splitScreenMode: true,
-      builder: (context, child) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          title: 'تطبيق مهرة',
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-            useMaterial3: true,
-            fontFamily: 'Tajawal',
-          ),
-          home: (FirebaseAuth.instance.currentUser != null &&
-                  FirebaseAuth.instance.currentUser!.emailVerified)
-              ? HomeScreen()
-              : OnboardingScreen(),
-          // تعيين اتجاه النص للتطبيق بالكامل
-          builder: (context, child) {
-            return Directionality(
-              textDirection: TextDirection.rtl, // تعيين اتجاه النص إلى اليمين لليسار
-              child: child!,
-            );
-          },
-        );
-      },
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'تطبيق مهرة',
+theme: lightTheme,
+darkTheme: darkTheme,
+themeMode: userProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
 
+
+      locale: languageProvider.selectedLanguage == 'العربية'
+          ? const Locale('ar')
+          : const Locale('en'),
+      localizationsDelegates: [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('ar', ''),
+        Locale('en', ''),
+      ],
+      home: Directionality(
+        textDirection: languageProvider.selectedLanguage == 'العربية'
+            ? TextDirection.rtl
+            : TextDirection.ltr,
+        child:  HomeScreen(),//widget.child ??
+      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // استيراد Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:mehra_app/modules/homePage/home_screen.dart';
 import 'package:mehra_app/modules/register/register_screen.dart';
 import 'package:mehra_app/shared/components/components.dart';
@@ -34,79 +35,79 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+
+  @override
+  Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 350;
+     final local = AppLocalizations.of(context)!;
+
   Future<void> _login() async {
+    final local = AppLocalizations.of(context)!;
+
     if (_formKey.currentState?.validate() ?? false) {
       setState(() {
-        isLoading = true; // بدء التحميل
+        isLoading = true;
       });
 
       try {
-        UserCredential userCredential =
-            await FirebaseAuth.instance.signInWithEmailAndPassword(
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: emailController.text.trim(),
           password: passwordController.text.trim(),
         );
 
-        // إذا نجح تسجيل الدخول، انتقل إلى الصفحة الرئيسية
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  HomeScreen()), // استبدل ReelsPage باسم صفحتك
+          MaterialPageRoute(builder: (context) => HomeScreen()),
         );
       } on FirebaseAuthException catch (e) {
-        // التعامل مع الأخطاء
-        String message = "حدث خطأ";
+        String message = local.errorOccurred;
+
         if (e.code == 'user-not-found') {
-          message = 'لا يوجد مستخدم مسجل بهذا البريد الإلكتروني.';
+          message = local.userNotFound;
         } else if (e.code == 'wrong-password') {
-          message = 'كلمة المرور غير صحيحة.';
+          message = local.wrongPassword;
         }
+
         AwesomeDialog(
           context: context,
           dialogType: DialogType.error,
           animType: AnimType.scale,
-          title: 'خطأ',
+          title: local.error,
           desc: message,
           btnOkOnPress: () {},
           btnOkColor: Colors.red,
         ).show();
       } finally {
         setState(() {
-          isLoading = false; // إيقاف التحميل
+          isLoading = false;
         });
       }
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
+
+
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 15,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                MyColor.blueColor,
-                MyColor.purpleColor,
-              ],
+              colors: [MyColor.blueColor, MyColor.purpleColor],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
           ),
         ),
       ),
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       body: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-        },
+        onTap: () => FocusScope.of(context).unfocus(),
         child: Stack(
           children: [
-            Container(
-              color: MyColor.lightprimaryColor,
-            ),
+            Container(color: MyColor.lightprimaryColor),
             Positioned(
               bottom: 0,
               left: 0,
@@ -114,104 +115,106 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Image.asset(
                 'assets/bottom.png',
                 fit: BoxFit.cover,
+                width: screenWidth,
               ),
             ),
-            Center(
+            Center( // تم إضافة Center هنا لجعل المحتوى في المنتصف
               child: SingleChildScrollView(
-                child: Center(
-                  child: Container(
-                    width: MediaQuery.of(context).size.width * 0.90,
-                    height: MediaQuery.of(context).size.height * 0.55,
-                    child: Card(
-                      color: Colors.white,
-                      shadowColor: Color(0xFF000000),
-                      margin: EdgeInsets.only(bottom: 3.0),
-                      elevation: 5,
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Form(
-                          key: _formKey,
-                          child: Padding(
-                            padding: const EdgeInsets.only(
-                                top: 50.0, bottom: 40, right: 10, left: 10),
-                            child: Column(
-                              children: [
-                                SizedBox(height: 20.0),
-                                defultTextFormField(
-                                  controller: emailController,
-                                  label: 'البريد الالكتروني',
-                                  prefix: Icons.email,
-                                  type: TextInputType.emailAddress,
-                                  validate: (value) {
-                                    if (value!.isEmpty) {
-                                      return 'يرجى إدخال  الايميل';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                SizedBox(height: 30.0),
-                                defultTextFormField(
-                                  controller: passwordController,
-                                  type: TextInputType.visiblePassword,
-                                  ispassword: isPassword,
-                                  validate: (value) {
-                                    if (value!.isEmpty) {
-                                      return 'يرجى إدخال كلمة المرور';
-                                    }
-                                    if (value.length < 8) {
-                                      return 'يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل';
-                                    }
-                                    if (!RegExp(r'[A-Z]').hasMatch(value)) {
-                                      return 'يجب أن تحتوي كلمة المرور على حرف كبير واحد على الأقل';
-                                    }
-                                    if (!RegExp(r'[0-9]').hasMatch(value)) {
-                                      return 'يجب أن تحتوي كلمة المرور على رقم واحد على الأقل';
-                                    }
-                                    return null;
-                                  },
-                                  label: 'كلمة المرور',
-                                  prefix: Icons.lock,
-                                  suffix: isPassword
-                                      ? Icons.visibility_off
-                                      : Icons.visibility,
-                                  suffixPressed: () {
-                                    setState(() {
-                                      isPassword = !isPassword;
-                                    });
-                                  },
-                                ),
-                                SizedBox(height: 30),
-                                Center(
-                                  child: GradientButton(
-                                    onPressed:
-                                        _login, // استدعاء دالة تسجيل الدخول
-                                    text: "الدخول",
-                                    width: 319,
-                                    height: 67,
-                                  ),
-                                ),
-                                SizedBox(height: 30),
-                                Expanded(
-                                  child: TextButton(
-                                      onPressed: () {
-                                        Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(
-                                              builder: (context) =>
-                                                  RegisterScreen()), // استبدل ReelsPage باسم صفحتك
-                                        );
-                                      },
-                                      child: Text(
-                                        ' ليس لديك حساب ! انشاء حساب',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          color: Colors.black,
-                                        ),
-                                      )),
-                                ),
-                              ],
+
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: Container(
+                  width: isSmallScreen ? screenWidth * 0.95 : screenWidth * 0.9,
+                  margin: EdgeInsets.symmetric(vertical: 20),
+                  child: Card(
+                    color: Colors.white,
+                    shadowColor: Color(0xFF000000),
+                    elevation: 5,
+                    child: Padding(
+                      padding: EdgeInsets.all(isSmallScreen ? 12.0 : 16.0),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            defultTextFormField(
+                              controller: emailController,
+                              label: 'البريد الالكتروني',
+                              prefix: Icons.email,
+                              type: TextInputType.emailAddress,
+                              validate: (value) {
+                                if (value!.isEmpty) return 'يرجى إدخال الايميل';
+                                return null;
+                              },
                             ),
-                          ),
+                            SizedBox(height: 16),
+                            defultTextFormField(
+                              controller: passwordController,
+                              type: TextInputType.visiblePassword,
+                              ispassword: isPassword,
+                              validate: (value) {
+                                if (value!.isEmpty) return 'يرجى إدخال كلمة المرور';
+                                if (value.length < 8) return 'يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل';
+                                if (!RegExp(r'[A-Z]').hasMatch(value)) return 'يجب أن تحتوي كلمة المرور على حرف كبير واحد على الأقل';
+                                if (!RegExp(r'[0-9]').hasMatch(value)) return 'يجب أن تحتوي كلمة المرور على رقم واحد على الأقل';
+                                return null;
+                              },
+                              label: 'كلمة المرور',
+                              prefix: Icons.lock,
+                              suffix: isPassword ? Icons.visibility_off : Icons.visibility,
+                              suffixPressed: () => setState(() => isPassword = !isPassword),
+                            ),
+                            SizedBox(height: 24),
+                            GradientButton(
+                              onPressed: () async {
+                                if (_formKey.currentState!.validate()) {
+                                  setState(() => isLoading = true);
+                                  try {
+                                    await FirebaseAuth.instance.signInWithEmailAndPassword(
+                                      email: emailController.text.trim(),
+                                      password: passwordController.text.trim(),
+                                    );
+                                    Navigator.pushReplacement(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => HomeScreen()),
+                                    );
+                                  } on FirebaseAuthException catch (e) {
+                                    AwesomeDialog(
+                                      context: context,
+                                      dialogType: DialogType.error,
+                                      animType: AnimType.bottomSlide,
+                                      title: 'خطأ',
+                                      desc: e.message ?? 'حدث خطأ أثناء تسجيل الدخول',
+                                      btnOkOnPress: () {},
+                                    ).show();
+                                  } finally {
+                                    setState(() => isLoading = false);
+                                  }
+                                }
+                              },
+                              text: "الدخول",
+                              width: isSmallScreen ? screenWidth * 0.85 : screenWidth * 0.8,
+                              height: 50,
+                            ),
+                            SizedBox(height: 16),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => RegisterScreen()),
+                                );
+                              },
+                              child: Text(
+                                'ليس لديك حساب ! انشاء حساب',
+                                style: TextStyle(
+                                  fontSize: isSmallScreen ? 14 : 16,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ],
+
                         ),
                       ),
                     ),
@@ -219,6 +222,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
+            if (isLoading)
+              Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(MyColor.purpleColor),
+                ),
+              ),
           ],
         ),
       ),
