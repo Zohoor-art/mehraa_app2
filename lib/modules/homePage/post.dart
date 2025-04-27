@@ -1,7 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:mehra_app/models/post.dart';
+import 'package:mehra_app/models/userModel.dart';
+import 'package:mehra_app/modules/chats/chat_room.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
@@ -81,6 +84,55 @@ class _PostWidgetState extends State<PostWidget> {
     }
   }
 
+// داخل _PostWidgetState
+  Future<void> _createOrderAndOpenChat() async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null || _userData == null) return;
+
+      // 1. التحقق من أن المستخدم الحالي ليس صاحب المنشور
+      if (currentUser.uid == widget.post.uid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('لا يمكنك طلب منتجك الخاص')),
+        );
+        return;
+      }
+
+      // 2. إنشاء الطلب في جدول orders الخاص بصاحب المنشور
+      final orderRef = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.post.uid)
+          .collection('orders')
+          .add({
+        'productDescription': widget.post.description,
+        'productImage': widget.post.postUrl,
+        'buyerId': currentUser.uid,
+        'sellerId': widget.post.uid,
+        'createdAt': FieldValue.serverTimestamp(),
+        'status': 'pending',
+        'postId': widget.post.postId,
+      });
+
+      // 3. فتح صفحة المحادثة مع إرسال الرسالة التلقائية
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatRoom(
+            userId: widget.post.uid,
+            userName: _userData?['storeName'] ??
+                _userData?['displayName'] ??
+                'مستخدم',
+            orderId: orderRef.id, // إرسال معرف الطلب
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('حدث خطأ أثناء إنشاء الطلب: ${e.toString()}')),
+      );
+    }
+  }
+
   @override
   void dispose() {
     if (widget.post.videoUrl.isNotEmpty) {
@@ -103,56 +155,58 @@ class _PostWidgetState extends State<PostWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Section
-      Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // حواف بسيطة
-  child: Row(
-    children: [
-      // الصورة
-      CircleAvatar(
-        radius: 20, // صغر الحجم هنا
-        backgroundImage: _isUserDataLoading
-            ? null
-            : NetworkImage(_userData?['profileImage'] ?? ''),
-        child: _isUserDataLoading
-            ? SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : null,
-      ),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 8, vertical: 4), // حواف بسيطة
+            child: Row(
+              children: [
+                // الصورة
+                CircleAvatar(
+                  radius: 20, // صغر الحجم هنا
+                  backgroundImage: _isUserDataLoading
+                      ? null
+                      : NetworkImage(_userData?['profileImage'] ?? ''),
+                  child: _isUserDataLoading
+                      ? SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : null,
+                ),
 
-      SizedBox(width: 10),
+                SizedBox(width: 10),
 
-      // الاسم والموقع
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _userData?['storeName'] ?? 'تحميل...',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                // الاسم والموقع
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _userData?['storeName'] ?? 'تحميل...',
+                        style: TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w600),
+                      ),
+                      // Text(
+                      //   widget.post.location,
+                      //   style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                      // ),
+                    ],
+                  ),
+                ),
+
+                // الخيارات
+                isCurrentUserPost
+                    ? _buildPostOwnerOptions()
+                    : IconButton(
+                        icon: Icon(Icons.more_vert, size: 18),
+                        onPressed: _showPostOptions,
+                      ),
+              ],
             ),
-            // Text(
-            //   widget.post.location,
-            //   style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-            // ),
-          ],
-        ),
-      ),
+          ),
 
-      // الخيارات
-      isCurrentUserPost
-          ? _buildPostOwnerOptions()
-          : IconButton(
-              icon: Icon(Icons.more_vert, size: 18),
-              onPressed: _showPostOptions,
-            ),
-    ],
-  ),
-),
-
-_buildPostContent(),
+          _buildPostContent(),
           // Interaction Buttons
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -163,9 +217,9 @@ _buildPostContent(),
                 _buildInteractionButton(
                   icon: SvgPicture.asset(
                     isLiked
-            ? 'assets/images/fillHeart.svg'
-            : 'assets/images/heartEmp.svg',
-                    color: isLiked ? Colors.deepPurple :  Colors.deepPurple,
+                        ? 'assets/images/fillHeart.svg'
+                        : 'assets/images/heartEmp.svg',
+                    color: isLiked ? Colors.deepPurple : Colors.deepPurple,
                     width: 25,
                     height: 25,
                   ),
@@ -173,7 +227,6 @@ _buildPostContent(),
                   onPressed: widget.onLike,
                 ),
                 SizedBox(width: 15),
-            
                 _buildInteractionButton(
                   icon: SvgPicture.asset(
                     'assets/images/comment.svg',
@@ -185,7 +238,6 @@ _buildPostContent(),
                   onPressed: _openComments,
                 ),
                 SizedBox(width: 16),
-            
                 _buildInteractionButton(
                   icon: SvgPicture.asset(
                     'assets/images/share.svg',
@@ -193,21 +245,22 @@ _buildPostContent(),
                     width: 25,
                     height: 25,
                   ),
-                  countText:widget. post.shareCount.toString(), // تأكد أنك عندك هذي القيمة
+                  countText: widget.post.shareCount
+                      .toString(), // تأكد أنك عندك هذي القيمة
                   onPressed: _sharePost,
                 ),
                 SizedBox(width: 16),
-            
                 _buildInteractionButton(
                   icon: SvgPicture.asset(
                     isSaved
-            ? 'assets/images/fill_save.svg'
-            : 'assets/images/save.svg',
+                        ? 'assets/images/fill_save.svg'
+                        : 'assets/images/save.svg',
                     color: isSaved ? Colors.deepPurple : Colors.deepPurple,
                     width: 25,
                     height: 25,
                   ),
-                  countText: '', // زر الحفظ غالبًا ما يحتاج عدد، لكن تقدر تضيف إذا عندك
+                  countText:
+                      '', // زر الحفظ غالبًا ما يحتاج عدد، لكن تقدر تضيف إذا عندك
                   onPressed: widget.onSave,
                 ),
               ],
@@ -236,7 +289,8 @@ _buildPostContent(),
               child: Wrap(
                 spacing: 8,
                 runSpacing: 4,
-                children: widget.post.tags.map((tag) => _buildTag(tag)).toList(),
+                children:
+                    widget.post.tags.map((tag) => _buildTag(tag)).toList(),
               ),
             ),
 
@@ -289,137 +343,141 @@ _buildPostContent(),
     );
   }
 
- Widget _buildPostContent() {
-  if (_isDeleting) {
-    return Container(
-      height: 200,
-      color: Colors.white,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 8),
-            Text('جاري حذف المنشور...'),
-          ],
+  Widget _buildPostContent() {
+    if (_isDeleting) {
+      return Container(
+        height: 200,
+        color: Colors.white,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 8),
+              Text('جاري حذف المنشور...'),
+            ],
+          ),
         ),
-      ),
-    );
-  }
+      );
+    }
 
-  if (widget.post.videoUrl.isNotEmpty) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16), // 👈 هنا زاوية الفيديو
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
-        child: _isVideoInitialized
-            ? Chewie(controller: _chewieController!)
-            : Center(child: CircularProgressIndicator()),
-      ),
-    );
-  } else {
-    return GestureDetector(
-      onTap: _openPostDetail,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16), // 👈 هنا زاوية الصورة
-        child: Container(
-          height: 300,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              fit: BoxFit.cover,
-              image: NetworkImage(widget.post.postUrl),
+    if (widget.post.videoUrl.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16), // 👈 هنا زاوية الفيديو
+        child: AspectRatio(
+          aspectRatio: 16 / 9,
+          child: _isVideoInitialized
+              ? Chewie(controller: _chewieController!)
+              : Center(child: CircularProgressIndicator()),
+        ),
+      );
+    } else {
+      return GestureDetector(
+        onTap: _openPostDetail,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16), // 👈 هنا زاوية الصورة
+          child: Container(
+            height: 300,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                fit: BoxFit.cover,
+                image: NetworkImage(widget.post.postUrl),
+              ),
+            ),
+            child: Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                if (widget.post.postUrl.isNotEmpty &&
+                    widget.post.videoUrl.isEmpty)
+                  _buildShoppingCartButton(),
+              ],
             ),
           ),
-          child: Stack(
-            alignment: Alignment.bottomRight,
+        ),
+      );
+    }
+  }
+
+  Widget _buildShoppingCartButton() {
+    return Positioned(
+      bottom: 16,
+      right: 16,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovering = true),
+        onExit: (_) => setState(() => _isHovering = false),
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: _isHovering
+                ? const Color.fromARGB(255, 232, 211, 250).withOpacity(0.05)
+                : const Color.fromARGB(255, 214, 189, 233).withOpacity(0.05),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              if (widget.post.postUrl.isNotEmpty &&
-                  widget.post.videoUrl.isEmpty)
-                _buildShoppingCartButton(),
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [Colors.pink, Colors.deepPurple],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Center(
+                  child: IconButton(
+                    onPressed: _createOrderAndOpenChat,
+                    icon: Icon(Icons.shopping_cart,
+                        color: Colors.white, size: 16),
+                  ),
+                ),
+              ),
+              SizedBox(width: 8),
+              Text(
+                'طلب المنتج',
+                style: TextStyle(color: Colors.white),
+              ),
             ],
           ),
         ),
       ),
     );
   }
-}
 
-
-  Widget _buildShoppingCartButton() {
-    return Positioned(
-  bottom: 16,
-  right: 16,
-  child: MouseRegion(
-    onEnter: (_) => setState(() => _isHovering = true),
-    onExit: (_) => setState(() => _isHovering = false),
-    child: AnimatedContainer(
-      duration: Duration(milliseconds: 200),
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: _isHovering ? const Color.fromARGB(255, 232, 211, 250).withOpacity(0.05) : const Color.fromARGB(255, 214, 189, 233).withOpacity(0.05),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [Colors.pink, Colors.deepPurple],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+  Widget _buildInteractionButton({
+    required Widget icon,
+    required String countText,
+    VoidCallback? onPressed,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 80,
+        padding: EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: const Color.fromARGB(255, 216, 195, 239).withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            icon,
+            if (countText.isNotEmpty) ...[
+              SizedBox(width: 8),
+              Text(
+                countText,
+                style: TextStyle(color: Colors.black, fontSize: 17),
               ),
-            ),
-            child: Center(
-              child: Icon(Icons.shopping_cart, color: Colors.white, size: 16),
-            ),
-          ),
-          SizedBox(width: 8),
-          Text(
-            'طلب المنتج',
-            style: TextStyle(color: Colors.white),
-          ),
-        ],
-      ),
-    ),
-  ),
-);
-
-  }
-
- Widget _buildInteractionButton({
-  required Widget icon,
-  required String countText,
-  VoidCallback? onPressed,
-}) {
-  return GestureDetector(
-    onTap: onPressed,
-    child: Container(
-      width: 80,
-      padding: EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 216, 195, 239).withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          icon,
-          if (countText.isNotEmpty) ...[
-            SizedBox(width: 8),
-            Text(
-              countText,
-              style: TextStyle(color: Colors.black, fontSize: 17),
-            ),
+            ],
           ],
-        ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildDescription() {
     return Column(
@@ -560,5 +618,20 @@ _buildPostContent(),
 
   String _formatDate(Timestamp timestamp) {
     return '${timestamp.toDate().day}/${timestamp.toDate().month}/${timestamp.toDate().year}';
+  }
+
+  void _openChatWithPostOwner() {
+    if (_userData == null) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatRoom(
+          userId: widget.post.uid,
+          userName:
+              _userData?['storeName'] ?? _userData?['displayName'] ?? 'مستخدم',
+        ),
+      ),
+    );
   }
 }

@@ -54,4 +54,24 @@ class StorageMethod {
       throw Exception("Failed to upload video: $e");
     }
   }
+    Future<String> uploadChatImage(File imageFile) async {
+    try {
+      final ref = FirebaseStorage.instance.ref('chats_images/${Uuid().v1()}.jpg');
+      await ref.putFile(imageFile);
+      return await ref.getDownloadURL();
+    } catch (e) {
+      throw Exception('Failed to upload image: $e');
+    }
+  }
+
+  Future<String> uploadAudioFile(String filePath) async {
+    try {
+      final file = File(filePath);
+      final ref = FirebaseStorage.instance.ref('voices/${Uuid().v1()}.m4a');
+      await ref.putFile(file);
+      return await ref.getDownloadURL();
+    } catch (e) {
+      throw Exception('Failed to upload audio: $e');
+    }
+  }
 }

@@ -2,9 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:mehra_app/models/firebase/firestore.dart';
 import 'package:mehra_app/modules/homePage/home_screen.dart';
 import 'package:mehra_app/modules/login/login_screen.dart';
-import 'package:mehra_app/modules/reels/home.dart';
 import 'package:mehra_app/modules/register/sign_up.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
@@ -25,154 +25,169 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void initState() {
     super.initState();
-    checkUserLoggedIn();
   }
 
   // التحقق مما إذا كان المستخدم قد سجل الدخول
-  void checkUserLoggedIn() async {
-    User? user = firebaseAuth.currentUser;
-    if (user != null) {
-      Navigator.of(context).pushReplacementNamed("HomeScreen");
-    }
+// في ملف تسجيل الدخول
+
+Future<UserCredential?> signInWithGoogle() async {
+  try {
+    setState(() => isLoading = true);
+
+    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+    if (googleUser == null) return null;
+
+    final GoogleSignInAuthentication googleAuth = 
+        await googleUser.authentication;
+    
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    final UserCredential userCredential = 
+        await firebaseAuth.signInWithCredential(credential);
+
+    // حفظ بيانات المستخدم باستخدام Firebase_Firestor
+    await Firebase_Firestor().saveGoogleUser(userCredential.user!);
+
+    return userCredential;
+  } catch (e) {
+    print("Error during Google Sign-In: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('فشل تسجيل الدخول: ${e.toString()}')),
+    );
+    return null;
+  } finally {
+    setState(() => isLoading = false);
   }
-
-  // تسجيل الدخول باستخدام حساب Google
-  Future<UserCredential?> signInWithGoogle() async {
-    try {
-      setState(() {
-        isLoading = true; // بدء التحميل
-      });
-
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser == null) {
-        print("User canceled the sign-in process.");
-        return null; // المستخدم ألغى العملية
-      }
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      // تسجيل الدخول مع Firebase
-      final UserCredential userCredential = await firebaseAuth.signInWithCredential(credential);
-
-      // إضافة بيانات المستخدم إلى Firestore
-      await firestore.collection('users').doc(userCredential.user?.uid).set({
-        'uid': userCredential.user?.uid,
-        'email': userCredential.user?.email,
-        'displayName': userCredential.user?.displayName,
-        'photoURL': userCredential.user?.photoURL,
-      });
-
-      print("User ID: ${userCredential.user?.uid}");
-      return userCredential; 
-    } catch (e) {
-      print("Error during Google Sign-In: ${e.toString()}");
-      // إظهار رسالة الخطأ للمستخدم
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text("خطأ"),
-          content: Text("فشل تسجيل الدخول، يرجى المحاولة مرة أخرى. \n${e.toString()}"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text("حسناً"),
-            ),
-          ],
-        ),
-      );
-      return null;
-    } finally {
-      setState(() {
-        isLoading = false; // إنهاء التحميل
-      });
-    }
-  }
-
+}
+ 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: MyColor.lightprimaryColor,
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 200),
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.5,
+          // محتوى الصفحة
+          SingleChildScrollView(
+            child: SizedBox(
+              height: screenHeight,
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  GradientButton(
-           onPressed: () {
-                      MaterialPageRoute(builder: (context) => HomeScreen());
-                    },
+                  // المساحة العلوية
+                  SizedBox(height: screenHeight * 0.2),
 
-                    text: 'المتابعة بدون تسجيل دخول',
-                    width: 336,
-                    height: 69,
-                    fontSize: 30,
-                  ),
-                  SizedBox(height: 60),
-                  GradientButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => SignUpscreen()),
-                      );
-                    },
-                    text: 'انشاء حساب تجاري',
-                    width: 336,
-                    height: 69,
-                  ),
-                  SizedBox(height: 60),
-                  buildGoogleButton(
-                    text: 'المتابعة بحساب جوجل',
-                    onPressed: () async {
-                      if (!isLoading) {
-                        UserCredential? userCredential = await signInWithGoogle();
-                        if (userCredential != null) {
-                          Navigator.of(context).pushNamedAndRemoveUntil("HomeScreen", (route) => false);
-                          print("User signed in successfully!");
-                        } else {
-                          print("Failed to sign in with Google.");
-                        }
-                      }
-                    },
-                  ),
-                  SizedBox(height: 20),
+                  // الأزرار الرئيسية
                   Expanded(
-                    child: TextButton(
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) =>
-                                  LoginScreen()), // استبدل  باسم صفحتك
-                        );
-                      },
-                      child: Text(
-                        'لديك حساب! الدخول بالحساب',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.black,
-                        ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.1,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // زر المتابعة بدون تسجيل
+                          SizedBox(
+                            width: screenWidth * 0.8,
+                            height: screenHeight * 0.08,
+                            child: GradientButton(
+                              onPressed: () {
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                      builder: (context) => HomeScreen()),
+                                );
+                              },
+                              text: 'المتابعة بدون تسجيل دخول',
+                              fontSize: screenWidth < 400 ? 16 : 18,
+                            ),
+                          ),
+
+                          SizedBox(height: screenHeight * 0.05),
+
+                          // زر إنشاء حساب تجاري
+                          SizedBox(
+                            width: screenWidth * 0.8,
+                            height: screenHeight * 0.08,
+                            child: GradientButton(
+                              onPressed: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => SignUpscreen()),
+                                );
+                              },
+                              text: 'انشاء حساب تجاري',
+                              fontSize: screenWidth < 400 ? 16 : 18,
+                            ),
+                          ),
+
+                          SizedBox(height: screenHeight * 0.05),
+
+                          // زر جوجل
+                          SizedBox(
+                            width: screenWidth * 0.8,
+                            height: screenHeight * 0.08,
+                            child: buildGoogleButton(
+                              text: 'المتابعة بحساب جوجل',
+                              fontSize: screenWidth < 400 ? 16 : 18,
+                              onPressed: () async {
+                                if (!isLoading) {
+                                  UserCredential? userCredential =
+                                      await signInWithGoogle();
+                                  if (userCredential != null) {
+                                    Navigator.of(context)
+                                        .pushNamedAndRemoveUntil(
+                                            "HomeScreen", (route) => false);
+                                    print("User signed in successfully!");
+                                  } else {
+                                    print("Failed to sign in with Google.");
+                                  }
+                                }
+                              },
+                            ),
+                          ),
+
+                          SizedBox(height: screenHeight * 0.04),
+
+                          // زر لديك حساب
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => LoginScreen()),
+                              );
+                            },
+                            child: Text(
+                              'لديك حساب! الدخول بالحساب',
+                              style: TextStyle(
+                                fontSize: screenWidth < 400 ? 16 : 18,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                  ),
+
+                  // الصورة السفلية
+                  SizedBox(
+                    height: screenHeight * 0.2,
+                    child: bottomImage(),
                   ),
                 ],
               ),
             ),
           ),
-          SizedBox(height: 20),
-          Expanded(
-            child: bottomImage(),
-          ),
-          if (isLoading) // عرض مؤشر التحميل إذا كانت حالة التحميل True
+
+          // مؤشر التحميل
+          if (isLoading)
             Center(
               child: CircularProgressIndicator(),
             ),
