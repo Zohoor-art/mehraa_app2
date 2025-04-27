@@ -1,0 +1,2 @@
+C:/Users/ola/Desktop/New folder/mehraa_app2/android/app/.cxx/RelWithDebInfo/453j1jp2/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/ola/Desktop/New folder/mehraa_app2/android/app/.cxx/RelWithDebInfo/453j1jp2/x86_64/CMakeFiles/rebuild_cache.dir

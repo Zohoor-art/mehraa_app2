@@ -8,10 +8,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:mehra_app/models/firebase/firestore.dart';
 import 'package:mehra_app/models/post.dart';
 import 'package:mehra_app/modules/SearchLocation/SearchLocation.dart';
+import 'package:mehra_app/modules/Story/clear_story.dart';
 import 'package:mehra_app/modules/chats/chats.dart';
 import 'package:mehra_app/modules/homePage/add_postScreen.dart';
 import 'package:mehra_app/modules/homePage/post.dart'; // تأكد من استيراد PostWidget
-import 'package:mehra_app/modules/homePage/story_page.dart';
+import 'package:mehra_app/modules/homePage/story_page.dart'; // تأكد من استيراد صفحة الاستوريات
 import 'package:mehra_app/modules/login/login_screen.dart';
 import 'package:mehra_app/modules/notifications/Notification.dart';
 import 'package:mehra_app/modules/site/site.dart';
@@ -29,6 +30,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 2; // Default selected index
   final Firebase_Firestor _firebaseFirestor = Firebase_Firestor();
+  @override
+void initState() {
+  super.initState();
+  StoryCleaner.cleanExpiredStories();
+}
 
   // List of pages corresponding to bottom navigation items
   final List<Widget> _pages = [
@@ -201,9 +207,10 @@ class HomePage extends StatelessWidget {
           Column(
             children: [
               Container(
-                height: 100, // Adjust height as needed for stories
-                child:  StoryPage(),
+                height: 130, // Adjust height as needed for stories
+                child:  StoryPage(), // هنا يتم عرض الاستوريات
               ),
+              const SizedBox(height: 10), 
               const Divider(color: Color.fromARGB(255, 247, 237, 237)),
             ],
           ),
@@ -212,7 +219,6 @@ class HomePage extends StatelessWidget {
           child:StreamBuilder<QuerySnapshot>(
   stream: FirebaseFirestore.instance
       .collection('posts')
-      
       .orderBy('datePublished', descending: true)
       .snapshots(includeMetadataChanges: true),
   builder: (context, snapshot) {
@@ -294,8 +300,7 @@ class HomePage extends StatelessWidget {
                 final post = posts[index];
                 final isCurrentUserPost =
                     post.uid == FirebaseAuth.instance.currentUser?.uid;
-                   
-                return Padding(
+                    return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
                   child: PostWidget(
                     key: ValueKey(post.postId),
@@ -317,6 +322,7 @@ class HomePage extends StatelessWidget {
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('حدث خطأ أثناء الحذف: $e')),
+
                               );
                             }
                           }
@@ -333,6 +339,7 @@ class HomePage extends StatelessWidget {
                               });
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text('تم استعادة المنشور بنجاح')),
+
                               );
                             } catch (e) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -346,10 +353,11 @@ class HomePage extends StatelessWidget {
                         final uid = FirebaseAuth.instance.currentUser?.uid;
                         if (uid == null) return;
                   
+
                         final postRef = FirebaseFirestore.instance
                             .collection('posts')
                             .doc(post.postId);
-                  
+
                         if (post.likes.contains(uid)) {
                           await postRef.update({
                             'likes': FieldValue.arrayRemove([uid]),
@@ -362,6 +370,7 @@ class HomePage extends StatelessWidget {
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('حدث خطأ أثناء تحديث الإعجاب')),
+
                         );
                       }
                     },
@@ -369,11 +378,11 @@ class HomePage extends StatelessWidget {
                       try {
                         final uid = FirebaseAuth.instance.currentUser?.uid;
                         if (uid == null) return;
-                  
+
                         final postRef = FirebaseFirestore.instance
                             .collection('posts')
                             .doc(post.postId);
-                  
+
                         if (post.savedBy.contains(uid)) {
                           await postRef.update({
                             'savedBy': FieldValue.arrayRemove([uid]),
@@ -386,6 +395,7 @@ class HomePage extends StatelessWidget {
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('حدث خطأ أثناء الحفظ')),
+
                         );
                       }
                     },

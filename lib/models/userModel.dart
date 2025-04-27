@@ -24,27 +24,25 @@ class Users {
     required this.following,
     required this.hours,
     required this.location,
-     required this.profileImage,
+    required this.profileImage,
     required this.storeName,
     required this.workType,
-   
   });
 
   Map<String, dynamic> toJson() => {
-        'contactNumber': contactNumber,
-        'uid': uid,
-        'days': days,
-        'descriptionl': description,
-        'email': email,
-        'followers': followers,
-        'following': following,
-        'hours': hours,
-        'location': location,
-        'profileImage': profileImage,
-        'storeName': storeName,
-        'workType': workType,
-
-      };
+    'contactNumber': contactNumber,
+    'uid': uid,
+    'days': days,
+    'description': description,
+    'email': email,
+    'followers': followers,
+    'following': following,
+    'hours': hours,
+    'location': location,
+    'profileImage': profileImage,
+    'storeName': storeName,
+    'workType': workType,
+  };
 
   static Users fromSnap(DocumentSnapshot snap) {
     var snapshot = snap.data() as Map<String, dynamic>;
@@ -60,7 +58,7 @@ class Users {
       location: snapshot['location'],
       profileImage: snapshot['profileImage'],
       storeName: snapshot['storeName'],
-      workType: snapshot['workType'], 
+      workType: snapshot['workType'],
     );
   }
 }
