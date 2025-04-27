@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:mehra_app/models/post.dart';
-import 'package:mehra_app/models/userModel.dart';
 import 'package:mehra_app/modules/chats/chat_room.dart';
 import 'package:mehra_app/modules/comments/comments.dart';
 import 'package:mehra_app/modules/profile/profile_screen.dart';
@@ -145,8 +144,6 @@ void checkIfFollowing() async {
     }
   }
  
- 
-
 
 // داخل _PostWidgetState
   Future<void> _createOrderAndOpenChat() async {
@@ -197,6 +194,9 @@ void checkIfFollowing() async {
     }
   }
 
+ 
+
+
   @override
   void dispose() {
     if (widget.post.videoUrl.isNotEmpty) {
@@ -221,7 +221,6 @@ void checkIfFollowing() async {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Section
-
       Padding(
   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // حواف بسيطة
   child: Row(
@@ -324,7 +323,6 @@ void checkIfFollowing() async {
 ),
 SizedBox(height: 5.0,),
 _buildPostContent(),
-
           // Interaction Buttons
           Padding(
             padding: const EdgeInsets.only(top: 10),
@@ -335,9 +333,9 @@ _buildPostContent(),
                 _buildInteractionButton(
                   icon: SvgPicture.asset(
                     isLiked
-                        ? 'assets/images/fillHeart.svg'
-                        : 'assets/images/heartEmp.svg',
-                    color: isLiked ? Colors.deepPurple : Colors.deepPurple,
+            ? 'assets/images/fillHeart.svg'
+            : 'assets/images/heartEmp.svg',
+                    color: isLiked ? Colors.deepPurple :  Colors.deepPurple,
                     width: 25,
                     height: 25,
                   ),
@@ -345,7 +343,6 @@ _buildPostContent(),
                   onPressed: widget.onLike,
                 ),
                 SizedBox(width: 15),
-
             StreamBuilder<QuerySnapshot>(
   stream: FirebaseFirestore.instance
       .collection('posts')
@@ -404,21 +401,20 @@ SizedBox(width: 16),
       ),
     );
   },
-
                 ),
                 SizedBox(width: 16),
+            
                 _buildInteractionButton(
                   icon: SvgPicture.asset(
                     isSaved
-                        ? 'assets/images/fill_save.svg'
-                        : 'assets/images/save.svg',
+            ? 'assets/images/fill_save.svg'
+            : 'assets/images/save.svg',
                     color: isSaved ? Colors.deepPurple : Colors.deepPurple,
                     width: 25,
                     height: 25,
                     
                   ),
-                  countText:
-                      '', // زر الحفظ غالبًا ما يحتاج عدد، لكن تقدر تضيف إذا عندك
+                  countText: '', // زر الحفظ غالبًا ما يحتاج عدد، لكن تقدر تضيف إذا عندك
                   onPressed: widget.onSave,
                 ),
               ],
@@ -447,8 +443,7 @@ SizedBox(width: 16),
               child: Wrap(
                 spacing: 8,
                 runSpacing: 4,
-                children:
-                    widget.post.tags.map((tag) => _buildTag(tag)).toList(),
+                children: widget.post.tags.map((tag) => _buildTag(tag)).toList(),
               ),
             ),
 
@@ -501,7 +496,6 @@ SizedBox(width: 16),
     );
   }
 
-
  Widget _buildPostContent() {
   if (_isDeleting) {
     return Container(
@@ -548,64 +542,36 @@ SizedBox(width: 16),
           ),
           child: Stack(
             alignment: Alignment.bottomRight,
-
             children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 8),
-              Text('جاري حذف المنشور...'),
+              if (widget.post.postUrl.isNotEmpty &&
+                  widget.post.videoUrl.isEmpty)
+                _buildShoppingCartButton(),
             ],
           ),
         ),
-
       ),
     );
   }
 }
 
+  
   Widget _buildShoppingCartButton() {
   return Positioned(
     bottom: 16,
     right: 16,
-    child: Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.6), // خلفية شفافة خفيفة
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 6,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // دائرة الأيقونة بتدرج لوني
-          Container(
-            width: 30,
-            height: 30,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [Colors.pink, Color(0xFF6319A5)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Icon(Icons.shopping_cart, size: 16, color: Colors.white),
-          ),
-          SizedBox(width: 8),
-          // نص الزر
-          Text(
-            'طلب المنتج',
-            style: TextStyle(
-              color: Colors.black, // نفس البنفسجي المستخدم في التطبيق
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-
+    child: MouseRegion(
+      onEnter: (_) => setState(() => _isHovering = true),
+      onExit: (_) => setState(() => _isHovering = false),
+      child: GestureDetector(
+        onTap: _createOrderAndOpenChat, // << هنا ربطنا الضغطة عالكارد كامل
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: _isHovering
+                ? Colors.white.withOpacity(0.6)
+                : Colors.white.withOpacity(0.6),
+            borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -622,26 +588,26 @@ SizedBox(width: 16),
                   ),
                 ),
                 child: Center(
-                  child: IconButton(
-                    onPressed: _createOrderAndOpenChat,
-                    icon: Icon(Icons.shopping_cart,
-                        color: Colors.white, size: 16),
+                  child: Icon(
+                    Icons.shopping_cart,
+                    color: Colors.white,
+                    size: 16,
                   ),
                 ),
               ),
               SizedBox(width: 8),
               Text(
                 'طلب المنتج',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: Colors.black),
               ),
             ],
           ),
         ),
       ),
-
     ),
   );
 }
+
 
  Widget _buildInteractionButton({
   required Widget icon,
@@ -667,11 +633,9 @@ SizedBox(width: 16),
               countText,
               style: TextStyle(color: Colors.black, fontSize: 17),
             ),
-
           ],
-        ),
+        ],
       ),
-
     ),
   );
 }
@@ -693,7 +657,7 @@ void _showReviewDialog() {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>RatingCard(uid:widget.post.uid,),
+                builder: (context) =>RatingCard(uid: widget.post.postUrl,),
               ),
             );
           },
@@ -702,7 +666,6 @@ void _showReviewDialog() {
     ),
   );
 }
-
 
 
   Widget _buildDescription() {
@@ -791,41 +754,36 @@ void _showReviewDialog() {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildActionIcon(Icons.link, 'نسخ الرابط', [Color(0xFFE91E63), Color(0xFF4A148C)], () {
-                   PostActions.copyLink(context, widget.post.postId);
                   Navigator.pop(context);
+                  PostActions.copyLink(context, widget.post.postId);
                 }),
                 _buildActionIcon(Icons.share, 'مشاركة', [Color(0xFFE91E63), Color(0xFF4A148C)], () {
-                  
-                  PostActions.sharePost(widget.post.postId, widget.post.shareCount);
                   Navigator.pop(context);
+                  PostActions.sharePost(widget.post.postId, widget.post.shareCount);
                 }),
                 _buildActionIcon(Icons.report, 'إبلاغ', [Color(0xFFBD4037), Color(0xFFED1404)], () {
-                  
-                  PostActions.reportPost(context, widget.post.postId);
                   Navigator.pop(context);
+                  PostActions.reportPost(context, widget.post.postId);
                 }),
               ],
             ),
             SizedBox(height: 24),
             if (isFollowing)
   _buildOptionTile(Icons.person_remove, 'إلغاء المتابعة', () async {
-   
+    Navigator.pop(context);
     await PostActions.unfollowUser(context, widget.post.uid);
-     Navigator.pop(context);
     setState(() {
       isFollowing = false; // عشان يرجع يظهر زر المتابعة
     });
   }),
 
             _buildOptionTile(Icons.visibility_off, 'إخفاء', () {
-              
-              PostActions.hidePost(context, widget.post.postId);
               Navigator.pop(context);
+              PostActions.hidePost(context, widget.post.postId);
             }),
             _buildOptionTile(Icons.person, 'عن هذا الحساب', () {
-              
-              PostActions.goToUserProfile(context, widget.post.uid);
               Navigator.pop(context);
+              PostActions.goToUserProfile(context, widget.post.uid);
             }),
             SizedBox(height: 12),
           ],
@@ -860,8 +818,8 @@ Widget _buildOptionTile(IconData icon, String title, VoidCallback onTap) {
     leading: Icon(icon, color: Colors.purple),
     title: Text(title, textAlign: TextAlign.right),
     onTap: () {
-      onTap();
       Navigator.pop(context);
+      onTap();
     },
   );
 }
@@ -899,20 +857,5 @@ Widget _buildOptionTile(IconData icon, String title, VoidCallback onTap) {
 
   String _formatDate(Timestamp timestamp) {
     return '${timestamp.toDate().day}/${timestamp.toDate().month}/${timestamp.toDate().year}';
-  }
-
-  void _openChatWithPostOwner() {
-    if (_userData == null) return;
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChatRoom(
-          userId: widget.post.uid,
-          userName:
-              _userData?['storeName'] ?? _userData?['displayName'] ?? 'مستخدم',
-        ),
-      ),
-    );
   }
 }
