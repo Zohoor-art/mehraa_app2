@@ -15,6 +15,8 @@ import 'package:mehra_app/modules/homePage/post.dart'; // تأكد من استي
 import 'package:mehra_app/modules/homePage/story_page.dart'; // تأكد من استيراد صفحة الاستوريات
 import 'package:mehra_app/modules/login/login_screen.dart';
 import 'package:mehra_app/modules/notifications/Notification.dart';
+import 'package:mehra_app/modules/settings/PrivacySettingsPage.dart';
+import 'package:mehra_app/modules/settings/Settings.dart';
 import 'package:mehra_app/modules/site/site.dart';
 import 'package:mehra_app/modules/xplore/xplore_screen.dart';
 import 'package:mehra_app/modules/profile/profile_screen.dart'; // تأكد من استيراد صفحة البروفايل
@@ -166,19 +168,82 @@ class HomePage extends StatelessWidget {
 )
 
                     ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () {
-                        // Navigate to another page (مثلاً، XploreScreen)
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const XploreScreen()),
-                        );
-                      },
-                      child: const Icon(FontAwesomeIcons.bars, size: 25),
-                    ),
-                    const SizedBox(width: 8),
+const SizedBox(width: 8),
+GestureDetector(
+  onTapDown: (TapDownDetails details) {
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        details.globalPosition.dx,
+        details.globalPosition.dy,
+        0,
+        0,
+      ),
+      items: [
+        PopupMenuItem(
+          child: ListTile(
+            leading: Icon(Icons.lock, color: Colors.purple),
+            title: Text('الخصوصية'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => PrivacySettingsPage()),
+              );
+            },
+          ),
+        ),
+        PopupMenuItem(
+          child: ListTile(
+            leading: Icon(Icons.settings, color: Colors.purple),
+            title: Text('الإعدادات'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SettingsPage()),
+              );
+            },
+          ),
+        ),
+        PopupMenuItem(
+          child: ListTile(
+            leading: Icon(Icons.logout_sharp, size: 25, color: Colors.red),
+            title: Text('تسجيل الخروج'),
+            onTap: () {
+              Navigator.pop(context); // إغلاق القائمة
+              AwesomeDialog(
+                context: context,
+                dialogType: DialogType.warning,
+                animType: AnimType.scale,
+                title: 'تأكيد الخروج',
+                desc: 'هل أنت متأكد أنك تريد تسجيل الخروج؟',
+                btnCancelOnPress: () {},
+                btnOkOnPress: () async {
+                  try {
+                    await FirebaseAuth.instance.signOut();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginScreen(),
+                      ),
+                    );
+                  } catch (e) {
+                    print("Error signing out: $e");
+                    // يمكنك عرض SnackBar هنا في حال الخطأ
+                  }
+                },
+              ).show();
+            },
+          ),
+        ),
+      ],
+    );
+  },
+  child: const Icon(FontAwesomeIcons.bars, size: 25),
+),
+const SizedBox(width: 8),
+
                     GestureDetector(
                       onTap: () {
                         // Navigate to ChatsPage
@@ -203,35 +268,7 @@ class HomePage extends StatelessWidget {
                       child: const Icon(Icons.add_circle_outline_outlined, size: 25),
                     ),
                     const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () {
-                        AwesomeDialog(
-                          context: context,
-                          dialogType: DialogType.warning,
-                          animType: AnimType.scale,
-                          title: 'تأكيد الخروج',
-                          desc: 'هل أنت متأكد أنك تريد تسجيل الخروج؟',
-                          btnCancelOnPress: () {},
-                          btnOkOnPress: () async {
-                            try {
-                              await FirebaseAuth.instance
-                                  .signOut(); // تسجيل الخروج من Firebase
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const LoginScreen()), // استبدل  باسم صفحتك
-                              ); // الانتقال إلى صفحة تسجيل الدخول
-                            } catch (e) {
-                              print("Error signing out: $e");
-                              // يمكنك عرض رسالة خطأ هنا إذا رغبت
-                            }
-                          },
-                        ).show();
-                      },
-                      child: const Icon(Icons.logout_sharp, size: 25),
-                    ),
-                  ],
+                    ],
                 ),
                 Text(
                   'Mehra',
