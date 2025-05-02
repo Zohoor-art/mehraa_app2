@@ -66,7 +66,6 @@ class StoryPage extends StatelessWidget {
           }
         }).toList();
 
-        // نجمع الستوريهات حسب المستخدم
         final Map<String, List<Story>> userStoriesMap = {};
 
         for (var doc in otherStories) {
@@ -178,11 +177,21 @@ class StoryPage extends StatelessWidget {
                       bottom: -2,
                       right: -1,
                       child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
+                        onTap: () async {
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(builder: (_) => CreateStoryPage()),
                           );
+
+                          if (result == true) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('✅ تم نشر الستوري بنجاح!'),
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          }
                         },
                         child: Container(
                           width: 25,
