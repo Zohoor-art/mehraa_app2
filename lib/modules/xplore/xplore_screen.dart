@@ -1,9 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:mehra_app/modules/xplore/ImageViewer.dart';
-import 'package:mehra_app/modules/xplore/VideoPlayer.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mehra_app/models/post.dart';
+import 'package:mehra_app/modules/homePage/post.dart';
 import 'package:mehra_app/shared/components/constants.dart';
-import 'package:video_player/video_player.dart'; // مكتبة تشغيل الفيديو
+import 'package:video_player/video_player.dart';
 
 class XploreScreen extends StatelessWidget {
   const XploreScreen({super.key});
@@ -27,12 +27,14 @@ class XploreScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: XploreBody(),
+      body: const XploreBody(),
     );
   }
 }
 
 class XploreBody extends StatefulWidget {
+  const XploreBody({super.key});
+
   @override
   _XploreBodyState createState() => _XploreBodyState();
 }
@@ -41,34 +43,49 @@ class _XploreBodyState extends State<XploreBody> {
   final FocusNode _focusNode = FocusNode();
   final TextEditingController _searchController = TextEditingController();
 
-  List<Map<String, dynamic>> _searchResults = [];
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _searchResults = [];
   bool isLoading = false;
-
   void _searchPosts(String query) async {
+  if (query.isEmpty) {
     setState(() {
-      isLoading = true;
+      _searchResults = [];
+      isLoading = false;
     });
+    return;
+  }
 
-    final result = await FirebaseFirestore.instance.collection('posts').get();
+  setState(() {
+    isLoading = true;
+  });
 
-    final filtered = result.docs
-        .map((doc) => doc.data())
-        .where((data) {
-          final description = (data['description'] ?? '').toString().toLowerCase();
-          final storeName = (data['storeName'] ?? '').toString().toLowerCase();
-          return description.contains(query.toLowerCase()) || storeName.contains(query.toLowerCase());
-        })
-        .toList();
+  try {
+    // البحث في اسم المتجر بدل الوصف واسم المستخدم
+    final usersQuery = FirebaseFirestore.instance
+        .collection('users')
+        .where('storeName', isGreaterThanOrEqualTo: query)
+        .where('storeName', isLessThan: query + 'z');
+
+    final usersSnapshot = await usersQuery.get();
 
     setState(() {
-      _searchResults = filtered;
+      _searchResults = usersSnapshot.docs;
+      isLoading = false;
+    });
+  } catch (e) {
+    debugPrint('Search error: $e');
+    setState(() {
       isLoading = false;
     });
   }
+}
 
-  Future<List<Map<String, dynamic>>> _getAllPosts() async {
-    final result = await FirebaseFirestore.instance.collection('posts').get();
-    return result.docs.map((doc) => doc.data()).toList();
+
+ Future<List<QueryDocumentSnapshot<Map<String, dynamic>>>> _getAllPosts() async {
+    final result = await FirebaseFirestore.instance
+        .collection('posts')
+        .orderBy('datePublished', descending: true)
+        .get();
+    return result.docs;
   }
 
   @override
@@ -100,7 +117,7 @@ class _XploreBodyState extends State<XploreBody> {
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : FutureBuilder<List<Map<String, dynamic>>>(
+                : FutureBuilder<List<QueryDocumentSnapshot<Map<String, dynamic>>>>(
                     future: _searchController.text.isEmpty
                         ? _getAllPosts()
                         : Future.value(_searchResults),
@@ -122,62 +139,16 @@ class _XploreBodyState extends State<XploreBody> {
                         ),
                         itemCount: posts.length,
                         itemBuilder: (context, index) {
-                          final post = posts[index];
-                          final postUrl = post['postUrl'] ?? '';
-                          final isVideo = postUrl.toLowerCase().endsWith('.mp4') || postUrl.toLowerCase().endsWith('.mov');
+                          final postSnap = posts[index];
+                          final post = postSnap.data();
+                          final mediaUrl = post['postUrl'] ?? post['videoUrl'] ?? '';
+                          final isVideo = post['isVideo'] ?? false;
 
-                          return GestureDetector(
-                            onTap: () {
-                              if (isVideo) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => VideoPlayerScreen(videoUrl: postUrl),
-                                  ),
-                                );
-                              } else {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ImageViewerScreen(imageUrl: postUrl),
-                                  ),
-                                );
-                              }
-                            },
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: isVideo
-                                  ? Container(
-                                      decoration: BoxDecoration(
-                                        color: Colors.black26,
-                                        image: const DecorationImage(
-                                          image: AssetImage('assets/video_placeholder.png'),
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                      child: const Center(
-                                        child: Icon(
-                                          Icons.play_circle_fill,
-                                          color: Colors.white,
-                                          size: 40,
-                                        ),
-                                      ),
-                                    )
-                                  : Image.network(
-                                      postUrl,
-                                      fit: BoxFit.cover,
-                                      loadingBuilder: (context, child, loadingProgress) {
-                                        if (loadingProgress == null) return child;
-                                        return const Center(child: CircularProgressIndicator());
-                                      },
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return Container(
-                                          color: Colors.grey[300],
-                                          child: const Icon(Icons.broken_image, color: Colors.grey),
-                                        );
-                                      },
-                                    ),
-                            ),
+                          return VideoPostItem(
+                            postSnap: postSnap,
+                            mediaUrl: mediaUrl,
+                            isVideo: isVideo,
+                            allPosts: posts,
                           );
                         },
                       );
@@ -240,6 +211,182 @@ class _XploreBodyState extends State<XploreBody> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class VideoPostItem extends StatefulWidget {
+  final QueryDocumentSnapshot<Map<String, dynamic>> postSnap;
+  final String mediaUrl;
+  final bool isVideo;
+  final List<QueryDocumentSnapshot<Map<String, dynamic>>> allPosts;
+
+  const VideoPostItem({
+    super.key,
+    required this.postSnap,
+    required this.mediaUrl,
+    required this.isVideo,
+    required this.allPosts,
+  });
+
+  @override
+  State<VideoPostItem> createState() => _VideoPostItemState();
+}
+
+class _VideoPostItemState extends State<VideoPostItem> with AutomaticKeepAliveClientMixin {
+  late VideoPlayerController _controller;
+  bool _isInitialized = false;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isVideo) {
+      _initializeVideo();
+    }
+  }
+
+  Future<void> _initializeVideo() async {
+    try {
+      _controller = VideoPlayerController.network(widget.mediaUrl);
+      await _controller.initialize();
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+        });
+        _controller.setLooping(true);
+        _controller.setVolume(0);
+        _controller.play();
+      }
+    } catch (e) {
+      debugPrint('Error initializing video: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    if (widget.isVideo) {
+      _controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PostGalleryScreen(
+              postId: widget.postSnap.id,
+              allPosts: widget.allPosts,
+            ),
+          ),
+        );
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: widget.isVideo
+            ? _buildVideoThumbnail()
+            : _buildImageThumbnail(),
+      ),
+    );
+  }
+
+  Widget _buildVideoThumbnail() {
+    if (!_isInitialized) {
+      return Container(
+        color: Colors.grey[200],
+        child: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        AspectRatio(
+          aspectRatio: _controller.value.aspectRatio,
+          child: VideoPlayer(_controller),
+        ),
+        const Center(
+          child: Icon(
+            Icons.play_circle_fill,
+            color: Colors.white70,
+            size: 40,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImageThumbnail() {
+    return widget.mediaUrl.isEmpty
+        ? Container(
+            color: Colors.grey[200],
+            child: const Icon(
+              Icons.image_not_supported,
+              color: Colors.grey,
+              size: 40,
+            ),
+          )
+        : Image.network(
+            widget.mediaUrl,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                      : null,
+                ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey[300],
+                child: const Icon(Icons.broken_image, color: Colors.grey),
+              );
+            },
+          );
+  }
+}
+
+class PostGalleryScreen extends StatelessWidget {
+  final String postId;
+  final List<QueryDocumentSnapshot<Map<String, dynamic>>> allPosts;
+
+  const PostGalleryScreen({
+    super.key,
+    required this.postId,
+    required this.allPosts,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Center(
+        child: ListView.builder(
+          itemCount: allPosts.length,
+          itemBuilder: (context, index) {
+            final postSnap = allPosts[index];
+            final post = Post.fromSnap(postSnap);
+            return PostWidget(post: post, currentUserId: post.uid);
+          },
+        ),
       ),
     );
   }

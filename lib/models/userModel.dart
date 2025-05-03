@@ -168,5 +168,7 @@ factory Users.fromFirestore(DocumentSnapshot doc) {
   );
 }
 
+  get displayNameOrStoreName => null;
+
 
 }
