@@ -282,6 +282,7 @@ class HomePage extends StatelessWidget {
               Text(
                 'Mehra',
                 style: GoogleFonts.pacifico(fontSize: 30),
+
               ),
             ],
           ),
