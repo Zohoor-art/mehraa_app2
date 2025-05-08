@@ -19,97 +19,116 @@ class AuthMethods {
 
   // بدء عملية التسجيل (الجزء الأول)
   Future<Map<String, dynamic>> startSignUpProcess({
-    required String email,
-    required String password,
-    required String storeName,
-    required Uint8List file,
-  }) async {
-    try {
-      if (email.isEmpty || storeName.isEmpty || password.isEmpty) {
-        throw 'الرجاء ملء جميع الحقول المطلوبة';
-      }
-
-      // إنشاء مستخدم جديد
-      UserCredential cred = await auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-
-      // إرسال التحقق من البريد الإلكتروني
-      await cred.user!.sendEmailVerification();
-
-      // رفع الصورة إلى التخزين
-      String profileImage =
-          await StorageMethod().uploadImageToStorage('profiles', file, false);
-
-      return {
-        'success': true,
-        'userId': cred.user!.uid,
-        'profileImage': profileImage,
-        'message': 'تم إرسال رمز التحقق إلى بريدك الإلكتروني'
-      };
-    } on FirebaseAuthException catch (error) {
-      String message = 'حدث خطأ ما';
-      if (error.code == 'invalid-email') {
-        message = 'البريد الإلكتروني غير صالح';
-      } else if (error.code == 'weak-password') {
-        message = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
-      } else if (error.code == 'email-already-in-use') {
-        message = 'البريد الإلكتروني مستخدم بالفعل';
-      }
-      return {'success': false, 'message': message};
-    } catch (error) {
-      return {'success': false, 'message': error.toString()};
+  required String email,
+  required String password,
+  required String storeName,
+  required Uint8List file,
+}) async {
+  try {
+    if (email.isEmpty || storeName.isEmpty || password.isEmpty) {
+      throw 'الرجاء ملء جميع الحقول المطلوبة';
     }
+
+    // إنشاء مستخدم جديد
+    UserCredential cred = await auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    // إرسال التحقق من البريد الإلكتروني
+    await cred.user!.sendEmailVerification();
+
+    // رفع الصورة إلى التخزين
+    String profileImage =
+        await StorageMethod().uploadImageToStorage('profiles', file, false);
+
+    // تخزين بيانات المستخدم في Firestore
+    await FirebaseFirestore.instance.collection('users').doc(cred.user!.uid).set({
+      'email': email,
+      'storeName': storeName,
+      'profileImage': profileImage,
+      'uid': cred.user!.uid,
+      'isCompleted': false, // حقل حالة التسجيل
+    });
+
+    return {
+      'success': true,
+      'userId': cred.user!.uid,
+      'profileImage': profileImage,
+      'message': 'تم إرسال رمز التحقق إلى بريدك الإلكتروني'
+    };
+  } on FirebaseAuthException catch (error) {
+    String message = 'حدث خطأ ما';
+    if (error.code == 'invalid-email') {
+      message = 'البريد الإلكتروني غير صالح';
+    } else if (error.code == 'weak-password') {
+      message = 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+    } else if (error.code == 'email-already-in-use') {
+      message = 'البريد الإلكتروني مستخدم بالفعل';
+    }
+    return {'success': false, 'message': message};
+  } catch (error) {
+    return {'success': false, 'message': error.toString()};
   }
+}
 
   // إكمال عملية التسجيل (الجزء الثاني)
-  Future<String> completeSignUpProcess({
-    required String userId,
-    required String contactNumber,
-    required String days,
-    required String description,
-    required String email,
-    required String hours,
-    required String location,
-    required String profileImage,
-    required String storeName,
-    required String workType,
-  }) async {
-    try {
-      // التحقق من أن البريد الإلكتروني قد تم التحقق منه
-      User? user = auth.currentUser;
-      if (user == null || user.uid != userId) {
-        return 'المستخدم غير موجود';
-      }
-
-      if (!user.emailVerified) {
-        return 'الرجاء التحقق من البريد الإلكتروني أولاً';
-      }
-
-      // إنشاء نموذج المستخدم وحفظه
-      model.Users userModel = model.Users(
-        contactNumber: contactNumber,
-        uid: userId,
-        days: days,
-        description: description,
-        email: email,
-        followers: [],
-        following: [],
-        hours: hours,
-        profileImage: profileImage,
-        location: location,
-        storeName: storeName,
-        workType: workType,
-      );
-
-      await firestore.collection('users').doc(userId).set(userModel.toJson());
-
-      return "success";
-    } catch (error) {
-      return error.toString();
+Future<String> completeSignUpProcess({
+  required String userId,
+  required String contactNumber,
+  required String days,
+  required String description,
+  required String email,
+  required String hours,
+  required String location,
+  required String profileImage,
+  required String storeName,
+  required String workType,
+  double? latitude,
+  double? longitude,
+  String? locationUrl,
+}) async {
+  try {
+    User? user = auth.currentUser;
+    if (user == null || user.uid != userId) {
+      return 'المستخدم غير موجود';
     }
+
+    if (!user.emailVerified) {
+      return 'الرجاء التحقق من البريد الإلكتروني أولاً';
+    }
+
+    // إنشاء نموذج المستخدم
+    model.Users userModel = model.Users(
+      contactNumber: contactNumber,
+      uid: userId,
+      days: days,
+      description: description,
+      email: email,
+      followers: [],
+      following: [],
+      hours: hours,
+      profileImage: profileImage,
+      location: location,
+      storeName: storeName,
+      workType: workType,
+      latitude: latitude,
+      longitude: longitude,
+      locationUrl: locationUrl,
+    );
+
+    // رفع البيانات مع إضافة isCompleted
+    await firestore.collection('users').doc(userId).set({
+      ...userModel.toJson(),
+      'isCompleted': true, // ← إضافة الحقل هنا
+    });
+
+    return "success";
+  } catch (error) {
+    return error.toString();
   }
+}
+
 
   // تسجيل الدخول
   Future<String> loginUser({

@@ -1,0 +1,2 @@
+C:/Users/zhoor/Desktop/mehra/mehraa_app2/android/app/.cxx/RelWithDebInfo/6g4d5o3w/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/zhoor/Desktop/mehra/mehraa_app2/android/app/.cxx/RelWithDebInfo/6g4d5o3w/armeabi-v7a/CMakeFiles/rebuild_cache.dir

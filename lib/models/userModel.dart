@@ -100,8 +100,14 @@ class Users {
   final String? profileImage; 
   final String storeName;
   final String workType;
+ final double? latitude;
+final double? longitude;
+final String? locationUrl;
 
   const Users({
+    this.locationUrl,
+    this.latitude,
+    this.longitude,
     required this.contactNumber,
     required this.uid,
     required this.days,
@@ -130,6 +136,10 @@ class Users {
         'profileImage': profileImage,
         'storeName': storeName,
         'workType': workType,
+        'latitude': latitude,
+        'longitude': longitude,
+         'locationUrl': locationUrl,
+ 
 
       };
 
@@ -139,12 +149,15 @@ class Users {
     contactNumber: snapshot['contactNumber'] ?? '',
     uid: snapshot['uid'] ?? '',
     days: snapshot['days'] ?? '',
+    latitude: snapshot['latitude'] ?? 0.0,
+    longitude: snapshot['longitude'] ?? 0.0,  
     description: snapshot['description'] ?? '',
     email: snapshot['email'] ?? '',
     followers: snapshot['followers'] ?? [],
     following: snapshot['following'] ?? [],
     hours: snapshot['hours'] ?? '',
     location: snapshot['location'] ?? '',
+    locationUrl: snapshot['locationUrl'] ?? '',
     profileImage: snapshot['profileImage'] ?? '',
     storeName: snapshot['storeName'] ?? '',
     workType: snapshot['workType'] ?? '',
@@ -154,6 +167,8 @@ factory Users.fromFirestore(DocumentSnapshot doc) {
   final data = doc.data() as Map<String, dynamic>;
   return Users(
     contactNumber: data['contactNumber'] ?? '',
+    latitude: data['latitude'] ?? 0.0,  
+    longitude: data['longitude'] ?? 0.0,
     uid: data['uid'] ?? '',
     days: data['days'] ?? '',
     description: data['description'] ?? '',
@@ -162,6 +177,7 @@ factory Users.fromFirestore(DocumentSnapshot doc) {
     following: List.from(data['following'] ?? []),
     hours: data['hours'] ?? '',
     location: data['location'] ?? '',
+    locationUrl: data['locationUrl'] ?? '',
     profileImage: data['profileImage'] ?? '', // ✅ هذا أهم سطر
     storeName: data['storeName'] ?? '',
     workType: data['workType'] ?? '',
