@@ -1,0 +1,2 @@
+D:/mehraa_app2/android/app/.cxx/Debug/6l721s34/x86/CMakeFiles/edit_cache.dir
+D:/mehraa_app2/android/app/.cxx/Debug/6l721s34/x86/CMakeFiles/rebuild_cache.dir

@@ -1,139 +1,101 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:mehra_app/modules/notifications/NotificationItem.dart';
-import 'package:mehra_app/shared/components/constants.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mehra_app/models/userModel.dart';
 
-class Notifications extends StatefulWidget {
-  const Notifications({super.key});
+class NotificationsPage extends StatefulWidget {
+  const NotificationsPage({Key? key}) : super(key: key);
 
   @override
-  _NotificationsState createState() => _NotificationsState();
+  _NotificationsPageState createState() => _NotificationsPageState();
 }
 
-class _NotificationsState extends State<Notifications> {
-  final DatabaseReference _notificationsRef = FirebaseDatabase.instance.ref('notifications');
-  List<NotificationItem> notifications = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadNotifications();
-  }
-
-  void _loadNotifications() {
-    _notificationsRef.onValue.listen((event) {
-      final snapshot = event.snapshot;
-      if (snapshot.exists) { // استخدام exists للتحقق إذا كان هناك قيمة
-        final data = snapshot.value as Map<dynamic, dynamic>;
-        
-        // تجميع الإشعارات
-        List<NotificationItem> loadedNotifications = [];
-        data.forEach((key, value) {
-          if (value is Map<dynamic, dynamic>) {
-            loadedNotifications.add(NotificationItem(
-              username: value['username'] ?? 'Unknown',
-              action: value['action'] ?? 'No Action',
-              time: value['time'] ?? 'Unknown Time',
-              avatarUrl: value['avatarUrl'] ?? 'assets/images/default_avatar.png',
-              showButton: value['showButton'] ?? false,
-            ));
-          }
-        });
-        setState(() {
-          notifications = loadedNotifications;
-        });
-      } else {
-        // في حالة عدم وجود بيانات
-        setState(() {
-          notifications = [];
-        });
-      }
-    });
-  }
-
+class _NotificationsPageState extends State<NotificationsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffFAF5FF),
       appBar: AppBar(
-        toolbarHeight: 15,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                MyColor.blueColor,
-                MyColor.purpleColor,
-              ],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-            ),
-          ),
-        ),
+        title: const Text('الإشعارات'),
       ),
-      body: Column(
-        children: [
-          SizedBox(height: 10), // مسافة فوق الكارد الجديد
-          Container(
-            width: MediaQuery.of(context).size.width * 0.9,
-            height: 55,
-            decoration: BoxDecoration(
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black26,
-                  offset: Offset(0, 0),
-                  blurRadius: 8,
-                  spreadRadius: 1,
-                ),
-              ],
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            alignment: Alignment.center,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: IconButton(
-                    icon: Icon(Icons.arrow_back, color: MyColor.blueColor),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Text(
-                    'الاشعارات',
-                    style: TextStyle(
-                      color: const Color.fromARGB(255, 12, 12, 12),
-                      fontSize: 25,
-                      fontFamily: 'Tajawal',
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('notifications')
+            .orderBy('timestamp', descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text('لا توجد إشعارات حالياً'));
+          }
+
+          final notifications = snapshot.data!.docs;
+
+          return ListView.builder(
+            itemCount: notifications.length,
+            itemBuilder: (context, index) {
+              final notif = notifications[index];
+              final data = notif.data() as Map<String, dynamic>;
+
+              return FutureBuilder<DocumentSnapshot>(
+                future: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(data['fromUid'])
+                    .get(),
+                builder: (context, userSnapshot) {
+                  if (!userSnapshot.hasData) return const SizedBox();
+
+                  final user = Users.fromSnap(userSnapshot.data!);
+
+                  String actionText;
+                  switch (data['type']) {
+                    case 'like':
+                      actionText = 'أعجب بمنشورك';
+                      break;
+                    case 'comment':
+                      actionText = 'علق على منشورك';
+                      break;
+                    case 'follow':
+                      actionText = 'بدأ بمتابعتك';
+                      break;
+                    default:
+                      actionText = 'قام بإجراء ما';
+                  }
+
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: NetworkImage(user.profileImage ?? ''),
                     ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                  child: Icon(
-                    Icons.notifications,
-                    size: 22,
-                    color: MyColor.blueColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.all(10),
-              itemCount: notifications.length,
-              itemBuilder: (context, index) {
-                return notifications[index];
-              },
-            ),
-          ),
-        ],
+                    title: Text(
+                      user.storeName.isNotEmpty
+                          ? user.storeName
+                          : user.email ?? 'مستخدم',
+                    ),
+                    subtitle: Text(actionText),
+                    trailing: Text(timeAgo(data['timestamp'])),
+                    onTap: () {
+                      // يمكن مستقبلاً التنقل إلى المنشور أو البروفايل حسب نوع الإشعار
+                    },
+                  );
+                },
+              );
+            },
+          );
+        },
       ),
     );
+  }
+
+  String timeAgo(Timestamp timestamp) {
+    final now = DateTime.now();
+    final date = timestamp.toDate();
+    final difference = now.difference(date);
+
+    if (difference.inSeconds < 60) return 'الآن';
+    if (difference.inMinutes < 60) return '${difference.inMinutes} دقيقة';
+    if (difference.inHours < 24) return '${difference.inHours} ساعة';
+    if (difference.inDays < 7) return '${difference.inDays} يوم';
+    return '${date.day}/${date.month}/${date.year}';
   }
 }

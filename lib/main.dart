@@ -5,7 +5,12 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import 'package:mehra_app/models/firebase/auth_methods.dart'; // ✅ جديد
+
+
+import 'package:mehra_app/modules/homePage/navigator_page.dart';
+import 'package:mehra_app/modules/notifications/Notification.dart';
 
 import 'package:mehra_app/modules/register/register_screen.dart';
 import 'package:mehra_app/modules/settings/Settings.dart';
@@ -95,6 +100,7 @@ class _MyAppState extends State<MyApp> {
         textDirection: languageProvider.selectedLanguage == 'العربية'
             ? TextDirection.rtl
             : TextDirection.ltr,
+
         child: FutureBuilder<Widget>(
           future: _getInitialScreen(),
           builder: (context, snapshot) {
@@ -107,6 +113,7 @@ class _MyAppState extends State<MyApp> {
             }
           },
         ),
+
       ),
     );
   }

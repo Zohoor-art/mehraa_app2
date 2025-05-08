@@ -757,6 +757,7 @@ void _showReviewDialog() {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildActionIcon(Icons.link, 'نسخ الرابط', [Color(0xFFE91E63), Color(0xFF4A148C)], () {
+
                   
                   PostActions.copyLink(context, widget.post.postId);
                   Navigator.pop(context);
@@ -765,6 +766,7 @@ void _showReviewDialog() {
                   
                   PostActions.sharePost(widget.post.postId, widget.post.shareCount);
                   Navigator.pop(context);
+
                 }),
                 _buildActionIcon(Icons.report, 'إبلاغ', [Color(0xFFBD4037), Color(0xFFED1404)], () {
                   
@@ -776,15 +778,18 @@ void _showReviewDialog() {
             SizedBox(height: 24),
             if (isFollowing)
   _buildOptionTile(Icons.person_remove, 'إلغاء المتابعة', () async {
-    
+
+   
     await PostActions.unfollowUser(context, widget.post.uid);
-    Navigator.pop(context);
+     Navigator.pop(context);
+
     setState(() {
       isFollowing = false; // عشان يرجع يظهر زر المتابعة
     });
   }),
 
             _buildOptionTile(Icons.visibility_off, 'إخفاء', () {
+
               
               PostActions.hidePost(context, widget.post.postId);
               Navigator.pop(context);
@@ -793,6 +798,7 @@ void _showReviewDialog() {
               
               PostActions.goToUserProfile(context, widget.post.uid);
               Navigator.pop(context);
+
             }),
             SizedBox(height: 12),
           ],
