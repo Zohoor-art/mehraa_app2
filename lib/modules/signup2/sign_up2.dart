@@ -3,6 +3,7 @@ import 'package:day_picker/day_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:mehra_app/models/firebase/auth_methods.dart';
 import 'package:mehra_app/modules/homePage/home_screen.dart';
+import 'package:mehra_app/modules/signup2/locationCard.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -35,6 +36,10 @@ class _SignUp2screenState extends State<SignUp2screen> {
   String? selectedDays;
   String? selectedHours;
   bool isLoading = false;
+  String? locationUrl;      // لحفظ رابط الموقع (يدوي أو من الخريطة)
+  double? latitude;         // إحداثيات من الخريطة فقط
+  double? longitude;
+  String? selectedArea;     // اسم المنطقة المختارة
 
   @override
   void initState() {
@@ -66,55 +71,49 @@ class _SignUp2screenState extends State<SignUp2screen> {
   }
 
   Future<void> _completeRegistration() async {
-    if (_formKey.currentState!.validate() &&
-        selectedWorkType != null &&
-        selectedDays != null &&
-        selectedHours != null) {
-      setState(() => isLoading = true);
+  if (_formKey.currentState!.validate() &&
+      selectedWorkType != null &&
+      selectedDays != null &&
+      selectedHours != null &&
+      selectedArea != null 
+     
+) {
+    setState(() => isLoading = true);
 
-      final authMethods = AuthMethods();
-      final result = await authMethods.completeSignUpProcess(
-        userId: widget.userId,
-        contactNumber: contactNumberController.text.trim(),
-        days: selectedDays!,
-        description: descriptionController.text.trim(),
-        email: widget.email,
-        hours: selectedHours!,
-        location: locationController.text.trim(),
-        profileImage: widget.profileImage,
-        storeName: widget.storeName,
-        workType: selectedWorkType!,
-      );
+    final authMethods = AuthMethods();
+    final result = await authMethods.completeSignUpProcess(
+      userId: widget.userId,
+      contactNumber: contactNumberController.text.trim(),
+      days: selectedDays!,
+      description: descriptionController.text.trim(),
+      email: widget.email,
+      hours: selectedHours!,
+      location: selectedArea!, // المنطقة
+      locationUrl: locationUrl!, // يدوي أو رابط من الخريطة
+      latitude:  latitude!,       // فقط لو تم استخدام الخريطة
+      longitude: longitude!,
+      profileImage: widget.profileImage,
+      storeName: widget.storeName,
+      workType: selectedWorkType!,
+    );
 
-      setState(() => isLoading = false);
-
-      if (result == "success") {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-          (route) => false,
-        );
-      } else {
-        AwesomeDialog(
-          context: context,
-          dialogType: DialogType.error,
-          animType: AnimType.bottomSlide,
-          title: 'خطأ',
-          desc: result,
-          btnOkOnPress: () {},
-        ).show();
-      }
+    setState(() => isLoading = false);
+    
+    if (result == 'success') {
+     Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(builder: (_) => HomePage()),
+    (route) => false,
+  );
     } else {
-      AwesomeDialog(
-        context: context,
-        dialogType: DialogType.warning,
-        animType: AnimType.bottomSlide,
-        title: 'تحذير',
-        desc: 'الرجاء ملء جميع الحقول المطلوبة',
-        btnOkOnPress: () {},
-      ).show();
+       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result)));
     }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("يرجى تعبئة جميع الحقول المطلوبة"))
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -284,18 +283,36 @@ class _SignUp2screenState extends State<SignUp2screen> {
                               },
                             ),
                             SizedBox(height: isSmallScreen ? 8 : 12),
-                            defultTextFormField(
-                              controller: locationController,
-                              type: TextInputType.text,
-                              label: 'الموقع',
-                              prefix: Icons.map,
-                              validate: (value) {
-                                if (value!.isEmpty) {
-                                  return 'يرجى إدخال الموقع';
-                                }
-                                return null;
-                              },
-                            ),
+                     defultTextFormField(
+  controller: locationController,
+  type: TextInputType.text,
+  label: 'الموقع',
+  prefix: Icons.map,
+  readOnly: true,
+  onTap: () async {
+  final result = await showModalBottomSheet<Map<String, dynamic>>(
+    context: context,
+    isScrollControlled: true,
+    builder: (context) => LocationSelectionCard(locationController),
+  );
+
+  if (result != null) {
+    locationController.text = result['fullText'];
+    selectedArea = result['area'];
+    locationUrl = result['mapUrl'] ?? result['manual'];
+    latitude = result['lat'];
+    longitude = result['lng'];
+  }
+},
+
+  validate: (value) {
+    if (value == null || value.isEmpty) {
+      return 'يرجى إدخال الموقع';
+    }
+    return null;
+  },
+),
+
                             SizedBox(height: isSmallScreen ? 16 : 24),
                             GradientButton(
                               onPressed: _completeRegistration,

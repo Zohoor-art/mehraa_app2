@@ -24,7 +24,8 @@ class _AddPostscreenState extends State<AddPostscreen> {
   VideoPlayerController? _controller;
   final TextEditingController _descriptionController = TextEditingController();
   bool _isLoading = false;
-  DocumentReference? _userRef; // سيحتوي على مرجع مستند المستخدم
+  DocumentReference? _userRef; 
+
 
   @override
   void initState() {
@@ -51,6 +52,10 @@ class _AddPostscreenState extends State<AddPostscreen> {
       _isLoading = true;
     });
     try {
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final location = userDoc['location'] ?? '';
+    final locationUrl = userDoc['locationUrl']; // ممكن يكون null
+    
       String res = await FirestoreMethods().uploadPost(
         _descriptionController.text,
         _file!,
@@ -59,7 +64,9 @@ class _AddPostscreenState extends State<AddPostscreen> {
         profileImage,
         videoPath: _videoPath,
         userRef: _userRef, // إضافة مرجع المستخدم
-        context: context, isVideo: true,
+        context: context, isVideo: true, location:location,
+        locationUrl:locationUrl,
+         // استبدل بموقعك الفعلي
       );
 
       if (res == 'تم نشر الصورة بنجاح') {

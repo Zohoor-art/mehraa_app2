@@ -1,32 +1,25 @@
+import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:mehra_app/models/firebase/auth_methods.dart'; // ✅ جديد
+
 import 'package:mehra_app/modules/register/register_screen.dart';
-import 'package:mehra_app/modules/register/sign_up.dart';
 import 'package:mehra_app/modules/settings/Settings.dart';
 import 'package:mehra_app/modules/settings/UserProvider.dart';
 import 'package:mehra_app/modules/settings/language_provider.dart';
 import 'package:mehra_app/modules/signup2/sign_up2.dart';
-import 'package:mehra_app/modules/xplore/xplore_screen.dart';
+import 'package:mehra_app/modules/homePage/home_screen.dart';
 import 'package:mehra_app/shared/theme/theme.dart';
 import 'package:mehra_app/shared/themes.dart' show lightTheme;
-import 'package:flutter_screenutil/flutter_screenutil.dart'; // إضافة مكتبة ScreenUtil
-import 'package:mehra_app/firebase_options.dart';
-import 'package:mehra_app/modules/homePage/home_screen.dart';
-import 'package:mehra_app/modules/onbording/onboarding_screen.dart';
-
 import 'package:provider/provider.dart';
-import 'firebase_options.dart';
-import 'dart:ui';
 import 'package:intl/intl.dart' as intl;
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:mehra_app/shared/theme/theme.dart' as custom_theme;
-
-
-
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,13 +37,9 @@ void main() async {
         designSize: const Size(375, 812),
         minTextAdapt: true,
         splitScreenMode: false,
-
-        // ✅ تمرير الـ child هنا بالشكل الصحيح
         builder: (context, child) {
           return MyApp(child: child);
         },
-
-        // ✅ الـ child اللي راح يُمرر إلى MyApp
         child: SettingsPage(),
       ),
     ),
@@ -86,15 +75,13 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'تطبيق مهرة',
-theme: lightTheme,
-darkTheme: darkTheme,
-themeMode: userProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-
-
+      theme: lightTheme,
+      darkTheme: darkTheme,
+      themeMode: userProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       locale: languageProvider.selectedLanguage == 'العربية'
           ? const Locale('ar')
           : const Locale('en'),
-      localizationsDelegates: [
+      localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -108,8 +95,52 @@ themeMode: userProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
         textDirection: languageProvider.selectedLanguage == 'العربية'
             ? TextDirection.rtl
             : TextDirection.ltr,
-        child:  HomeScreen(),//widget.child ??
+        child: FutureBuilder<Widget>(
+          future: _getInitialScreen(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(body: Center(child: CircularProgressIndicator()));
+            } else if (snapshot.hasError) {
+              return const Scaffold(body: Center(child: Text('حدث خطأ أثناء التحقق من المستخدم')));
+            } else {
+              return snapshot.data!;
+            }
+          },
+        ),
       ),
     );
   }
+
+  Future<Widget> _getInitialScreen() async {
+  final user = FirebaseAuth.instance.currentUser;
+
+  // الحالة 1: غير مسجل دخول
+  if (user == null) {
+    return RegisterScreen();
+  }
+
+  // التحقق من وجود مستند بيانات في Firestore
+  final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+  final userData = doc.data();
+
+  // الحالة 2: لا يوجد أي بيانات في Firestore → رجوع لـ Register
+  if (userData == null) {
+    return RegisterScreen();
+  }
+
+  // الحالة 3: عنده بيانات لكن التسجيل غير مكتمل → يروح SignUp2screen
+  if (userData['isCompleted'] != true) {
+    return SignUp2screen(
+      userId: user.uid,
+      email: userData['email'] ?? user.email ?? '',
+      storeName: userData['storeName'] ?? '',
+      profileImage: userData['profileImage'] ?? '',
+    );
+  }
+
+  // الحالة 4: مكتمل التسجيل → يروح للـ HomePage
+  return HomeScreen();
+}
+
+
 }

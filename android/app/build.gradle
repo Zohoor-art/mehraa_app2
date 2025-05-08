@@ -15,6 +15,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8 // تعيين توافق المصدر
         targetCompatibility = JavaVersion.VERSION_1_8 // تعيين توافق الهدف
+        coreLibraryDesugaringEnabled true
     }
 
     kotlinOptions {
@@ -41,6 +42,8 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:31.0.0') // استخدم أحدث إصدار
     implementation 'com.google.firebase:firebase-messaging' // لإشعارات Firebase
     implementation 'com.google.android.gms:play-services-auth:20.0.0'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
+
     // أضف اعتمادات أخرى كما تحتاج
 }
 

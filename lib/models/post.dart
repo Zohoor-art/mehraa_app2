@@ -18,9 +18,10 @@ class Post {
   final int commentCount;
   final int shareCount;
   final String location;
+  final String? locationUrl; // ✅ الموقع المفصل
+  final GeoPoint? locationCoords; // ✅ إحداثيات الموقع التلقائي
   final List<String> savedBy;
   final bool isVideo;
-
 
   const Post({
     required this.uid,
@@ -39,9 +40,10 @@ class Post {
     this.commentCount = 0,
     this.shareCount = 0,
     this.location = '',
+    this.locationUrl, // ✅
+    this.locationCoords, // ✅
     this.savedBy = const [],
     this.isVideo = false,
-
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
@@ -62,6 +64,8 @@ class Post {
       commentCount: json['commentCount'] ?? 0,
       shareCount: json['shareCount'] ?? 0,
       location: json['location'] ?? '',
+      locationUrl: json['locationUrl'], // ✅
+      locationCoords: json['locationCoords'], // ✅ GeoPoint يأتي تلقائيًا
       savedBy: List<String>.from(json['savedBy'] ?? []),
       isVideo: json['isVideo'] ?? false,
     );
@@ -84,9 +88,10 @@ class Post {
         'commentCount': commentCount,
         'shareCount': shareCount,
         'location': location,
+        'locationUrl': locationUrl, // ✅
+        'locationCoords': locationCoords, // ✅
         'savedBy': savedBy,
         'isVideo': isVideo,
-
       };
 
   static Post fromSnap(DocumentSnapshot snap) {
@@ -145,8 +150,10 @@ class Post {
     int? commentCount,
     int? shareCount,
     String? location,
+    String? locationUrl, // ✅
+    GeoPoint? locationCoords, // ✅
     List<String>? savedBy,
-    bool? isVideo, // ✅ أضفنا هذا
+    bool? isVideo,
   }) {
     return Post(
       uid: uid ?? this.uid,
@@ -165,9 +172,10 @@ class Post {
       commentCount: commentCount ?? this.commentCount,
       shareCount: shareCount ?? this.shareCount,
       location: location ?? this.location,
+      locationUrl: locationUrl ?? this.locationUrl,
+      locationCoords: locationCoords ?? this.locationCoords,
       savedBy: savedBy ?? this.savedBy,
-      isVideo: isVideo ?? this.isVideo, // ✅ وهنا تمريره
-
+      isVideo: isVideo ?? this.isVideo,
     );
   }
 }
