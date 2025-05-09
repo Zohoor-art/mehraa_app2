@@ -137,11 +137,11 @@ class _MyAppState extends State<MyApp> {
 
   // الحالة 3: عنده بيانات لكن التسجيل غير مكتمل → يروح SignUp2screen
   if (userData['isCompleted'] != true) {
-    return SignUp2screen(
-      userId: user.uid,
-      email: userData['email'] ?? user.email ?? '',
-      storeName: userData['storeName'] ?? '',
-      profileImage: userData['profileImage'] ?? '',
+    return HomeScreen(
+      // userId: user.uid,
+      // email: userData['email'] ?? user.email ?? '',
+      // storeName: userData['storeName'] ?? '',
+      // profileImage: userData['profileImage'] ?? '',
     );
   }
 

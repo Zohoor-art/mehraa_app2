@@ -4,8 +4,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 
+
 class OrderNotifications extends StatefulWidget {
-  const OrderNotifications({super.key});
+  final String searchQuery;
+  
+  const OrderNotifications({super.key, required this.searchQuery});
 
   @override
   State<OrderNotifications> createState() => _OrderNotificationsState();
@@ -16,6 +19,9 @@ class _OrderNotificationsState extends State<OrderNotifications> {
   String _currentUserId = '';
   bool _isLoading = true;
   final Map<String, bool> _expandedItems = {};
+  int _weeklyOrders = 0;
+  int _monthlyOrders = 0;
+  int _yearlyOrders = 0;
 
   @override
   void initState() {
@@ -28,6 +34,46 @@ class _OrderNotificationsState extends State<OrderNotifications> {
     if (user != null) {
       setState(() => _currentUserId = user.uid);
       await _fetchOrders();
+      await _fetchOrdersCount();
+    }
+  }
+
+  Future<void> _fetchOrdersCount() async {
+    try {
+      final now = DateTime.now();
+      final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+      final startOfMonth = DateTime(now.year, now.month, 1);
+      final startOfYear = DateTime(now.year, 1, 1);
+
+      final weeklyQuery = FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUserId)
+          .collection('orders')
+          .where('createdAt', isGreaterThan: Timestamp.fromDate(startOfWeek));
+
+      final monthlyQuery = FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUserId)
+          .collection('orders')
+          .where('createdAt', isGreaterThan: Timestamp.fromDate(startOfMonth));
+
+      final yearlyQuery = FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUserId)
+          .collection('orders')
+          .where('createdAt', isGreaterThan: Timestamp.fromDate(startOfYear));
+
+      final weeklySnapshot = await weeklyQuery.get();
+      final monthlySnapshot = await monthlyQuery.get();
+      final yearlySnapshot = await yearlyQuery.get();
+
+      setState(() {
+        _weeklyOrders = weeklySnapshot.size;
+        _monthlyOrders = monthlySnapshot.size;
+        _yearlyOrders = yearlySnapshot.size;
+      });
+    } catch (e) {
+      print('Error fetching orders count: $e');
     }
   }
 
@@ -82,6 +128,80 @@ class _OrderNotificationsState extends State<OrderNotifications> {
     }
   }
 
+  Widget _buildOrdersStatsCard(String title, int count, Color color) {
+    return Expanded(
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 4),
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color, width: 1),
+        ),
+        child: Column(
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            SizedBox(height: 2),
+            Text(
+              count.toString(),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOrdersStats() {
+    return Container(
+      margin: EdgeInsets.all(12),
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'إحصائيات الطلبات',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+          ),
+          SizedBox(height: 12),
+          Row(
+            children: [
+              _buildOrdersStatsCard('هذا الأسبوع', _weeklyOrders, MyColor.blueColor),
+              _buildOrdersStatsCard('هذا الشهر', _monthlyOrders, MyColor.pinkColor),
+              _buildOrdersStatsCard('هذه السنة', _yearlyOrders, MyColor.purpleColor),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _updateOrderStatus(String orderId, String status) async {
     try {
       await FirebaseFirestore.instance
@@ -91,7 +211,6 @@ class _OrderNotificationsState extends State<OrderNotifications> {
           .doc(orderId)
           .update({'status': status});
 
-      // تحديث حالة الطلب محليًا لتجنب إعادة جلب البيانات
       setState(() {
         final index = _orders.indexWhere((order) => order['id'] == orderId);
         if (index != -1) {
@@ -309,8 +428,20 @@ class _OrderNotificationsState extends State<OrderNotifications> {
     );
   }
 
+
+  List<Map<String, dynamic>> _filterOrders() {
+    if (widget.searchQuery.isEmpty) return _orders;
+    
+    return _orders.where((order) {
+      return order['buyerName'].toString().toLowerCase().contains(widget.searchQuery.toLowerCase()) ||
+             order['productDescription'].toString().toLowerCase().contains(widget.searchQuery.toLowerCase());
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final filteredOrders = _filterOrders();
+    
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -327,7 +458,10 @@ class _OrderNotificationsState extends State<OrderNotifications> {
         actions: [
           IconButton(
             icon: Icon(Icons.refresh, color: MyColor.pinkColor),
-            onPressed: _fetchOrders,
+            onPressed: () {
+              _fetchOrders();
+              _fetchOrdersCount();
+            },
           ),
         ],
       ),
@@ -337,7 +471,7 @@ class _OrderNotificationsState extends State<OrderNotifications> {
                 valueColor: AlwaysStoppedAnimation<Color>(MyColor.pinkColor),
               ),
             )
-          : _orders.isEmpty
+          : filteredOrders.isEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -349,7 +483,9 @@ class _OrderNotificationsState extends State<OrderNotifications> {
                       ),
                       SizedBox(height: 16),
                       Text(
-                        'لا توجد طلبات متاحة',
+                        widget.searchQuery.isEmpty 
+                            ? 'لا توجد طلبات متاحة'
+                            : 'لا توجد نتائج بحث',
                         style: TextStyle(
                           fontSize: 18,
                           color: Colors.grey[600],
@@ -360,13 +496,16 @@ class _OrderNotificationsState extends State<OrderNotifications> {
                 )
               : RefreshIndicator(
                   color: MyColor.pinkColor,
-                  onRefresh: _fetchOrders,
-                  child: ListView.builder(
+                  onRefresh: () async {
+                    await _fetchOrders();
+                    await _fetchOrdersCount();
+                  },
+                  child: ListView(
                     padding: EdgeInsets.only(top: 16, bottom: 24),
-                    itemCount: _orders.length,
-                    itemBuilder: (context, index) {
-                      return _buildOrderItem(_orders[index]);
-                    },
+                    children: [
+                      _buildOrdersStats(),
+                      ...filteredOrders.map((order) => _buildOrderItem(order)).toList(),
+                    ],
                   ),
                 ),
     );

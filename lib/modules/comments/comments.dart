@@ -7,6 +7,7 @@ import 'package:mehra_app/shared/components/constants.dart';
 
 class Comments extends StatefulWidget {
   final String postId;
+
   const Comments({super.key, required this.postId});
 
   @override
@@ -19,7 +20,13 @@ class _CommentsState extends State<Comments> {
   Map<String, TextEditingController> _replyControllers = {};
 
   void _sendComment() async {
-    if (_commentController.text.trim().isEmpty) return;
+    if (_commentController.text.trim().isEmpty) {
+      // لا ترسل تعليق فارغ
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('لا يمكن إرسال تعليق فارغ')),
+      );
+      return;
+    }
 
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
@@ -46,9 +53,8 @@ class _CommentsState extends State<Comments> {
       'replies': [],
     });
 
-    _commentController.clear();
+    _commentController.clear(); // تنظيف حقل التعليق بعد الإرسال
   }
-
   void _toggleLike(String commentId, bool isLiked) async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
@@ -135,7 +141,7 @@ class _CommentsState extends State<Comments> {
     );
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -408,7 +414,7 @@ class _CommentsState extends State<Comments> {
                   ),
                   GestureDetector(
                     onTap: _sendComment,
-                    child: Icon(Icons.send_outlined, color: Colors.grey[500]),
+                    child: Icon(Icons.send_outlined, color: MyColor.pinkColor),
                   ),
                 ],
               ),

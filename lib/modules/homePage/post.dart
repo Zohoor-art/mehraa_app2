@@ -15,7 +15,7 @@ import 'package:chewie/chewie.dart';
 
 class PostWidget extends StatefulWidget {
   final Post post;
- 
+
   final String currentUserId;
   final VoidCallback? onDelete;
   final VoidCallback? onRestore;
@@ -25,7 +25,6 @@ class PostWidget extends StatefulWidget {
   const PostWidget({
     Key? key,
     required this.post,
-    
     required this.currentUserId,
     this.onDelete,
     this.onRestore,
@@ -38,7 +37,7 @@ class PostWidget extends StatefulWidget {
 }
 
 class _PostWidgetState extends State<PostWidget> {
-   bool isFollowing =false;
+  bool isFollowing = false;
   bool _isExpanded = false;
   bool _isHovering = false;
   bool _isVideoInitialized = false;
@@ -49,57 +48,55 @@ class _PostWidgetState extends State<PostWidget> {
   Map<String, dynamic>? _userData;
   bool _isUserDataLoading = true;
   void _toggleFollowUser() async {
-  final currentUser = FirebaseAuth.instance.currentUser;
-  final otherUserId = _userData?['uid'];
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final otherUserId = _userData?['uid'];
 
-  if (currentUser == null || otherUserId == null) return;
+    if (currentUser == null || otherUserId == null) return;
 
-  final currentUserRef = FirebaseFirestore.instance
-      .collection('users')
-      .doc(currentUser.uid);
+    final currentUserRef =
+        FirebaseFirestore.instance.collection('users').doc(currentUser.uid);
 
-  final otherUserRef = FirebaseFirestore.instance
-      .collection('users')
-      .doc(otherUserId);
+    final otherUserRef =
+        FirebaseFirestore.instance.collection('users').doc(otherUserId);
 
-  final followingRef = currentUserRef.collection('following').doc(otherUserId);
-  final followerRef = otherUserRef.collection('followers').doc(currentUser.uid);
+    final followingRef =
+        currentUserRef.collection('following').doc(otherUserId);
+    final followerRef =
+        otherUserRef.collection('followers').doc(currentUser.uid);
 
-  try {
-    // متابعة فقط
-    await followingRef.set({'followedAt': Timestamp.now()});
-    await followerRef.set({'followedAt': Timestamp.now()});
+    try {
+      // متابعة فقط
+      await followingRef.set({'followedAt': Timestamp.now()});
+      await followerRef.set({'followedAt': Timestamp.now()});
 
-    setState(() {
-      isFollowing = true; // يخفي الزر
-    });
-  } catch (e) {
-    debugPrint('Error following user: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('حدث خطأ أثناء المتابعة')),
-    );
+      setState(() {
+        isFollowing = true; // يخفي الزر
+      });
+    } catch (e) {
+      debugPrint('Error following user: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('حدث خطأ أثناء المتابعة')),
+      );
+    }
   }
-}
-void checkIfFollowing() async {
-  final currentUser = FirebaseAuth.instance.currentUser;
-  final otherUserId = _userData?['uid'];
 
-  if (currentUser == null || otherUserId == null) return;
+  void checkIfFollowing() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final otherUserId = _userData?['uid'];
 
-  final doc = await FirebaseFirestore.instance
-      .collection('users')
-      .doc(currentUser.uid)
-      .collection('following')
-      .doc(otherUserId)
-      .get();
-if (!mounted) return;
-  setState(() {
-    isFollowing = doc.exists; // ← true إذا تتابعه
-  });
+    if (currentUser == null || otherUserId == null) return;
 
-
-}
-
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('following')
+        .doc(otherUserId)
+        .get();
+    if (!mounted) return;
+    setState(() {
+      isFollowing = doc.exists; // ← true إذا تتابعه
+    });
+  }
 
   @override
   void initState() {
@@ -144,7 +141,6 @@ if (!mounted) return;
       checkIfFollowing();
     }
   }
- 
 
 // داخل _PostWidgetState
   Future<void> _createOrderAndOpenChat() async {
@@ -195,9 +191,6 @@ if (!mounted) return;
     }
   }
 
- 
-
-
   @override
   void dispose() {
     if (widget.post.videoUrl.isNotEmpty) {
@@ -206,7 +199,6 @@ if (!mounted) return;
     }
     super.dispose();
   }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -217,114 +209,116 @@ if (!mounted) return;
     return Card(
       color: MyColor.lightprimaryColor,
       margin: EdgeInsets.only(top: 0, bottom: 1),
-
       elevation: 2,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Section
-      Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // حواف بسيطة
-  child: Row(
-    children: [
-  // الصورة
-  GestureDetector(
- onTap: () {
-    if (!_isUserDataLoading && _userData != null) {
-      String otherUserId = _userData!['uid']; // ← هنا نجيبه
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ProfileScreen(userId: otherUserId),
-        ),
-      );
-    }
-  },
-  child: CircleAvatar(
-    radius: 25,
-    backgroundImage: _isUserDataLoading
-        ? null
-        : NetworkImage(_userData?['profileImage'] ?? ''),
-    child: _isUserDataLoading
-        ? const SizedBox(
-            width: 14,
-            height: 14,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          )
-        : null,
-  ),
-),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+                horizontal: 8, vertical: 4), // حواف بسيطة
+            child: Row(
+              children: [
+                // الصورة
+                GestureDetector(
+                  onTap: () {
+                    if (!_isUserDataLoading && _userData != null) {
+                      String otherUserId = _userData!['uid']; // ← هنا نجيبه
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ProfileScreen(userId: otherUserId),
+                        ),
+                      );
+                    }
+                  },
+                  child: CircleAvatar(
+                    radius: 25,
+                    backgroundImage: _isUserDataLoading
+                        ? null
+                        : NetworkImage(_userData?['profileImage'] ?? ''),
+                    child: _isUserDataLoading
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : null,
+                  ),
+                ),
 
-  SizedBox(width: 10),
+                SizedBox(width: 10),
 
-  // الاسم والموقع أو حالة المتابعة
-  Expanded(
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        _userData?['storeName'] ?? 'تحميل...',
-        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-      ),
-      Text(
-        isCurrentUserPost
-            ? 'أنت'
-            : _userData?['location'] != null
-                ? _userData!['location']
-                : isFollowing
-                    ? 'تتابعه'
-                    : 'مقترح لك',
-        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-      ),
-    ],
-  ),
-),
+                // الاسم والموقع أو حالة المتابعة
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _userData?['storeName'] ?? 'تحميل...',
+                        style: TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.w600),
+                      ),
+                      Text(
+                        isCurrentUserPost
+                            ? 'أنت'
+                            : _userData?['location'] != null
+                                ? _userData!['location']
+                                : isFollowing
+                                    ? 'تتابعه'
+                                    : 'مقترح لك',
+                        style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
 
+                // زر متابعة
+                if (!isCurrentUserPost)
+                  GestureDetector(
+                    onTap: () {
+                      if (!isFollowing) {
+                        _toggleFollowUser(); // تنفيذ المتابعة
+                      } else {
+                        _showReviewDialog(); // عرض نافذة التقييم
+                      }
+                    },
+                    child: Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: isFollowing
+                              ? [Colors.purple, Colors.pink] // تقييم
+                              : [Colors.pink, Colors.deepPurple], // متابعة
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        isFollowing ? 'تقييم' : 'متابعة',
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                  ),
 
-  // زر متابعة
-  if (!isCurrentUserPost)
-  GestureDetector(
-    onTap: () {
-      if (!isFollowing) {
-        _toggleFollowUser(); // تنفيذ المتابعة
-      } else {
-        _showReviewDialog(); // عرض نافذة التقييم
-      }
-    },
-    child: Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: isFollowing
-              ? [Colors.purple, Colors.pink] // تقييم
-              : [Colors.pink, Colors.deepPurple],   // متابعة
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        isFollowing ? 'تقييم' : 'متابعة',
-        style: TextStyle(color: Colors.white, fontSize: 12),
-      ),
-    ),
-  ),
+                SizedBox(width: 6),
 
-  SizedBox(width: 6),
-
-  // الخيارات
-  isCurrentUserPost
-      ? _buildPostOwnerOptions()
-      : IconButton(
-          icon: Icon(Icons.more_vert, size: 22),
-          onPressed: _showPostOptions,
-        ),
-],
-
-  ),
-),
-SizedBox(height: 5.0,),
-_buildPostContent(),
+                // الخيارات
+                isCurrentUserPost
+                    ? _buildPostOwnerOptions()
+                    : IconButton(
+                        icon: Icon(Icons.more_vert, size: 22),
+                        onPressed: _showPostOptions,
+                      ),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 5.0,
+          ),
+          _buildPostContent(),
           // Interaction Buttons
           Padding(
             padding: const EdgeInsets.only(top: 10),
@@ -335,9 +329,9 @@ _buildPostContent(),
                 _buildInteractionButton(
                   icon: SvgPicture.asset(
                     isLiked
-            ? 'assets/images/fillHeart.svg'
-            : 'assets/images/heartEmp.svg',
-                    color: isLiked ? Colors.deepPurple :  Colors.deepPurple,
+                        ? 'assets/images/fillHeart.svg'
+                        : 'assets/images/heartEmp.svg',
+                    color: isLiked ? Colors.deepPurple : Colors.deepPurple,
                     width: 25,
                     height: 25,
                   ),
@@ -345,78 +339,79 @@ _buildPostContent(),
                   onPressed: widget.onLike,
                 ),
                 SizedBox(width: 15),
-            StreamBuilder<QuerySnapshot>(
-  stream: FirebaseFirestore.instance
-      .collection('posts')
-      .doc(widget.post.postId)
-      .collection('comments')
-      .snapshots(),
-  builder: (context, snapshot) {
-    final commentCount = snapshot.hasData ? snapshot.data!.docs.length : 0;
+                StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('posts')
+                      .doc(widget.post.postId)
+                      .collection('comments')
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    final commentCount =
+                        snapshot.hasData ? snapshot.data!.docs.length : 0;
 
-    return _buildInteractionButton(
-      icon: SvgPicture.asset(
-        'assets/images/comment.svg',
-        color: Colors.deepPurple,
-        width: 32,
-        height: 32,
-      ),
-      countText: commentCount.toString(),
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Comments(postId: widget.post.postId),
-          ),
-        );
-      },
-    );
-  },
-),
-SizedBox(width: 16),
-            
-                _buildInteractionButton(
-  icon: SvgPicture.asset(
-    'assets/images/share.svg',
-    color: Colors.deepPurple,
-    width: 25,
-    height: 25,
-  ),
-  countText: widget.post.shareCount.toString(),
-  onPressed: () async {
-    // 1. زيادة عداد المشاركات في Firestore
-    await FirebaseFirestore.instance
-        .collection('posts')
-        .doc(widget.post.postId)
-        .update({
-      'shareCount': FieldValue.increment(1),
-    });
-
-    // 2. فتح شاشة المشاركة كبوتوم شيت
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Sharing(
-        postImageUrl: widget.post.postUrl,
-        postId: widget.post.postId,
-      ),
-    );
-  },
+                    return _buildInteractionButton(
+                      icon: SvgPicture.asset(
+                        'assets/images/comment.svg',
+                        color: Colors.deepPurple,
+                        width: 32,
+                        height: 32,
+                      ),
+                      countText: commentCount.toString(),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                Comments(postId: widget.post.postId),
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
                 SizedBox(width: 16),
-            
+                _buildInteractionButton(
+                  icon: SvgPicture.asset(
+                    'assets/images/share.svg',
+                    color: Colors.deepPurple,
+                    width: 25,
+                    height: 25,
+                  ),
+                  countText: widget.post.shareCount.toString(),
+                  onPressed: () async {
+                    // 1. زيادة عداد المشاركات في Firestore
+                    await FirebaseFirestore.instance
+                        .collection('posts')
+                        .doc(widget.post.postId)
+                        .update({
+                      'shareCount': FieldValue.increment(1),
+                    });
+
+                    // 2. فتح شاشة المشاركة كبوتوم شيت
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => Sharing(
+                        postImageUrl: widget.post.postUrl,
+                        postId: widget.post.postId,
+                        postDescription: widget.post.description,
+                      ),
+                    );
+                  },
+                ),
+                SizedBox(width: 16),
                 _buildInteractionButton(
                   icon: SvgPicture.asset(
                     isSaved
-            ? 'assets/images/fill_save.svg'
-            : 'assets/images/save.svg',
+                        ? 'assets/images/fill_save.svg'
+                        : 'assets/images/save.svg',
                     color: isSaved ? Colors.deepPurple : Colors.deepPurple,
                     width: 25,
                     height: 25,
-                    
                   ),
-                  countText: '', // زر الحفظ غالبًا ما يحتاج عدد، لكن تقدر تضيف إذا عندك
+                  countText:
+                      '', // زر الحفظ غالبًا ما يحتاج عدد، لكن تقدر تضيف إذا عندك
                   onPressed: widget.onSave,
                 ),
               ],
@@ -445,7 +440,8 @@ SizedBox(width: 16),
               child: Wrap(
                 spacing: 8,
                 runSpacing: 4,
-                children: widget.post.tags.map((tag) => _buildTag(tag)).toList(),
+                children:
+                    widget.post.tags.map((tag) => _buildTag(tag)).toList(),
               ),
             ),
 
@@ -498,178 +494,173 @@ SizedBox(width: 16),
     );
   }
 
- Widget _buildPostContent() {
-  if (_isDeleting) {
-    return Container(
-      height: 200,
-      color: Colors.white,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 8),
-            Text('جاري حذف المنشور...'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  if (widget.post.isVideo) {
-  return ClipRRect(
-    borderRadius: BorderRadius.circular(12), // زاوية الفيديو
-    child: SizedBox(
-      width: double.infinity,
-      height: MediaQuery.of(context).size.width * 1.3, // زي إنستا
-      child: _isVideoInitialized
-          ? Chewie(controller: _chewieController!)
-          : Center(child: CircularProgressIndicator()),
-    ),
-  );
-}
-
-  else {
-    return GestureDetector(
-      onTap: _openPostDetail,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12), // 👈 هنا زاوية الصورة
-        child: Container(
-          height: 350,
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              fit: BoxFit.cover,
-              image: NetworkImage(widget.post.postUrl),
-            ),
-          ),
-          child: Stack(
-            alignment: Alignment.bottomRight,
+  Widget _buildPostContent() {
+    if (_isDeleting) {
+      return Container(
+        height: 200,
+        color: Colors.white,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (widget.post.postUrl.isNotEmpty &&
-                  widget.post.videoUrl.isEmpty)
-                _buildShoppingCartButton(),
+              CircularProgressIndicator(),
+              SizedBox(height: 8),
+              Text('جاري حذف المنشور...'),
             ],
           ),
         ),
+      );
+    }
+
+    if (widget.post.isVideo) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12), // زاوية الفيديو
+        child: SizedBox(
+          width: double.infinity,
+          height: MediaQuery.of(context).size.width * 1.3, // زي إنستا
+          child: _isVideoInitialized
+              ? Chewie(controller: _chewieController!)
+              : Center(child: CircularProgressIndicator()),
+        ),
+      );
+    } else {
+      return GestureDetector(
+        onTap: _openPostDetail,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12), // 👈 هنا زاوية الصورة
+          child: Container(
+            height: 350,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                fit: BoxFit.cover,
+                image: NetworkImage(widget.post.postUrl),
+              ),
+            ),
+            child: Stack(
+              alignment: Alignment.bottomRight,
+              children: [
+                if (widget.post.postUrl.isNotEmpty &&
+                    widget.post.videoUrl.isEmpty)
+                  _buildShoppingCartButton(),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
+  Widget _buildShoppingCartButton() {
+    return Positioned(
+      bottom: 16,
+      right: 16,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovering = true),
+        onExit: (_) => setState(() => _isHovering = false),
+        child: GestureDetector(
+          onTap: _createOrderAndOpenChat, // << هنا ربطنا الضغطة عالكارد كامل
+          child: AnimatedContainer(
+            duration: Duration(milliseconds: 200),
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: _isHovering
+                  ? Colors.white.withOpacity(0.6)
+                  : Colors.white.withOpacity(0.6),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      colors: [Colors.pink, Colors.deepPurple],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.shopping_cart,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8),
+                Text(
+                  'طلب المنتج',
+                  style: TextStyle(color: Colors.black),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
-}
 
-  
-  Widget _buildShoppingCartButton() {
-  return Positioned(
-    bottom: 16,
-    right: 16,
-    child: MouseRegion(
-      onEnter: (_) => setState(() => _isHovering = true),
-      onExit: (_) => setState(() => _isHovering = false),
-      child: GestureDetector(
-        onTap: _createOrderAndOpenChat, // << هنا ربطنا الضغطة عالكارد كامل
-        child: AnimatedContainer(
-          duration: Duration(milliseconds: 200),
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: _isHovering
-                ? Colors.white.withOpacity(0.6)
-                : Colors.white.withOpacity(0.6),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [Colors.pink, Colors.deepPurple],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.shopping_cart,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ),
-              ),
+  Widget _buildInteractionButton({
+    required Widget icon,
+    required String countText,
+    VoidCallback? onPressed,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 80,
+        padding: EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.grey.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            icon,
+            if (countText.isNotEmpty) ...[
               SizedBox(width: 8),
               Text(
-                'طلب المنتج',
-                style: TextStyle(color: Colors.black),
+                countText,
+                style: TextStyle(color: Colors.black, fontSize: 17),
               ),
             ],
-          ),
+          ],
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-
- Widget _buildInteractionButton({
-  required Widget icon,
-  required String countText,
-  VoidCallback? onPressed,
-}) {
-  return GestureDetector(
-    onTap: onPressed,
-    child: Container(
-      width: 80,
-      padding: EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color:  Colors.grey.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          icon,
-          if (countText.isNotEmpty) ...[
-            SizedBox(width: 8),
-            Text(
-              countText,
-              style: TextStyle(color: Colors.black, fontSize: 17),
-            ),
-          ],
+  void _showReviewDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('تقييم المتجر'),
+        content: Text('هل تريد تقييم هذا المتجر؟'),
+        actions: [
+          TextButton(
+            child: Text('إلغاء'),
+            onPressed: () => Navigator.pop(context),
+          ),
+          ElevatedButton(
+            child: Text('موافق'),
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RatingCard(uid: widget.post.uid),
+                ),
+              );
+            },
+          ),
         ],
       ),
-    ),
-  );
-}
-void _showReviewDialog() {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: Text('تقييم المتجر'),
-      content: Text('هل تريد تقييم هذا المتجر؟'),
-      actions: [
-        TextButton(
-          child: Text('إلغاء'),
-          onPressed: () => Navigator.pop(context),
-        ),
-        ElevatedButton(
-          child: Text('موافق'),
-          onPressed: () {
-            Navigator.pop(context);
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>RatingCard(uid: widget.post.uid)
-,
-              ),
-            );
-          },
-        ),
-      ],
-    ),
-  );
-}
-
+    );
+  }
 
   Widget _buildDescription() {
     return Column(
@@ -732,112 +723,106 @@ void _showReviewDialog() {
   }
 
   void _showPostOptions() {
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: Colors.white,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (context) => SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(10),
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
-            ),
-            SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildActionIcon(Icons.link, 'نسخ الرابط', [Color(0xFFE91E63), Color(0xFF4A148C)], () {
-
-                  
-                  PostActions.copyLink(context, widget.post.postId);
+              SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildActionIcon(Icons.link, 'نسخ الرابط',
+                      [Color(0xFFE91E63), Color(0xFF4A148C)], () {
+                    PostActions.copyLink(context, widget.post.postId);
+                    Navigator.pop(context);
+                  }),
+                  _buildActionIcon(Icons.share, 'مشاركة',
+                      [Color(0xFFE91E63), Color(0xFF4A148C)], () {
+                    PostActions.sharePost(
+                        widget.post.postId, widget.post.shareCount);
+                    Navigator.pop(context);
+                  }),
+                  _buildActionIcon(Icons.report, 'إبلاغ',
+                      [Color(0xFFBD4037), Color(0xFFED1404)], () {
+                    PostActions.reportPost(context, widget.post.postId);
+                    Navigator.pop(context);
+                  }),
+                ],
+              ),
+              SizedBox(height: 24),
+              if (isFollowing)
+                _buildOptionTile(Icons.person_remove, 'إلغاء المتابعة',
+                    () async {
+                  await PostActions.unfollowUser(context, widget.post.uid);
                   Navigator.pop(context);
+
+                  setState(() {
+                    isFollowing = false; // عشان يرجع يظهر زر المتابعة
+                  });
                 }),
-                _buildActionIcon(Icons.share, 'مشاركة', [Color(0xFFE91E63), Color(0xFF4A148C)], () {
-                  
-                  PostActions.sharePost(widget.post.postId, widget.post.shareCount);
-                  Navigator.pop(context);
-
-                }),
-                _buildActionIcon(Icons.report, 'إبلاغ', [Color(0xFFBD4037), Color(0xFFED1404)], () {
-                  
-                  PostActions.reportPost(context, widget.post.postId);
-                  Navigator.pop(context);
-                }),
-              ],
-            ),
-            SizedBox(height: 24),
-            if (isFollowing)
-  _buildOptionTile(Icons.person_remove, 'إلغاء المتابعة', () async {
-
-   
-    await PostActions.unfollowUser(context, widget.post.uid);
-     Navigator.pop(context);
-
-    setState(() {
-      isFollowing = false; // عشان يرجع يظهر زر المتابعة
-    });
-  }),
-
-            _buildOptionTile(Icons.visibility_off, 'إخفاء', () {
-
-              
-              PostActions.hidePost(context, widget.post.postId);
-              Navigator.pop(context);
-            }),
-            _buildOptionTile(Icons.person, 'عن هذا الحساب', () {
-              
-              PostActions.goToUserProfile(context, widget.post.uid);
-              Navigator.pop(context);
-
-            }),
-            SizedBox(height: 12),
-          ],
+              _buildOptionTile(Icons.visibility_off, 'إخفاء', () {
+                PostActions.hidePost(context, widget.post.postId);
+                Navigator.pop(context);
+              }),
+              _buildOptionTile(Icons.person, 'عن هذا الحساب', () {
+                PostActions.goToUserProfile(context, widget.post.uid);
+                Navigator.pop(context);
+              }),
+              SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-Widget _buildActionIcon(IconData icon, String label, List<Color> gradientColors, VoidCallback onTap) {
-  return GestureDetector(
-    onTap: onTap,
-    child: Column(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(colors: gradientColors),
+  Widget _buildActionIcon(IconData icon, String label,
+      List<Color> gradientColors, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(colors: gradientColors),
+            ),
+            padding: EdgeInsets.all(16),
+            child: Icon(icon, color: Colors.white),
           ),
-          padding: EdgeInsets.all(16),
-          child: Icon(icon, color: Colors.white),
-        ),
-        SizedBox(height: 8),
-        Text(label, style: TextStyle(fontSize: 14)),
-      ],
-    ),
-  );
-}
+          SizedBox(height: 8),
+          Text(label, style: TextStyle(fontSize: 14)),
+        ],
+      ),
+    );
+  }
 
-Widget _buildOptionTile(IconData icon, String title, VoidCallback onTap) {
-  return ListTile(
-    leading: Icon(icon, color: Colors.purple),
-    title: Text(title, textAlign: TextAlign.right),
-    onTap: () {
-      Navigator.pop(context);
-      onTap();
-    },
-  );
-}
+  Widget _buildOptionTile(IconData icon, String title, VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.purple),
+      title: Text(title, textAlign: TextAlign.right),
+      onTap: () {
+        Navigator.pop(context);
+        onTap();
+      },
+    );
+  }
 
   void _openPostDetail() {
     Navigator.push(
@@ -867,8 +852,6 @@ Widget _buildOptionTile(IconData icon, String title, VoidCallback onTap) {
   void _sharePost() {
     // TODO: Implement share functionality
   }
-
-  
 
   String _formatDate(Timestamp timestamp) {
     return '${timestamp.toDate().day}/${timestamp.toDate().month}/${timestamp.toDate().year}';
