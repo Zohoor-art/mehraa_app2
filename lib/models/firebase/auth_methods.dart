@@ -114,7 +114,8 @@ Future<String> completeSignUpProcess({
       workType: workType,
       latitude: latitude,
       longitude: longitude,
-      locationUrl: locationUrl,
+      locationUrl: locationUrl, 
+      isCommercial: true,
     );
 
     // رفع البيانات مع إضافة isCompleted
