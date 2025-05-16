@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:mehra_app/modules/notifications/notification_methods.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 
@@ -52,14 +54,50 @@ class _RatingCardState extends State<RatingCard> {
       double averagePoints = (productQuality + interactionStyle + commitment) / 3;
       int averageRating = ((averagePoints / 4) * 100).round();
 
-      await FirebaseFirestore.instance.collection('storeRatings').doc(widget.uid).set({
+      final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
+
+      // حفظ التقييم كمستند منفصل داخل collection فرعي "ratings"
+      final ratingDocRef = await FirebaseFirestore.instance
+          .collection('storeRatings')
+          .doc(widget.uid)
+          .collection('ratings')
+          .add({
         'productQuality': productQuality,
         'interactionStyle': interactionStyle,
         'commitment': commitment,
         'averageRating': averageRating,
         'timestamp': FieldValue.serverTimestamp(),
-        'totalRatings': FieldValue.increment(1),
+        'raterUid': currentUserUid,
+      });
+
+      // تحديث المستند الرئيسي storeRatings/{uid} بحساب متوسط النقاط و عدد التقييمات
+      final storeDocRef = FirebaseFirestore.instance.collection('storeRatings').doc(widget.uid);
+
+      final storeSnapshot = await storeDocRef.get();
+
+      int totalRatings = 1;
+      double totalAverageRating = averageRating.toDouble();
+
+      if (storeSnapshot.exists) {
+        final data = storeSnapshot.data()!;
+        totalRatings = (data['totalRatings'] ?? 0) + 1;
+        final prevAvg = (data['averageRating'] ?? 0).toDouble();
+
+        // تحديث المتوسط التراكمي
+        totalAverageRating = ((prevAvg * (totalRatings - 1)) + averageRating) / totalRatings;
+      }
+
+      await storeDocRef.set({
+        'averageRating': totalAverageRating,
+        'totalRatings': totalRatings,
+        'lastRatingTimestamp': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+
+      // إرسال إشعار التقييم
+      await NotificationMethods.sendRatingNotification(
+        toUid: widget.uid,
+        fromUid: currentUserUid,
+      );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('تم حفظ تقييمك بنجاح ✅')),

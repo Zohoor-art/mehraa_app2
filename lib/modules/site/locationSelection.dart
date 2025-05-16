@@ -23,19 +23,25 @@ class _RegionSelectionScreenState extends State<RegionSelectionScreen> {
 
   Future<void> fetchRegions() async {
     try {
-      final field = widget.showDetailedLocations ? 'locationUrl' : 'location';
-      print("🔍 Fetching regions using field: $field");
+      print("🔍 Fetching regions using field: ${widget.showDetailedLocations ? 'locationUrl' : 'location'}");
 
-      final QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .where(field, isNotEqualTo: null)
-          .get();
+      final QuerySnapshot snapshot =
+          await FirebaseFirestore.instance.collection('users').get();
 
       final regionSet = <String>{};
       for (var doc in snapshot.docs) {
-        final value = doc[field];
-        if (value != null && value.toString().trim().isNotEmpty) {
-          regionSet.add(value);
+        final data = doc.data() as Map<String, dynamic>;
+
+        if (widget.showDetailedLocations) {
+          final locationUrl = data['locationUrl'];
+          if (locationUrl != null && locationUrl.toString().trim().isNotEmpty) {
+            regionSet.add(locationUrl);
+          }
+        } else {
+          final location = data['location'];
+          if (location != null && location.toString().trim().isNotEmpty) {
+            regionSet.add(location);
+          }
         }
       }
 
