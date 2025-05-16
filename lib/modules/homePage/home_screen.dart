@@ -2,6 +2,7 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -15,6 +16,8 @@ import 'package:mehra_app/modules/homePage/post.dart';
 import 'package:mehra_app/modules/homePage/story_page.dart';
 import 'package:mehra_app/modules/login/login_screen.dart';
 import 'package:mehra_app/modules/notifications/Notification.dart';
+import 'package:mehra_app/modules/notifications/notificationScreen.dart';
+import 'package:mehra_app/modules/notifications/weeklyNoti.dart';
 import 'package:mehra_app/modules/site/nearToUPage.dart';
 import 'package:mehra_app/modules/site/site.dart';
 import 'package:mehra_app/modules/xplore/xplore_screen.dart';
@@ -26,6 +29,8 @@ class HomeScreen extends StatefulWidget {
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
+ 
+
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -36,7 +41,25 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     StoryCleaner.cleanExpiredStories();
+   _sendWeeklySummary();
+    _saveDeviceToken(); 
+
   }
+void _sendWeeklySummary() async {
+  final storeId = FirebaseAuth.instance.currentUser?.uid;
+  if (storeId != null) {
+    await WeeklyNotificationManager.trySendWeeklySummaryIfNeeded(storeId);
+  }
+}
+   void _saveDeviceToken() async {
+  final fcmToken = await FirebaseMessaging.instance.getToken();
+  final uid = FirebaseAuth.instance.currentUser?.uid;
+  if (uid != null && fcmToken != null) {
+    await FirebaseFirestore.instance.collection('users').doc(uid).update({
+      'fcmToken': fcmToken,
+    });
+  }
+}
 
   final List<Widget> _pages = [
     const NearbyOptionsScreen(),
@@ -173,15 +196,49 @@ class HomePage extends StatelessWidget {
                   child: const Icon(FontAwesomeIcons.bars, size: 25),
                 ),
                 const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const Notifications()),
-                    );
-                  },
-                  child: const Icon(FontAwesomeIcons.bell, size: 25),
+               StreamBuilder<QuerySnapshot>(
+  stream: FirebaseFirestore.instance
+      .collection('notifications')
+      .doc(FirebaseAuth.instance.currentUser!.uid)
+      .collection('items')
+      .where('isRead', isEqualTo: false)
+      .snapshots(),
+  builder: (context, snapshot) {
+    bool hasUnread = false;
+
+    if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+      hasUnread = true;
+    }
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+        );
+      },
+      child: Stack(
+        children: [
+          const Icon(FontAwesomeIcons.bell, size: 25),
+          if (hasUnread)
+            Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                width: 10,
+                height: 10,
+                decoration: const BoxDecoration(
+                  color: Colors.deepPurple,
+                  shape: BoxShape.circle,
                 ),
+              ),
+            ),
+        ],
+      ),
+    );
+  },
+)
+,
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () {

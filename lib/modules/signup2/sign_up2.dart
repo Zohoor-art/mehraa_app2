@@ -89,9 +89,9 @@ class _SignUp2screenState extends State<SignUp2screen> {
       email: widget.email,
       hours: selectedHours!,
       location: selectedArea!, // المنطقة
-      locationUrl: locationUrl!, // يدوي أو رابط من الخريطة
-      latitude:  latitude!,       // فقط لو تم استخدام الخريطة
-      longitude: longitude!,
+      locationUrl: locationUrl, // يدوي أو رابط من الخريطة
+      latitude:  latitude,       // فقط لو تم استخدام الخريطة
+      longitude: longitude,
       profileImage: widget.profileImage,
       storeName: widget.storeName,
       workType: selectedWorkType!,
