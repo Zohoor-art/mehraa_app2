@@ -249,12 +249,16 @@ Widget defultTextFormField({
   required String label,
   required IconData prefix,
   IconData? suffix,
+   bool readOnly = false, // <-- اختياري
+  void Function()? onTap,
   bool ispassword = false,
-  void Function()? suffixPressed,
+  void Function()? suffixPressed, 
 }) =>
     TextFormField(
       controller: controller,
       keyboardType: type,
+      readOnly: readOnly,
+      onTap: onTap,
       onFieldSubmitted: onSubmit,
       onChanged: onChanged,
       style: TextStyle(fontSize: 18),
@@ -262,6 +266,7 @@ Widget defultTextFormField({
       obscureText: ispassword,
       decoration: InputDecoration(
         labelText: label,
+        
         labelStyle: TextStyle(fontSize: 18), 
         prefixIcon: Icon(prefix, color: MyColor.purpleColor), // لون الأيقونة بنفسجي
         suffixIcon: suffix != null

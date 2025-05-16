@@ -83,6 +83,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           email: widget.email,
           storeName: widget.storeName,
           profileImage: widget.profileImage,
+          
         ),
       ),
     );

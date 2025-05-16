@@ -19,27 +19,35 @@ class FirestoreMethods {
   required bool isVideo,
   DocumentReference? userRef,
   required BuildContext context,
+  required String location,
+  String? locationUrl,
+  GeoPoint? locationCoords,
 }) async {
   String res = "ظهر خطأ ما";
   try {
-    String postId = const Uuid().v1(); // Generate a unique post ID
+    String postId = const Uuid().v1();
 
-    // Upload image if available
     String? photoUrl;
     if (file.isNotEmpty) {
       photoUrl = await StorageMethod().uploadImageToStorage('posts', file, true);
     }
 
-    // Upload video if available
     String? videoUrl;
     if (videoPath != null && videoPath.isNotEmpty) {
       videoUrl = await StorageMethod().uploadVideoToStorage('posts/videos', File(videoPath));
     }
 
-    // Get current timestamp
     Timestamp datePublished = Timestamp.now();
 
-    // Create post data
+    // ✅ جلب workType فقط من المستخدم (بدون حساب التقييم)
+    String? workType;
+    if (userRef != null) {
+      final userSnapshot = await userRef.get();
+      if (userSnapshot.exists) {
+        workType = userSnapshot.get('workType');
+      }
+    }
+
     Map<String, dynamic> postData = {
       'uid': uid,
       'postId': postId,
@@ -51,17 +59,16 @@ class FirestoreMethods {
       'storeName': storename,
       'likes': [],
       'userRef': userRef,
-      'isVideo': isVideo, // Add user reference
+      'isVideo': isVideo,
+      'location': location,
+      'locationUrl': locationUrl,
+      'locationCoords': locationCoords,
+      'workType': workType,
     };
 
-    // Remove null or empty fields
     postData.removeWhere((key, value) => value == null || value == '');
 
-    // Save to Firestore
-    await FirebaseFirestore.instance
-        .collection('posts')
-        .doc(postId)
-        .set(postData);
+    await FirebaseFirestore.instance.collection('posts').doc(postId).set(postData);
 
     res = 'تم نشر الصورة بنجاح';
   } on FirebaseException catch (e) {
@@ -70,4 +77,5 @@ class FirestoreMethods {
     res = e.toString();
   }
   return res;
-}}
+}
+}

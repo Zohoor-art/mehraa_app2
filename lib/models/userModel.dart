@@ -13,9 +13,26 @@ class Users {
   final String? profileImage;
   final String storeName;
   final String workType;
+
   final String storeNameLower; // تم إضافة هذه الخاصية
 
+  final bool isCommercial;
+  final String? provider;
+  final String? displayName;
+  final Timestamp? lastMessageTime;
+  final double? latitude;
+  final double? longitude;
+  final String? locationUrl;
+
+
   const Users({
+    required this.isCommercial,
+    this.provider,
+    this.displayName,
+    this.lastMessageTime,
+    this.locationUrl,
+    this.latitude,
+    this.longitude,
     required this.contactNumber,
     required this.uid,
     required this.days,
@@ -45,6 +62,11 @@ class Users {
         'storeName': storeName,
         'workType': workType,
         'storeNameLower': storeNameLower, // تم إضافة هذه الخاصية في الـ Map
+
+        'latitude': latitude,
+        'longitude': longitude,
+        'locationUrl': locationUrl,
+
       };
 
   static Users fromSnap(DocumentSnapshot snap) {
@@ -53,16 +75,22 @@ class Users {
       contactNumber: snapshot['contactNumber'] ?? '',
       uid: snapshot['uid'] ?? '',
       days: snapshot['days'] ?? '',
+
+      latitude: snapshot['latitude'] ?? 0.0,
+      longitude: snapshot['longitude'] ?? 0.0,
+
       description: snapshot['description'] ?? '',
       email: snapshot['email'] ?? '',
       followers: snapshot['followers'] ?? [],
       following: snapshot['following'] ?? [],
       hours: snapshot['hours'] ?? '',
       location: snapshot['location'] ?? '',
+      storeNameLower: (snapshot['storeName'] as String).toLowerCase(), // تم تحويل storeName إلى lowercase
+      locationUrl: snapshot['locationUrl'] ?? '',
       profileImage: snapshot['profileImage'] ?? '',
       storeName: snapshot['storeName'] ?? '',
       workType: snapshot['workType'] ?? '',
-      storeNameLower: (snapshot['storeName'] as String).toLowerCase(), // تم تحويل storeName إلى lowercase
+      isCommercial: snapshot['isCommercial'] as bool? ?? false,
     );
   }
 
@@ -70,6 +98,10 @@ class Users {
     final data = doc.data() as Map<String, dynamic>;
     return Users(
       contactNumber: data['contactNumber'] ?? '',
+
+      latitude: data['latitude'] ?? 0.0,
+      longitude: data['longitude'] ?? 0.0,
+
       uid: data['uid'] ?? '',
       days: data['days'] ?? '',
       description: data['description'] ?? '',
@@ -78,12 +110,17 @@ class Users {
       following: List.from(data['following'] ?? []),
       hours: data['hours'] ?? '',
       location: data['location'] ?? '',
+
+      
+      locationUrl: data['locationUrl'] ?? '',
       profileImage: data['profileImage'] ?? '', // ✅ هذا أهم سطر
       storeName: data['storeName'] ?? '',
       workType: data['workType'] ?? '',
+      isCommercial: data['isCommercial'] as bool? ?? false,
       storeNameLower: (data['storeName'] as String).toLowerCase(), // تم تحويل storeName إلى lowercase
     );
   }
 
   get displayNameOrStoreName => storeName; // تم تعديل هذا ليكون displayNameOrStoreName بدل من null.
+
 }

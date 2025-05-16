@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:mehra_app/modules/notifications/notification_methods.dart';
+import 'package:mehra_app/modules/notifications/notifications_services.dart';
 
 class RatingsListPage extends StatefulWidget {
   final String userId;
@@ -106,5 +108,69 @@ class _RatingsListPageState extends State<RatingsListPage> {
         ],
       ),
     );
+  }
+
+  /// 🟡 استدعِ هذه الدالة عند التقييم لحفظ بيانات المقيم داخل الكولكشن الفرعي "raters"
+  Future<void> submitRatingWithRaterInfo({
+    required String storeId,
+    required String raterUid,
+    required String raterName,
+    required int productQuality,
+    required int interactionStyle,
+    required int commitment,
+  }) async {
+    final storeRef = FirebaseFirestore.instance.collection('storeRatings').doc(storeId);
+    final raterRef = storeRef.collection('raters').doc(raterUid);
+
+    final ratingData = {
+      'productQuality': productQuality,
+      'interactionStyle': interactionStyle,
+      'commitment': commitment,
+      'timestamp': FieldValue.serverTimestamp(),
+      'uid': raterUid,
+      'name': raterName,
+    };
+
+    try {
+      // إضافة تقييم الشخص في الكولكشن الفرعي
+      await raterRef.set(ratingData);
+
+      // تحديث التقييم الإجمالي
+      final snapshot = await storeRef.get();
+      if (snapshot.exists) {
+        final current = snapshot.data()!;
+        int total = current['totalRatings'] ?? 0;
+        int pq = current['productQuality'] ?? 0;
+        int istyle = current['interactionStyle'] ?? 0;
+        int com = current['commitment'] ?? 0;
+
+        await storeRef.update({
+          'totalRatings': total + 1,
+          'productQuality': ((pq * total) + productQuality) ~/ (total + 1),
+          'interactionStyle': ((istyle * total) + interactionStyle) ~/ (total + 1),
+          'commitment': ((com * total) + commitment) ~/ (total + 1),
+          'averageRating': (((pq * total) + productQuality + (istyle * total) + interactionStyle + (com * total) + commitment) ~/ (3 * (total + 1))),
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      } else {
+        await storeRef.set({
+          'totalRatings': 1,
+          'productQuality': productQuality,
+          'interactionStyle': interactionStyle,
+          'commitment': commitment,
+          'averageRating': ((productQuality + interactionStyle + commitment) ~/ 3),
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      }
+      // await NotificationService.notifyStoreOwnerOnRating(storeId, raterName);
+      await NotificationMethods.sendRatingNotification(
+  toUid: storeId, // صاحب المتجر هو المستلم
+  fromUid: raterUid, // المقيّم
+  
+);
+
+    } catch (e) {
+      print('فشل في حفظ التقييم والمقيم: $e');
+    }
   }
 }

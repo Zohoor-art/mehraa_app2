@@ -22,6 +22,9 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   bool _isLoading = false;
   DocumentReference? _userRef;
+    String selectedRegionName = ''; // اسم المنطقة (إجباري)
+String? detailedLocationUrl;    // رابط Google Maps (يدوي أو من الخريطة)
+GeoPoint? selectedCoords;
 
   @override
   void initState() {
@@ -102,7 +105,10 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
 
     try {
       final userData = await _fetchUserDetails();
-
+       
+    final location = userData['location'] ?? '';
+    final locationUrl = userData['locationUrl']; // ممكن يكون null
+    
       String res = await FirestoreMethods().uploadPost(
         _descriptionController.text,
         Uint8List(0),
@@ -112,7 +118,10 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
         videoPath: widget.videoPath,
         userRef: _userRef,
         context: context,
-        isVideo: true,
+        isVideo: true, 
+        location: selectedRegionName,
+        locationUrl: detailedLocationUrl, // رابط Google Maps (يدوي أو من الخريطة)
+         // إحداثيات الموقع (اختياري)
       );
 
       Navigator.pop(context); // إغلاق Dialog

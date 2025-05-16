@@ -1,123 +1,107 @@
-import 'package:flutter/material.dart';
-import 'package:mehra_app/shared/components/components.dart';
-import 'package:mehra_app/shared/components/constants.dart';
+// import 'package:flutter/material.dart';
+// import 'package:mehra_app/modules/site/region_stores_screen.dart';
+// import 'package:mehra_app/shared/components/constants.dart';
 
-class SiteScreen extends StatefulWidget {
-  const SiteScreen({super.key});
+// class SiteScreen extends StatefulWidget {
+//   const SiteScreen({super.key});
 
-  @override
-  State<SiteScreen> createState() => _SiteScreenState();
-}
+//   @override
+//   State<SiteScreen> createState() => _SiteScreenState();
+// }
 
-class _SiteScreenState extends State<SiteScreen> {
-  String? selectedValue; // المتغير لتخزين القيمة المحددة
+// class _SiteScreenState extends State<SiteScreen> {
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       backgroundColor: MyColor.lightprimaryColor,
+//       appBar: AppBar(
+//         toolbarHeight: 0,
+//         elevation: 0,
+//         flexibleSpace: Container(
+//           decoration: BoxDecoration(
+//             gradient: LinearGradient(
+//               colors: [MyColor.blueColor, MyColor.purpleColor],
+//             ),
+//           ),
+//         ),
+//       ),
+//       body: Padding(
+//         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.stretch,
+//           children: [
+//             const Text(
+//               'اختر طريقة تحديد الموقع',
+//               textAlign: TextAlign.center,
+//               style: TextStyle(
+//                 fontFamily: 'Tajawal',
+//                 fontSize: 26,
+//                 fontWeight: FontWeight.bold,
+//                 color: Color(0xFF707070),
+//               ),
+//             ),
+//             const SizedBox(height: 40),
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 3,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                MyColor.blueColor,
-                MyColor.purpleColor,
-              ],
-            ),
-          ),
-        ),
-      ),
-      body: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-        },
-        child: Stack(children: [
-          Container(
-            color: MyColor.lightprimaryColor,
-          ),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Image.asset(
-              'assets/images/sites.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          Positioned(
-            top: 300,
-            left: 20,
-            right: 20,
-            child: Column(
-              children: [
-                Text(
-                  'طريقة تحديد الموقع',
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Tajawal',
-                    color: Color(0XFF707070),
-                  ),
-                ),
-                SizedBox(height: 40),
+//             // زر 1 - دخول لاكتشاف المتاجر
+//             _buildButton(
+//               title: 'دخول لاكتشاف المتاجر',
+//               onTap: () {
+//                 Navigator.pushNamed(context, '/search');
+//               },
+//             ),
 
-                // زر تلقائي
-                GradientButton(
-                  onPressed: () {},
-                  text: 'تلقائي',
-                  width: 348,
-                  height: 70,
-                  fontSize: 40,
-                ),
+//             const SizedBox(height: 20),
 
-                SizedBox(height: 40),
+//             // زر 2 - حسب المنطقة (location)
+//             _buildButton(
+//               title: 'اختيار المتجر حسب المنطقة',
+//               onTap: () {
+//                 Navigator.push(
+//   context,
+//   MaterialPageRoute(builder: (context) => const RegionStoresScreen()),
+// );
 
-                // المربع الذي يحتوي على القائمة المنسدلة
-                Container(
-                  width: 348, // عرض المربع
-                  height: 65, // ارتفاع المربع
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.purple, width: 2), // لون وحجم الإطار
-                    borderRadius: BorderRadius.circular(8), // زوايا دائرية للإطار
-                  ),
-                  child: PopupMenuButton<String>(
-                    onSelected: (String newValue) {
-                      setState(() {
-                        selectedValue = newValue; // تعيين القيمة المحددة
-                      });
-                    },
-                    child: Center(
-                      child: Text(
-                        selectedValue ?? 'يدوي', // عرض القيمة المحددة أو النص الافتراضي
-                        style: TextStyle(color: Colors.black),
-                      ),
-                    ),
-                    itemBuilder: (BuildContext context) {
-                      return <PopupMenuEntry<String>>[
-                        PopupMenuItem<String>(
-                          value: 'مذبح',
-                          child: Text('مذبح'),
-                        ),
-                        PopupMenuItem<String>(
-                          value: 'عصر',
-                          child: Text('عصر'),
-                        ),
-                        PopupMenuItem<String>(
-                          value: 'شملان',
-                          child: Text('شملان'),
-                        ),
-                      ];
-                    },
-                  ),
-                ),
+// },
 
-                SizedBox(height: 30),
-              ],
-            ),
-          ),
-        ]),
-      ),
-    );
-  }
-}
+              
+//             ),
+
+//             const SizedBox(height: 20),
+
+//             // زر 3 - حسب العنوان المفصل (locationUrl)
+//             _buildButton(
+//               title: 'البحث بالموقع المفصل',
+//               onTap: () {
+//                 Navigator.pushNamed(context, '/detailedAddressStores');
+//               },
+//             ),
+
+//             const SizedBox(height: 20),
+
+//             // زر 4 - تحديد الموقع تلقائياً
+//             _buildButton(
+//               title: 'تحديد الموقع تلقائياً',
+//               onTap: () {
+//                 Navigator.pushNamed(context, '/autoLocation');
+//               },
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _buildButton({required String title, required VoidCallback onTap}) {
+//     return ElevatedButton(
+//       onPressed: onTap,
+//       style: ElevatedButton.styleFrom(
+//         backgroundColor: MyColor.blueColor,
+//         foregroundColor: Colors.white,
+//         padding: const EdgeInsets.symmetric(vertical: 20),
+//         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+//         textStyle: const TextStyle(fontSize: 20, fontFamily: 'Tajawal'),
+//       ),
+//       child: Text(title),
+//     );
+//   }
+// }

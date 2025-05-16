@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:mehra_app/modules/notifications/notification_methods.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 
@@ -22,35 +24,88 @@ class _RatingCardState extends State<RatingCard> {
   void toggleStar(int rowIndex, int colIndex) {
     setState(() {
       for (int i = 0; i <= 3; i++) {
-        starRatings[rowIndex][i] = i <= colIndex; 
+        starRatings[rowIndex][i] = i <= colIndex;
       }
     });
   }
 
+  bool isEveryCategoryRated() {
+    for (var rating in starRatings) {
+      if (rating.where((star) => star).isEmpty) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   Future<void> submitRatings() async {
+    if (!isEveryCategoryRated()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('يرجى تقييم جميع الفئات قبل الحفظ ❗')),
+      );
+      return;
+    }
+
     try {
-      int productQuality = (starRatings[0].where((star) => star).length) * 25;
-      int interactionStyle = (starRatings[1].where((star) => star).length) * 25;
-      int commitment = (starRatings[2].where((star) => star).length) * 25;
+      int productQuality = starRatings[0].where((star) => star).length;
+      int interactionStyle = starRatings[1].where((star) => star).length;
+      int commitment = starRatings[2].where((star) => star).length;
 
-      int averageRating = ((productQuality + interactionStyle + commitment) / 3).round();
+      double averagePoints = (productQuality + interactionStyle + commitment) / 3;
+      int averageRating = ((averagePoints / 4) * 100).round();
 
-      await FirebaseFirestore.instance.collection('storeRatings').doc(widget.uid).set({
+      final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
+
+      // حفظ التقييم كمستند منفصل داخل collection فرعي "ratings"
+      final ratingDocRef = await FirebaseFirestore.instance
+          .collection('storeRatings')
+          .doc(widget.uid)
+          .collection('ratings')
+          .add({
         'productQuality': productQuality,
         'interactionStyle': interactionStyle,
         'commitment': commitment,
         'averageRating': averageRating,
         'timestamp': FieldValue.serverTimestamp(),
-        'totalRatings': FieldValue.increment(1), // زيادة عدد التقييمات
-      }, SetOptions(merge: true)); // دمج البيانات مع البيانات الموجودة بالفعل
-      
+        'raterUid': currentUserUid,
+      });
+
+      // تحديث المستند الرئيسي storeRatings/{uid} بحساب متوسط النقاط و عدد التقييمات
+      final storeDocRef = FirebaseFirestore.instance.collection('storeRatings').doc(widget.uid);
+
+      final storeSnapshot = await storeDocRef.get();
+
+      int totalRatings = 1;
+      double totalAverageRating = averageRating.toDouble();
+
+      if (storeSnapshot.exists) {
+        final data = storeSnapshot.data()!;
+        totalRatings = (data['totalRatings'] ?? 0) + 1;
+        final prevAvg = (data['averageRating'] ?? 0).toDouble();
+
+        // تحديث المتوسط التراكمي
+        totalAverageRating = ((prevAvg * (totalRatings - 1)) + averageRating) / totalRatings;
+      }
+
+      await storeDocRef.set({
+        'averageRating': totalAverageRating,
+        'totalRatings': totalRatings,
+        'lastRatingTimestamp': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      // إرسال إشعار التقييم
+      await NotificationMethods.sendRatingNotification(
+        toUid: widget.uid,
+        fromUid: currentUserUid,
+      );
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('تم حفظ تقييمك بنجاح ✅')),
       );
 
-      Navigator.of(context).pop(); // يرجع المستخدم بعد الحفظ
+      Navigator.of(context).pop();
     } catch (e) {
+      print('خطأ أثناء حفظ التقييم: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('حدث خطأ أثناء الحفظ ❌')),
       );
@@ -177,14 +232,14 @@ class _RatingCardState extends State<RatingCard> {
                                         actions: [
                                           TextButton(
                                             onPressed: () {
-                                              Navigator.pop(context); // يغلق الديالوق
-                                              submitRatings(); // يحفظ التقييم
+                                              Navigator.pop(context);
+                                              submitRatings();
                                             },
                                             child: Text('نعم', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
                                           ),
                                           TextButton(
                                             onPressed: () {
-                                              Navigator.pop(context); // يغلق الديالوق بدون حفظ
+                                              Navigator.pop(context);
                                             },
                                             child: Text('لا', style: TextStyle(color: Colors.red)),
                                           ),
@@ -217,9 +272,8 @@ class _RatingCardState extends State<RatingCard> {
                                         actions: [
                                           TextButton(
                                             onPressed: () {
-                                              Navigator.pop(context); // يغلق الديالوق
+                                              Navigator.pop(context);
                                               setState(() {
-                                                // يرجع النجوم كلها فاضية
                                                 starRatings = [
                                                   [false, false, false, false],
                                                   [false, false, false, false],
@@ -231,8 +285,8 @@ class _RatingCardState extends State<RatingCard> {
                                           ),
                                           TextButton(
                                             onPressed: () {
-                                              Navigator.pop(context); // يغلق الديالوق
-                                              Navigator.of(context).pop(); // يرجع للصفحة السابقة
+                                              Navigator.pop(context);
+                                              Navigator.of(context).pop();
                                             },
                                             child: Text('خروج', style: TextStyle(color: Colors.red)),
                                           ),

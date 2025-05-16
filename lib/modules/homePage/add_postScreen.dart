@@ -24,7 +24,8 @@ class _AddPostscreenState extends State<AddPostscreen> {
   VideoPlayerController? _controller;
   final TextEditingController _descriptionController = TextEditingController();
   bool _isLoading = false;
-  DocumentReference? _userRef; // سيحتوي على مرجع مستند المستخدم
+  DocumentReference? _userRef; 
+
 
   @override
   void initState() {
@@ -47,37 +48,44 @@ class _AddPostscreenState extends State<AddPostscreen> {
   }
 
   void postImage(String uid, String storename, String profileImage) async {
-    setState(() {
-      _isLoading = true;
-    });
-    try {
-      String res = await FirestoreMethods().uploadPost(
-        _descriptionController.text,
-        _file!,
-        uid,
-        storename,
-        profileImage,
-        videoPath: _videoPath,
-        userRef: _userRef, // إضافة مرجع المستخدم
-        context: context, isVideo: true,
-      );
+  setState(() {
+    _isLoading = true;
+  });
+  try {
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    final location = userDoc['location'] ?? '';
+    final locationUrl = userDoc['locationUrl']; // ممكن يكون null
+    
+    String res = await FirestoreMethods().uploadPost(
+      _descriptionController.text,
+      _file!,
+      uid,
+      storename,
+      profileImage,
+      videoPath: _videoPath,
+      userRef: _userRef, // إضافة مرجع المستخدم
+      context: context,
+      isVideo: _videoPath != null && _videoPath!.isNotEmpty, // <-- هنا التعديل
+      location: location,
+      locationUrl: locationUrl,
+    );
 
-      if (res == 'تم نشر الصورة بنجاح') {
-        setState(() {
-          _isLoading = false;
-        });
-        showSnackBar('تم النشر', context);
-        clearImage();
-      } else {
-        showSnackBar(res, context);
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      showSnackBar(e.toString(), context);
+    if (res == 'تم نشر الصورة بنجاح') {
+      setState(() {
+        _isLoading = false;
+      });
+      showSnackBar('تم النشر', context);
+      clearImage();
+    } else {
+      showSnackBar(res, context);
+      setState(() {
+        _isLoading = false;
+      });
     }
+  } catch (e) {
+    showSnackBar(e.toString(), context);
   }
+}
 
   Future<void> pickVideo() async {
     final ImagePicker picker = ImagePicker();
