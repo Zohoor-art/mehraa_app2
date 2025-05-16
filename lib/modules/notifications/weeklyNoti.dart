@@ -21,8 +21,8 @@ class WeeklyNotificationManager {
   }
 
   static Future<void> trySendWeeklySummaryIfNeeded(String storeId) async {
-    // final now = DateTime.now();
-    // if (now.weekday != DateTime.friday) return; // فقط يوم الجمعة
+    final now = DateTime.now();
+    if (now.weekday != DateTime.friday) return; // فقط يوم الجمعة
 
     final sent = await isWeeklyNotificationSent(storeId);
     if (sent) return;
