@@ -7,11 +7,13 @@ import 'package:flutter/services.dart';
 class Sharing extends StatefulWidget {
   final String postImageUrl;
   final String postId;
+  final String postDescription;
 
   const Sharing({
     super.key,
     required this.postImageUrl,
     required this.postId,
+    required this.postDescription,
   });
 
   @override
@@ -80,13 +82,64 @@ class _SharingState extends State<Sharing> {
     if (currentUser == null) return;
 
     final msg = _messageController.text.trim();
-    await FirebaseFirestore.instance.collection('messages').add({
+    final timestamp = FieldValue.serverTimestamp();
+    final messageId = FirebaseFirestore.instance.collection('messages').doc().id;
+
+    // إنشاء رسالة في محادثة المرسل
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('chats')
+        .doc(receiverId)
+        .collection('messages')
+        .doc(messageId)
+        .set({
       'senderId': currentUser.uid,
       'receiverId': receiverId,
       'postId': widget.postId,
-      'message': msg,
-      'timestamp': FieldValue.serverTimestamp(),
+      'postImageUrl': widget.postImageUrl,
+      'postDescription': widget.postDescription,
+      'message': msg.isNotEmpty ? msg : 'قام بمشاركة منشور معك',
+      'timestamp': timestamp,
+      'isRead': false,
+      'isPostMessage': true,
     });
+
+    // إنشاء رسالة في محادثة المستقبل
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(receiverId)
+        .collection('chats')
+        .doc(currentUser.uid)
+        .collection('messages')
+        .doc(messageId)
+        .set({
+      'senderId': currentUser.uid,
+      'receiverId': receiverId,
+      'postId': widget.postId,
+      'postImageUrl': widget.postImageUrl,
+      'postDescription': widget.postDescription,
+      'message': msg.isNotEmpty ? msg : 'قام بمشاركة منشور معك',
+      'timestamp': timestamp,
+      'isRead': false,
+      'isPostMessage': true,
+    });
+
+    // تحديث سجل المحادثة للمرسل
+    await _updateChatHistory(
+      currentUser.uid,
+      receiverId,
+      msg.isNotEmpty ? msg : 'منشور: ${widget.postDescription}',
+      timestamp,
+    );
+
+    // تحديث سجل المحادثة للمستقبل
+    await _updateChatHistory(
+      receiverId,
+      currentUser.uid,
+      msg.isNotEmpty ? msg : 'منشور: ${widget.postDescription}',
+      timestamp,
+    );
 
     setState(() {
       sentUserIds.add(receiverId);
@@ -95,6 +148,25 @@ class _SharingState extends State<Sharing> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('تم الإرسال')),
     );
+  }
+
+  Future<void> _updateChatHistory(
+    String userId,
+    String otherUserId,
+    String lastMessage,
+    FieldValue timestamp,
+  ) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('chats')
+        .doc(otherUserId)
+        .set({
+      'lastMessage': lastMessage,
+      'lastMessageTime': timestamp,
+      'unreadCount': FieldValue.increment(1),
+      'isLastMessageRead': false,
+    }, SetOptions(merge: true));
   }
 
   void _copyLink() {
@@ -295,7 +367,7 @@ class _SharingState extends State<Sharing> {
             ? NetworkImage(img)
             : AssetImage('assets/images/2.png') as ImageProvider,
       ),
-      title: Text(user['storeName'] ?? 'مستخدم'),
+      title: Text(user['storeName'] ?? user['displayName']),
       trailing: Container(
         decoration: BoxDecoration(
           gradient: isSent ? null : gradient,

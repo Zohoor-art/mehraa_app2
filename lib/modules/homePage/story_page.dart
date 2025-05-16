@@ -72,7 +72,9 @@ class StoryPage extends StatelessWidget {
             .map((doc) => Story.fromDocumentSnapshot(doc))
             .toList();
 
+
         final Map<String, List<Story>> groupedStories = {};
+
 
         for (var story in otherStories) {
           groupedStories.putIfAbsent(story.userId, () => []).add(story);
@@ -260,6 +262,43 @@ class StoryPage extends StatelessWidget {
                             : const Icon(Icons.person, size: 40),
                       ),
                     ),
+
+                    Positioned(
+                      bottom: -2,
+                      right: -1,
+                      child: GestureDetector(
+                        onTap: () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => CreateStoryPage()),
+                          );
+
+                          if (result == true) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('✅ تم نشر الستوري بنجاح!'),
+                                backgroundColor: Colors.green,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                        },
+                        child: Container(
+                          width: 25,
+                          height: 25,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: LinearGradient(
+                              colors: [Colors.pink, Colors.purple],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
+                          child: const Icon(Icons.add, color: Colors.white, size: 20),
+                        ),
+                      ),
+                    ),
+
                   ],
                 ),
                 const SizedBox(height: 6),

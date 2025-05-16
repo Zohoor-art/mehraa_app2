@@ -178,4 +178,6 @@ class Post {
       isVideo: isVideo ?? this.isVideo,
     );
   }
+
+  String get mediaUrl => isVideo ? videoUrl : postUrl;
 }
