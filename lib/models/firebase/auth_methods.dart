@@ -73,6 +73,8 @@ class AuthMethods {
 }
 
   // إكمال عملية التسجيل (الجزء الثاني)
+
+
 Future<String> completeSignUpProcess({
   required String userId,
   required String contactNumber,
@@ -83,6 +85,7 @@ Future<String> completeSignUpProcess({
   required String location,
   required String profileImage,
   required String storeName,
+   
   required String workType,
   double? latitude,
   double? longitude,
@@ -111,6 +114,7 @@ Future<String> completeSignUpProcess({
       profileImage: profileImage,
       location: location,
       storeName: storeName,
+       storeNameLower: storeName.toLowerCase(), 
       workType: workType,
       latitude: latitude,
       longitude: longitude,
@@ -121,6 +125,7 @@ Future<String> completeSignUpProcess({
     // رفع البيانات مع إضافة isCompleted
     await firestore.collection('users').doc(userId).set({
       ...userModel.toJson(),
+       'storeNameLower': storeName.toLowerCase(),
       'isCompleted': true, // ← إضافة الحقل هنا
     });
 
@@ -170,5 +175,29 @@ Future<String> completeSignUpProcess({
       return user.emailVerified;
     }
     return false;
+  }
+
+  // البحث عن المستخدمين بناءً على storeNameLower
+  Future<List<model.Users>> searchUsersByStoreName(String searchQuery) async {
+    try {
+      // تحويل الاستعلام إلى حروف صغيرة
+      String searchQueryLower = searchQuery.toLowerCase();
+
+      // البحث في مجموعة المستخدمين بناءً على storeNameLower
+      QuerySnapshot snapshot = await firestore
+          .collection('users')
+          .where('storeNameLower', isGreaterThanOrEqualTo: searchQueryLower)
+          .where('storeNameLower', isLessThan: searchQueryLower + 'z')
+          .get();
+
+      // تحويل النتائج إلى قائمة من المستخدمين
+      List<model.Users> usersList = snapshot.docs
+          .map((doc) => model.Users.fromSnap(doc))
+          .toList();
+
+      return usersList;
+    } catch (error) {
+      return [];
+    }
   }
 }

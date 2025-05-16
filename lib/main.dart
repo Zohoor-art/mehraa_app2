@@ -101,6 +101,7 @@ class _MyAppState extends State<MyApp> {
             ? TextDirection.rtl
             : TextDirection.ltr,
 
+
         child: FutureBuilder<Widget>(
           future: _getInitialScreen(),
           builder: (context, snapshot) {
@@ -113,6 +114,7 @@ class _MyAppState extends State<MyApp> {
             }
           },
         ),
+
 
       ),
     );

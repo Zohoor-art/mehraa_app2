@@ -251,6 +251,7 @@ class HomePage extends StatelessWidget {
                     },
                     child: const Icon(FontAwesomeIcons.bars, size: 25),
                   ),
+
                 const SizedBox(width: 8),
                      const SizedBox(width: 8),
                StreamBuilder<QuerySnapshot>(
@@ -266,6 +267,7 @@ class HomePage extends StatelessWidget {
     if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
       hasUnread = true;
     }
+
 
     return GestureDetector(
       onTap: () {
