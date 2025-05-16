@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:mehra_app/models/chat_model.dart';
 import 'package:mehra_app/models/post.dart';
 import 'package:mehra_app/models/userModel.dart';
 import 'package:mehra_app/shared/utils/exception.dart';
@@ -114,9 +113,16 @@ class Firebase_Firestor {
     String? text,
     String? imageUrl,
     String? audioUrl,
+    required Timestamp timestamp,
+    bool isPostMessage = false,
+    String? postId,
+    String? postImageUrl,
+    String? postDescription,
   }) async {
     final currentUserId = _auth.currentUser?.uid;
     if (currentUserId == null) return;
+
+    final messageId = _uuid.v1();
 
     final messageData = {
       'senderId': currentUserId,
@@ -126,11 +132,15 @@ class Firebase_Firestor {
       'audioUrl': audioUrl,
       'timestamp': FieldValue.serverTimestamp(),
       'isRead': false,
+      'isPostMessage': isPostMessage,
+      if (isPostMessage) ...{
+        'postId': postId,
+        'postImageUrl': postImageUrl,
+        'postDescription': postDescription,
+      },
     };
 
-    // إضافة الرسالة لكلا الطرفين
-    final messageId = _uuid.v1();
-    
+    // Save the message in sender's messages
     await _firebaseFirestore
         .collection('users')
         .doc(currentUserId)
@@ -140,6 +150,7 @@ class Firebase_Firestor {
         .doc(messageId)
         .set(messageData);
 
+    // Save the message in receiver's messages
     await _firebaseFirestore
         .collection('users')
         .doc(receiverId)
@@ -149,12 +160,11 @@ class Firebase_Firestor {
         .doc(messageId)
         .set(messageData);
 
-    // تحديث حالة الرسائل
     await _updateUserMessagesStatus(currentUserId);
     await _updateUserMessagesStatus(receiverId);
 
-    // تحديث آخر رسالة
-    await _updateLastMessage(currentUserId, receiverId, text, imageUrl, audioUrl);
+    await _updateLastMessage(
+        currentUserId, receiverId, text, imageUrl, audioUrl);
   }
 
   Future<void> sendOrderConfirmation({
@@ -170,7 +180,6 @@ class Firebase_Firestor {
     final timestamp = FieldValue.serverTimestamp();
     final messageText = 'تم إنشاء طلب جديد للمنتج: $productDescription';
 
-    // بيانات الرسالة الأساسية
     final messageData = {
       'senderId': currentUserId,
       'receiverId': receiverId,
@@ -181,7 +190,6 @@ class Firebase_Firestor {
       'orderId': orderId,
     };
 
-    // إرسال الرسالة لكلا الطرفين
     await _firebaseFirestore
         .collection('users')
         .doc(currentUserId)
@@ -200,7 +208,6 @@ class Firebase_Firestor {
         .doc(messageId)
         .set(messageData);
 
-    // إرسال صورة المنتج إذا كانت موجودة
     if (productImage != null) {
       final imageMessageId = _uuid.v1();
       final imageMessageData = {
@@ -230,11 +237,11 @@ class Firebase_Firestor {
           .set(imageMessageData);
     }
 
-    // تحديث سجل المحادثة لكلا الطرفين
-    await _updateLastMessage(currentUserId, receiverId, messageText, null, null);
-    await _updateLastMessage(receiverId, currentUserId, messageText, null, null);
+    await _updateLastMessage(
+        currentUserId, receiverId, messageText, null, null);
+    await _updateLastMessage(
+        receiverId, currentUserId, messageText, null, null);
 
-    // تحديث حالة وجود رسائل لكلا المستخدمين
     await _updateUserMessagesStatus(currentUserId);
     await _updateUserMessagesStatus(receiverId);
   }
@@ -295,7 +302,7 @@ class Firebase_Firestor {
     final batch = _firebaseFirestore.batch();
 
     for (final messageId in messageIds) {
-      final messageRef = _firebaseFirestore
+      final userMessageRef = _firebaseFirestore
           .collection('users')
           .doc(userId)
           .collection('chats')
@@ -303,50 +310,101 @@ class Firebase_Firestor {
           .collection('messages')
           .doc(messageId);
 
-      batch.update(messageRef, {'isRead': true});
-    }
-
-    await batch.commit();
-  }
-
-  Future<void> deleteMessages(
-      String userId, String otherUserId, bool deleteForBoth) async {
-    // حذف من المستخدم الحالي
-    final currentUserMessages = await _firebaseFirestore
-        .collection('users')
-        .doc(userId)
-        .collection('chats')
-        .doc(otherUserId)
-        .collection('messages')
-        .get();
-
-    final batch1 = _firebaseFirestore.batch();
-    for (var doc in currentUserMessages.docs) {
-      batch1.delete(doc.reference);
-    }
-    await batch1.commit();
-
-    // إذا طلب حذف من الطرفين
-    if (deleteForBoth) {
-      final otherUserMessages = await _firebaseFirestore
+      final otherUserMessageRef = _firebaseFirestore
           .collection('users')
           .doc(otherUserId)
           .collection('chats')
           .doc(userId)
           .collection('messages')
-          .get();
+          .doc(messageId);
 
-      final batch2 = _firebaseFirestore.batch();
-      for (var doc in otherUserMessages.docs) {
-        batch2.delete(doc.reference);
-      }
-      await batch2.commit();
+      batch.update(userMessageRef, {'isRead': true});
+      batch.update(otherUserMessageRef, {'isRead': true});
     }
 
-    // تحديث حالة وجود رسائل
-    await _updateHasMessagesStatus(userId);
-    if (deleteForBoth) {
-      await _updateHasMessagesStatus(otherUserId);
+    // تصفير عداد الرسائل الغير مقروءة
+    batch.update(
+      _firebaseFirestore
+          .collection('users')
+          .doc(userId)
+          .collection('chats')
+          .doc(otherUserId),
+      {'unreadCount': 0},
+    );
+
+    await batch.commit();
+  }
+
+  // في كلاس Firebase_Firestor
+  Future<void> deleteMessages(
+      String currentUserId, String otherUserId, bool deleteForBoth) async {
+    try {
+      // حذف الرسائل من مستخدم الحالي
+      final currentUserMessages = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUserId)
+          .collection('chats')
+          .doc(otherUserId)
+          .collection('messages')
+          .get();
+
+      final batch = FirebaseFirestore.instance.batch();
+      for (var doc in currentUserMessages.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+
+      // إذا كان الحذف للطرفين
+      if (deleteForBoth) {
+        final otherUserMessages = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(otherUserId)
+            .collection('chats')
+            .doc(currentUserId)
+            .collection('messages')
+            .get();
+
+        final otherBatch = FirebaseFirestore.instance.batch();
+        for (var doc in otherUserMessages.docs) {
+          otherBatch.delete(doc.reference);
+        }
+        await otherBatch.commit();
+      }
+    } catch (e) {
+      throw 'Failed to delete messages: ${e.toString()}';
+    }
+  }
+
+  Future<void> deleteMessage({
+    required String senderId,
+    required String receiverId,
+    required String messageId,
+    bool deleteForBoth = false,
+  }) async {
+    try {
+      // حذف من مرسل الرسالة
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(senderId)
+          .collection('chats')
+          .doc(receiverId)
+          .collection('messages')
+          .doc(messageId)
+          .delete();
+
+      // إذا كان الحذف للطرفين
+      if (deleteForBoth) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(receiverId)
+            .collection('chats')
+            .doc(senderId)
+            .collection('messages')
+            .doc(messageId)
+            .delete();
+      }
+    } catch (e) {
+      throw 'Failed to delete message: ${e.toString()}';
     }
   }
 
