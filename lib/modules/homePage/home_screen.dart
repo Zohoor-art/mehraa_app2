@@ -258,7 +258,7 @@ class HomePage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => const Notifications()),
+                            builder: (context) => NotificationsPage()),
                       );
                     },
                     child: const Icon(FontAwesomeIcons.bell, size: 25),

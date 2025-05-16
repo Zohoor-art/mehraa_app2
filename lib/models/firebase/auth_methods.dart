@@ -100,10 +100,14 @@ class AuthMethods {
         profileImage: profileImage,
         location: location,
         storeName: storeName,
+        storeNameLower: storeName.toLowerCase(),  // استخدام storeNameLower
         workType: workType,
       );
 
-      await firestore.collection('users').doc(userId).set(userModel.toJson());
+      await firestore.collection('users').doc(userId).set({
+        ...userModel.toJson(),
+        'storeNameLower': storeName.toLowerCase(),  // إضافة storeNameLower
+      });
 
       return "success";
     } catch (error) {
@@ -150,5 +154,29 @@ class AuthMethods {
       return user.emailVerified;
     }
     return false;
+  }
+
+  // البحث عن المستخدمين بناءً على storeNameLower
+  Future<List<model.Users>> searchUsersByStoreName(String searchQuery) async {
+    try {
+      // تحويل الاستعلام إلى حروف صغيرة
+      String searchQueryLower = searchQuery.toLowerCase();
+
+      // البحث في مجموعة المستخدمين بناءً على storeNameLower
+      QuerySnapshot snapshot = await firestore
+          .collection('users')
+          .where('storeNameLower', isGreaterThanOrEqualTo: searchQueryLower)
+          .where('storeNameLower', isLessThan: searchQueryLower + 'z')
+          .get();
+
+      // تحويل النتائج إلى قائمة من المستخدمين
+      List<model.Users> usersList = snapshot.docs
+          .map((doc) => model.Users.fromSnap(doc))
+          .toList();
+
+      return usersList;
+    } catch (error) {
+      return [];
+    }
   }
 }
