@@ -103,7 +103,7 @@ class _PostWidgetState extends State<PostWidget> {
     setState(() {
       isFollowing = doc.exists; // ← true إذا تتابعه
     });
-  }
+  }}
 
   @override
   void initState() {
@@ -145,7 +145,7 @@ class _PostWidgetState extends State<PostWidget> {
         _userData = data;
         _isUserDataLoading = false;
       });
-      checkIfFollowing();
+       checkIfFollowing();
     }
   }
 
@@ -206,6 +206,25 @@ await NotificationService.sendNotification(
   }
 }
 
+void checkIfFollowing() async {
+  final currentUser = FirebaseAuth.instance.currentUser;
+  final otherUserId = _userData?['uid'];
+
+  if (currentUser == null || otherUserId == null) return;
+
+  final doc = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(currentUser.uid)
+      .collection('following')
+      .doc(otherUserId)
+      .get();
+if (!mounted) return;
+  setState(() {
+    isFollowing = doc.exists; // ← true إذا تتابعه
+  });
+
+
+}
 
 
   @override
@@ -438,7 +457,7 @@ SizedBox(width: 16),
       backgroundColor: Colors.transparent,
       builder: (_) => Sharing(
         postImageUrl: widget.post.postUrl,
-        postId: widget.post.postId,
+        postId: widget.post.postId, postDescription: widget.post.description,
       ),
     );
   },
