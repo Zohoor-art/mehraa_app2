@@ -134,19 +134,36 @@ class _RegionPostsScreenState extends State<RegionPostsScreen>
     final crossAxisCount = screenWidth < 600 ? 2 : 3;
 
     return Scaffold(
+      backgroundColor: MyColor.lightprimaryColor,
       appBar: AppBar(
-        backgroundColor: MyColor.lightprimaryColor,
-        title: Text('متاجر ${widget.region ?? ""}',
-            style: const TextStyle(color: Colors.black)),
-        iconTheme: const IconThemeData(color: Colors.deepPurple),
+        toolbarHeight: MediaQuery.of(context).size.height * 0.07,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [MyColor.blueColor, MyColor.purpleColor],
+            ),
+          ),
+        ),
+        title: Center(
+          child: Text(
+            'متاجر ${widget.region ?? ""}',
+            style: TextStyle(
+              fontFamily: 'Tajawal',
+              fontSize: screenWidth < 600 ? 18 : 20,
+              fontWeight: FontWeight.normal,
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [
           Container(
-            margin: const EdgeInsets.all(12),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            height: 50,
+            margin: EdgeInsets.all(screenWidth * 0.03),
+            padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.02, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: Colors.white,
               borderRadius: BorderRadius.circular(20),
               boxShadow: const [
                 BoxShadow(
@@ -159,15 +176,16 @@ class _RegionPostsScreenState extends State<RegionPostsScreen>
             child: Row(
               children: [
                 const Icon(Icons.person, color: Colors.deepPurple),
-                const SizedBox(width: 8),
+                SizedBox(width: screenWidth * 0.02),
                 Expanded(
                   child: TextField(
                     controller: _searchController,
                     onChanged: (value) => setState(() {
                       searchQuery = value.trim();
                     }),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'بحث',
+                      hintStyle: TextStyle(fontFamily: 'Tajawal',fontSize:screenWidth < 600 ? 14 : 16 ),
                       border: InputBorder.none,
                     ),
                   ),
@@ -177,7 +195,7 @@ class _RegionPostsScreenState extends State<RegionPostsScreen>
             ),
           ),
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 12),
+            margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.03),
             height: 40,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
@@ -194,12 +212,11 @@ class _RegionPostsScreenState extends State<RegionPostsScreen>
                     });
                   },
                   child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.015),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.04, vertical: 8),
                     decoration: BoxDecoration(
-                      color:
-                          isSelected ? Colors.white : MyColor.lightprimaryColor,
+                      color: isSelected ? Colors.white : Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color:
@@ -211,6 +228,8 @@ class _RegionPostsScreenState extends State<RegionPostsScreen>
                       child: Text(
                         type,
                         style: TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: screenWidth < 600 ? 16 : 18,
                           color: Colors.black,
                           fontWeight:
                               isSelected ? FontWeight.bold : FontWeight.normal,
@@ -227,7 +246,9 @@ class _RegionPostsScreenState extends State<RegionPostsScreen>
               stream: getPostsStream(selectedWorkType),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
                 }
 
                 final posts = snapshot.data!;
@@ -240,14 +261,22 @@ class _RegionPostsScreenState extends State<RegionPostsScreen>
                 }).toList();
 
                 if (filteredPosts.isEmpty) {
-                  return const Center(child: Text('لا توجد منشورات مطابقة.'));
+                  return Center(
+                    child: Text(
+                      'لا توجد منشورات مطابقة.',
+                      style: TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontSize: screenWidth < 600 ? 14 : 16,
+                      ),
+                    ),
+                  );
                 }
 
                 return MasonryGridView.count(
                   crossAxisCount: crossAxisCount,
                   mainAxisSpacing: 8,
                   crossAxisSpacing: 8,
-                  padding: const EdgeInsets.all(12),
+                  padding: EdgeInsets.all(screenWidth * 0.03),
                   itemCount: filteredPosts.length,
                   itemBuilder: (context, index) {
                     final post = filteredPosts[index];
@@ -261,11 +290,11 @@ class _RegionPostsScreenState extends State<RegionPostsScreen>
                       builder: (context, userSnapshot) {
                         if (userSnapshot.connectionState ==
                             ConnectionState.waiting) {
-                          return const SizedBox.shrink();
+                          return SizedBox.shrink();
                         }
                         if (!userSnapshot.hasData ||
                             userSnapshot.data == null) {
-                          return const SizedBox.shrink();
+                          return SizedBox.shrink();
                         }
 
                         final user = userSnapshot.data!;
@@ -278,6 +307,7 @@ class _RegionPostsScreenState extends State<RegionPostsScreen>
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
+                            color: Colors.white,
                             clipBehavior: Clip.antiAlias,
                             elevation: 2,
                             child: Column(
@@ -293,7 +323,7 @@ class _RegionPostsScreenState extends State<RegionPostsScreen>
                                         ),
                                 ),
                                 Padding(
-                                  padding: const EdgeInsets.all(8.0),
+                                  padding: EdgeInsets.all(screenWidth * 0.02),
                                   child: Row(
                                     children: [
                                       GestureDetector(
@@ -301,17 +331,19 @@ class _RegionPostsScreenState extends State<RegionPostsScreen>
                                         child: CircleAvatar(
                                           backgroundImage:
                                               NetworkImage(userPhoto),
-                                          radius: 16,
+                                          radius: screenWidth * 0.04,
                                         ),
                                       ),
-                                      const SizedBox(width: 8),
+                                      SizedBox(width: screenWidth * 0.02),
                                       Expanded(
                                         child: GestureDetector(
                                           onTap: () =>
                                               navigateToStorePage(uid),
                                           child: Text(
                                             username,
-                                            style: const TextStyle(
+                                            style: TextStyle(
+                                              fontFamily: 'Tajawal',
+                                              fontSize: screenWidth < 600 ? 12 : 14,
                                               fontWeight: FontWeight.bold,
                                             ),
                                             overflow: TextOverflow.ellipsis,
@@ -376,6 +408,8 @@ class _PostVideoPlayerState extends State<PostVideoPlayer> {
             borderRadius: BorderRadius.circular(12),
             child: VideoPlayer(_controller),
           )
-        : const Center(child: CircularProgressIndicator());
+        : Center(
+            child: CircularProgressIndicator(),
+          );
   }
 }

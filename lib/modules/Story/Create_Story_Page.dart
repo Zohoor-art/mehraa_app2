@@ -23,7 +23,6 @@ class _CreateStoryPageState extends State<CreateStoryPage> {
   bool _isUploading = false;
 
   final List<Color> _colors = [
-    Colors.white,
     Colors.black,
     Colors.purple,
     Colors.blue,
@@ -32,6 +31,7 @@ class _CreateStoryPageState extends State<CreateStoryPage> {
     Colors.orange,
     Colors.red,
     Colors.teal,
+    Colors.pinkAccent,
   ];
 
   Future<void> _pickMedia(ImageSource source, {bool isVideo = false}) async {
@@ -98,7 +98,8 @@ class _CreateStoryPageState extends State<CreateStoryPage> {
       }
 
       final timestamp = Timestamp.now();
-      final expirationTime = Timestamp.fromDate(DateTime.now().add(Duration(hours: 24)));
+      final expirationTime =
+          Timestamp.fromDate(DateTime.now().add(Duration(hours: 24)));
 
       await _firestore.collection('stories').add({
         'userId': user.uid,
@@ -125,6 +126,9 @@ class _CreateStoryPageState extends State<CreateStoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 400;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -135,6 +139,8 @@ class _CreateStoryPageState extends State<CreateStoryPage> {
             Navigator.pop(context);
           },
         ),
+        title: Text('إنشاء يومية', style: TextStyle(color: Colors.black)),
+        centerTitle: true,
       ),
       body: Stack(
         children: [
@@ -143,17 +149,33 @@ class _CreateStoryPageState extends State<CreateStoryPage> {
               Expanded(
                 child: AnimatedContainer(
                   duration: Duration(milliseconds: 300),
-                  color: _selectedFile == null ? _backgroundColor : Colors.black,
-                  padding: EdgeInsets.all(24),
+                  color:
+                      _selectedFile == null ? _backgroundColor : Colors.black,
+                  padding: EdgeInsets.all(16),
                   child: Center(
                     child: _selectedFile != null
                         ? mediaType == 'video'
-                            ? Icon(Icons.play_circle_fill, size: 120, color: Colors.white)
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.play_circle_fill,
+                                      size: 80, color: Colors.white),
+                                  SizedBox(height: 10),
+                                  Text('فيديو',
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 18)),
+                                ],
+                              )
                             : Image.file(_selectedFile!, fit: BoxFit.contain)
                         : TextField(
-                            decoration: InputDecoration.collapsed(hintText: '✍️ اكتب ستوريتك هنا...'),
+                            decoration: InputDecoration.collapsed(
+                              hintText: '✍️ اكتب يوميتك هنا...',
+                              hintStyle: TextStyle(
+                                fontSize: isSmallScreen ? 22 : 28,
+                              ),
+                            ),
                             style: TextStyle(
-                              fontSize: 28,
+                              fontSize: isSmallScreen ? 22 : 28,
                               color: _backgroundColor.computeLuminance() > 0.5
                                   ? Colors.black
                                   : Colors.white,
@@ -167,11 +189,16 @@ class _CreateStoryPageState extends State<CreateStoryPage> {
               ),
               if (_selectedFile != null)
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: TextField(
                     decoration: InputDecoration(
                       labelText: '📝 اضافة نص',
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
                     onChanged: (value) => _caption = value,
                     maxLines: 3,
@@ -179,7 +206,10 @@ class _CreateStoryPageState extends State<CreateStoryPage> {
                 ),
               Container(
                 padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                color: Colors.grey[100],
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
                 child: Column(
                   children: [
                     SingleChildScrollView(
@@ -193,22 +223,24 @@ class _CreateStoryPageState extends State<CreateStoryPage> {
                               });
                             },
                             child: Container(
-                              margin: EdgeInsets.symmetric(horizontal: 4),
-                              width: 30,
-                              height: 30,
+                              margin: EdgeInsets.symmetric(horizontal: 6),
+                              width: 36,
+                              height: 36,
                               decoration: BoxDecoration(
                                 color: color,
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black26,
+                                    color: Colors.black12,
                                     blurRadius: 4,
                                     offset: Offset(0, 2),
-                                  ),
+                                  )
                                 ],
                                 border: Border.all(
-                                  color: _backgroundColor == color ? Colors.black : Colors.white,
-                                  width: 2,
+                                  color: _backgroundColor == color
+                                      ? MyColor.darkPurpleColor
+                                      : Colors.transparent,
+                                  width: 3,
                                 ),
                               ),
                             ),
@@ -216,60 +248,32 @@ class _CreateStoryPageState extends State<CreateStoryPage> {
                         }).toList(),
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.center,
                       children: [
-                        ElevatedButton.icon(
+                        _buildActionButton(
+                          icon: Icons.camera_alt,
+                          label: 'كاميرا',
                           onPressed: _showCameraOptions,
-                          icon: Icon(Icons.camera_alt, size: 16),
-                          label: Text('كاميرا', style: TextStyle(fontSize: 12)),
+                          isSmallScreen: isSmallScreen,
                         ),
-                        ElevatedButton.icon(
+                        _buildActionButton(
+                          icon: Icons.image,
+                          label: 'صورة',
                           onPressed: () => _pickMedia(ImageSource.gallery),
-                          icon: Icon(Icons.image, size: 16),
-                          label: Text('صورة', style: TextStyle(fontSize: 12)),
+                          isSmallScreen: isSmallScreen,
                         ),
-                        ElevatedButton.icon(
-                          onPressed: () => _pickMedia(ImageSource.gallery, isVideo: true),
-                          icon: Icon(Icons.videocam, size: 16),
-                          label: Text('فيديو', style: TextStyle(fontSize: 12)),
+                        _buildActionButton(
+                          icon: Icons.videocam,
+                          label: 'فيديو',
+                          onPressed: () =>
+                              _pickMedia(ImageSource.gallery, isVideo: true),
+                          isSmallScreen: isSmallScreen,
                         ),
-                        ElevatedButton(
-                          onPressed: _isUploading
-                              ? null
-                              : () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('📤 جاري رفع الستوري...'),
-                                      duration: Duration(seconds: 2),
-                                    ),
-                                  );
-                                  _addStory();
-                                },
-                          child: _isUploading
-                              ? Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2, color: Colors.white),
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text('🔄 جاري النشر...',
-                                        style: TextStyle(fontSize: 12, color: Colors.white)),
-                                  ],
-                                )
-                              : Text('📤 نشر',
-                                  style: TextStyle(fontSize: 12, color: Colors.white)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: MyColor.darkPurpleColor,
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                          ),
-                        ),
+                        _buildUploadButton(isSmallScreen: isSmallScreen),
                       ],
                     ),
                   ],
@@ -281,12 +285,102 @@ class _CreateStoryPageState extends State<CreateStoryPage> {
             Container(
               color: Colors.black45,
               child: Center(
-                child: CircularProgressIndicator(color: Colors.white),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(color: Colors.white),
+                    SizedBox(height: 16),
+                    Text('جاري رفع المحتوى...',
+                        style: TextStyle(color: Colors.white, fontSize: 18)),
+                  ],
+                ),
               ),
             ),
         ],
       ),
     );
-    
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    required bool isSmallScreen,
+  }) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: MyColor.darkPurpleColor,
+        padding: EdgeInsets.symmetric(
+          horizontal: isSmallScreen ? 12 : 16,
+          vertical: isSmallScreen ? 8 : 10,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: BorderSide(color: MyColor.darkPurpleColor),
+        ),
+        elevation: 2,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: isSmallScreen ? 16 : 18),
+          SizedBox(width: 6),
+          Text(label, style: TextStyle(fontSize: isSmallScreen ? 12 : 14)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUploadButton({required bool isSmallScreen}) {
+    return ElevatedButton(
+      onPressed: _isUploading
+          ? null
+          : () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('📤 جاري رفع اليومية...'),
+                  duration: Duration(seconds: 2),
+                ),
+              );
+              _addStory();
+            },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: MyColor.darkPurpleColor,
+        foregroundColor: Colors.white,
+        padding: EdgeInsets.symmetric(
+          horizontal: isSmallScreen ? 16 : 24,
+          vertical: isSmallScreen ? 10 : 12,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        elevation: 3,
+      ),
+      child: _isUploading
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
+                ),
+                SizedBox(width: 8),
+                Text('جاري النشر...', style: TextStyle(fontSize: 14)),
+              ],
+            )
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.upload, size: isSmallScreen ? 16 : 18),
+                SizedBox(width: 6),
+                Text('نشر',
+                    style: TextStyle(fontSize: isSmallScreen ? 14 : 16)),
+              ],
+            ),
+    );
   }
 }

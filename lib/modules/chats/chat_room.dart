@@ -11,21 +11,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mehra_app/models/firebase/firestore.dart';
+import 'package:mehra_app/models/story.dart';
+import 'package:mehra_app/modules/Story/Story_View_Page.dart';
 import 'package:mehra_app/modules/chats/user_profile.dart';
 import 'package:mehra_app/modules/homePage/home_screen.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
+import 'package:mehra_app/shared/components/custom_Dialog.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:share_plus/share_plus.dart';
 
 class ChatRoom extends StatefulWidget {
-  final String userId;
+final String userId;
   final String userName;
   final String? orderId;
   final String? sharedPostId;
   final String? sharedPostImageUrl;
   final String? sharedPostDescription;
+  final Story? repliedStory; // إضافة معامل جديد للستوري المردود عليه
 
   const ChatRoom({
     Key? key,
@@ -35,6 +39,7 @@ class ChatRoom extends StatefulWidget {
     this.sharedPostId,
     this.sharedPostImageUrl,
     this.sharedPostDescription,
+    this.repliedStory,
   }) : super(key: key);
 
   @override
@@ -64,6 +69,7 @@ class _ChatRoomState extends State<ChatRoom> {
   bool _isEditing = false;
   bool _showCancelEdit = false;
   final Firebase_Firestor _firestoreService = Firebase_Firestor();
+  final ScrollController _scrollController = ScrollController();
 
   final List<DayInWeek> days = [
     DayInWeek("السبت", dayKey: "monday"),
@@ -91,6 +97,7 @@ class _ChatRoomState extends State<ChatRoom> {
       _sendOrderConfirmation();
       _handleSharedPost();
       _markAllMessagesAsRead();
+      _handleStoryReply(); // معالجة الرد على الستوري إذا كان موجوداً
     });
 
     textEditingController.addListener(() {
@@ -102,12 +109,39 @@ class _ChatRoomState extends State<ChatRoom> {
     _listenForIncomingMessages();
   }
 
-  @override
-  void dispose() {
-    _messagesSubscription?.cancel();
-    audioPlayer.dispose();
-    textEditingController.dispose();
-    super.dispose();
+  Future<void> _handleStoryReply() async {
+    if (widget.repliedStory == null) return;
+    
+    final story = widget.repliedStory!;
+    final storyData = {
+      'mediaUrl': story.mediaUrl,
+      'mediaType': story.mediaType,
+      'caption': story.caption,
+      'backgroundColor': story.backgroundColor,
+    };
+
+    try {
+      final timestamp = Timestamp.now();
+      await _firestoreService.sendChatMessage(
+        receiverId: widget.userId,
+        text: textEditingController.text.isNotEmpty 
+            ? textEditingController.text 
+            : 'قام بالرد على ستوريك',
+        timestamp: timestamp,
+        isStoryReply: true,
+        storyId: story.storyId,
+        storyData: storyData,
+      );
+
+      // تحديث عدد الردود في الستوري الأصلي
+      await FirebaseFirestore.instance
+          .collection('stories')
+          .doc(story.storyId)
+          .update({'replyCount': FieldValue.increment(1)});
+
+    } catch (e) {
+      _showSnackBar('فشل إرسال الرد على الستوري: ${e.toString()}');
+    }
   }
 
   Future<void> _handleSharedPost() async {
@@ -162,6 +196,129 @@ class _ChatRoomState extends State<ChatRoom> {
         .listen((snapshot) {
       _markMessagesAsRead(snapshot.docs);
     });
+  }
+
+  Widget _buildStoryReplyMessage(
+      Map<String, dynamic> message, bool isSender, bool isRead, String time) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+    final storyData = message['storyData'] as Map<String, dynamic>?;
+
+    return InkWell(
+      onTap: () {
+        // الانتقال إلى الستوري عند النقر على الرد
+        if (message['storyId'] != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => StoryViewPage(
+                groupedStories: [
+                  [
+                    Story(
+                      storyId: message['storyId'],
+                      userId: message['senderId'],
+                      mediaUrl: storyData?['mediaUrl'] ?? '',
+                      mediaType: storyData?['mediaType'] ?? 'image',
+                      caption: storyData?['caption'],
+                      timestamp: (message['timestamp'] as Timestamp).toDate(),
+                      backgroundColor: storyData?['backgroundColor'],
+                    )
+                  ]
+                ],
+                initialGroupIndex: 0,
+                initialStoryIndex: 0,
+              ),
+            ),
+          );
+        }
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 8),
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              blurRadius: 6,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.reply, color: MyColor.blueColor, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'رد على ستوري',
+                  style: TextStyle(
+                    color: MyColor.blueColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: isSmallScreen ? 14 : 16,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8),
+            if (storyData != null && storyData['mediaType'] == 'image')
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  storyData['mediaUrl'],
+                  width: double.infinity,
+                  height: 150,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            if (storyData != null && storyData['mediaType'] == 'text')
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Color(
+                      storyData['backgroundColor'] ?? Colors.deepPurple.value),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  storyData['caption'] ?? 'ستوري نصي',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallScreen ? 14 : 16,
+                  ),
+                ),
+              ),
+            SizedBox(height: 8),
+            Text(
+              message['message'] ?? '',
+              style: TextStyle(
+                fontSize: isSmallScreen ? 14 : 16,
+              ),
+            ),
+            SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  time,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                  ),
+                ),
+                if (isRead)
+                  Padding(
+                    padding: EdgeInsets.only(left: 4),
+                    child: Icon(Icons.done_all, size: 16, color: Colors.blue),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _markMessagesAsRead(List<QueryDocumentSnapshot> messages) async {
@@ -343,17 +500,23 @@ class _ChatRoomState extends State<ChatRoom> {
     }
   }
 
-  Future<void> _sendMessage(
-      {String? imageUrl,
-      String? audioUrl,
-      String? postId,
-      String? postImageUrl,
-      String? postDescription}) async {
+
+     Future<void> _sendMessage({
+    String? imageUrl,
+    String? audioUrl,
+    String? postId,
+    String? postImageUrl,
+    String? postDescription,
+    bool isStoryReply = false,
+    String? storyId,
+    Map<String, dynamic>? storyData,
+  }) async {
     if (isSending) return;
     if (textEditingController.text.isEmpty &&
         imageUrl == null &&
         audioUrl == null &&
-        postId == null) return;
+        postId == null &&
+        !isStoryReply) return;
 
     setState(() => isSending = true);
     try {
@@ -371,7 +534,11 @@ class _ChatRoomState extends State<ChatRoom> {
         postId: postId,
         postImageUrl: postImageUrl,
         postDescription: postDescription,
+        isStoryReply: isStoryReply,
+        storyId: storyId,
+        storyData: storyData,
       );
+      
       textEditingController.clear();
       setState(() => _selectedImage = null);
     } catch (e) {
@@ -380,6 +547,8 @@ class _ChatRoomState extends State<ChatRoom> {
       setState(() => isSending = false);
     }
   }
+
+  
 
   Future<void> _deleteAllMessages(bool deleteForBoth) async {
     try {
@@ -739,175 +908,177 @@ class _ChatRoomState extends State<ChatRoom> {
     );
   }
 
- void _showDeleteMessageOptions(DocumentSnapshot messageDoc) {
-  bool deleteForMe = false;
-  bool deleteForBoth = false;
+  void _showDeleteMessageOptions(DocumentSnapshot messageDoc) {
+    bool deleteForMe = false;
+    bool deleteForBoth = false;
 
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: Colors.transparent,
-    isScrollControlled: true,
-    builder: (context) => StatefulBuilder(
-      builder: (context, setState) {
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-          ),
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-            top: 16,
-            left: 16,
-            right: 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle indicator
-              Center(
-                child: Container(
-                  width: 50,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(10),
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+            ),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              top: 16,
+              left: 16,
+              right: 16,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle indicator
+                Center(
+                  child: Container(
+                    width: 50,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.3),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(height: 20),
+                SizedBox(height: 20),
 
-              // Title
-              Text(
-                'حذف الرسالة',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
+                // Title
+                Text(
+                  'حذف الرسالة',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
                 ),
-              ),
-              SizedBox(height: 16),
+                SizedBox(height: 16),
 
-              // Options with checkboxes
-              Column(
-                children: [
-                  // Delete for me option
-                  ListTile(
-                    leading: Checkbox(
-                      value: deleteForMe,
-                      onChanged: (value) {
+                // Options with checkboxes
+                Column(
+                  children: [
+                    // Delete for me option
+                    ListTile(
+                      leading: Checkbox(
+                        value: deleteForMe,
+                        onChanged: (value) {
+                          setState(() {
+                            deleteForMe = value!;
+                            if (deleteForMe) deleteForBoth = false;
+                          });
+                        },
+                        activeColor: Colors.blue,
+                      ),
+                      title: Text(
+                        'حذف من عندي فقط',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      onTap: () {
                         setState(() {
-                          deleteForMe = value!;
+                          deleteForMe = !deleteForMe;
                           if (deleteForMe) deleteForBoth = false;
                         });
                       },
-                      activeColor: Colors.blue,
                     ),
-                    title: Text(
-                      'حذف من عندي فقط',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    onTap: () {
-                      setState(() {
-                        deleteForMe = !deleteForMe;
-                        if (deleteForMe) deleteForBoth = false;
-                      });
-                    },
-                  ),
 
-                  // Delete for both option
-                  ListTile(
-                    leading: Checkbox(
-                      value: deleteForBoth,
-                      onChanged: (value) {
+                    // Delete for both option
+                    ListTile(
+                      leading: Checkbox(
+                        value: deleteForBoth,
+                        onChanged: (value) {
+                          setState(() {
+                            deleteForBoth = value!;
+                            if (deleteForBoth) deleteForMe = false;
+                          });
+                        },
+                        activeColor: Colors.red,
+                      ),
+                      title: Text(
+                        'حذف من الطرفين',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      onTap: () {
                         setState(() {
-                          deleteForBoth = value!;
+                          deleteForBoth = !deleteForBoth;
                           if (deleteForBoth) deleteForMe = false;
                         });
                       },
-                      activeColor: Colors.red,
                     ),
-                    title: Text(
-                      'حذف من الطرفين',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    onTap: () {
-                      setState(() {
-                        deleteForBoth = !deleteForBoth;
-                        if (deleteForBoth) deleteForMe = false;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              SizedBox(height: 24),
+                  ],
+                ),
+                SizedBox(height: 24),
 
-              // Action buttons
-              Row(
-                children: [
-                  // Cancel button
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                // Action buttons
+                Row(
+                  children: [
+                    // Cancel button
+                    Expanded(
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          side: BorderSide(color: Colors.grey),
                         ),
-                        side: BorderSide(color: Colors.grey),
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        'إلغاء',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[700],
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          'إلغاء',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[700],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  SizedBox(width: 12),
+                    SizedBox(width: 12),
 
-                  // Confirm button
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    // Confirm button
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          backgroundColor: Colors.red,
                         ),
-                        backgroundColor: Colors.red,
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        if (deleteForMe) {
-                          _deleteMessage(messageDoc, false);
-                        } else if (deleteForBoth) {
-                          _deleteMessage(messageDoc, true);
-                        }
-                      },
-                      child: Text(
-                        'موافقة',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
+                        onPressed: () {
+                          Navigator.pop(context);
+                          if (deleteForMe) {
+                            _deleteMessage(messageDoc, false);
+                          } else if (deleteForBoth) {
+                            _deleteMessage(messageDoc, true);
+                          }
+                        },
+                        child: Text(
+                          'موافقة',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    ),
-  );
-} Widget _buildMessageItem(DocumentSnapshot messageDoc) {
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildMessageItem(DocumentSnapshot messageDoc) {
     final data = messageDoc.data() as Map<String, dynamic>;
     final isSender = data['senderId'] == currentUserId;
     final isRead = data['isRead'] ?? false;
@@ -993,111 +1164,120 @@ class _ChatRoomState extends State<ChatRoom> {
     );
   }
 
-Widget _buildPostMessage(
-    Map<String, dynamic> message, bool isSender, bool isRead, String time) {
-  return Center(
-    child: InkWell(
-      onTap: () {
-        if (message['postId'] != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => HomeScreen(),
-            ),
-          );
-        }
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 16),
-        width: MediaQuery.of(context).size.width * 0.85,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.3),
-              spreadRadius: 2,
-              blurRadius: 10,
-              offset: Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-              decoration: BoxDecoration(
-                color: MyColor.blueColor.withOpacity(0.1),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                ),
+  Widget _buildPostMessage(
+      Map<String, dynamic> message, bool isSender, bool isRead, String time) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return Center(
+      child: InkWell(
+        onTap: () {
+          if (message['postId'] != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomeScreen(),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.share, size: 20, color: MyColor.blueColor),
-                  SizedBox(width: 8),
-                  Text(
-                    'تمت مشاركة المنشور',
-                    style: TextStyle(
-                      color: MyColor.blueColor,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+            );
+          }
+        },
+        child: Container(
+          margin: EdgeInsets.symmetric(vertical: 16),
+          width: screenWidth * 0.85,
+          constraints: BoxConstraints(maxWidth: 500),
+          decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.3),
+                  spreadRadius: 2,
+                  blurRadius: 10,
+                  offset: Offset(0, 3),
+                ),
+              ]),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: MyColor.blueColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
                   ),
-                ],
-              ),
-            ),
-            if (message['postImageUrl'] != null)
-              ClipRRect(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(0),
-                  topRight: Radius.circular(0),
                 ),
-                child: Image.network(
-                  message['postImageUrl'],
-                  width: double.infinity,
-                  height: 200,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            Padding(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // التعديل هنا: عرض الرسالة المخصصة بدلاً من وصف المنشور
-                  Text(
-                    message['message'] ?? 'منشور مشارك', // استخدام حقل message بدلاً من postDescription
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Text(
-                        time,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.share, size: 20, color: MyColor.blueColor),
+                    SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'تمت مشاركة المنشور',
                         style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey,
+                          color: MyColor.blueColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: screenWidth < 360 ? 14 : 16,
                         ),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              if (message['postImageUrl'] != null)
+                AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(0),
+                      topRight: Radius.circular(0),
+                    ),
+                    child: Image.network(
+                      message['postImageUrl'],
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      message['message'] ?? 'منشور مشارك',
+                      style: TextStyle(
+                        fontSize: screenWidth < 360 ? 14 : 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          time,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
+
   Future<void> _sendOrderConfirmation() async {
     if (widget.orderId == null) return;
 
@@ -1223,21 +1403,24 @@ Widget _buildPostMessage(
 
   Widget _buildMessageContent(
       Map<String, dynamic> message, bool isSender, bool isRead, String time) {
+    if (message['isStoryReply'] == true) {
+      return _buildStoryReplyMessage(message, isSender, isRead, time);
+    }
     if (message['isOrderMessage'] == true) {
       return _buildOrderMessage(message, isSender, isRead, time);
     }
-
     if (message['isPostMessage'] == true) {
       return _buildPostMessage(message, isSender, isRead, time);
     }
-
     if (message['text'] != null) {
+      final fontSize = MediaQuery.of(context).size.width < 360 ? 16.0 : 18.0;
+
       return BubbleSpecialOne(
         text: "${message['text']}\n$time",
         isSender: isSender,
         color: isSender ? Colors.white : MyColor.blueColor,
         textStyle: TextStyle(
-          fontSize: 18,
+          fontSize: fontSize,
           color: isSender ? Colors.black : Colors.white,
         ),
         delivered: true,
@@ -1313,49 +1496,45 @@ Widget _buildPostMessage(
   }
 
   void _showDeleteMessagesDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('حذف الرسائل'),
-        content: Text('هل تريد حذف جميع الرسائل؟'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _showDeleteOptionsDialog();
-            },
-            child: Text('نعم'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('لا'),
-          ),
-        ],
-      ),
+    CustomDialog.show(
+      context,
+      title: 'حذف الرسائل',
+      content: 'هل تريد حذف جميع الرسائل؟',
+      confirmText: 'نعم',
+      cancelText: 'لا',
+      icon: Icons.delete,
+      onConfirm: () {
+        Navigator.pop(context);
+        _showDeleteOptionsDialog();
+      },
     );
   }
 
   void _showDeleteOptionsDialog() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('خيارات الحذف'),
-        content: Column(
+      builder: (context) => Container(
+        padding: EdgeInsets.all(16),
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ListTile(
-              title: Text('حذف من عندي فقط'),
-              onTap: () {
-                Navigator.pop(context);
-                _deleteAllMessages(false);
-              },
-            ),
-            ListTile(
-              title: Text('حذف من الطرفين'),
-              onTap: () {
+            CustomDialog(
+              title: 'خيارات الحذف',
+              content: 'اختر طريقة الحذف المطلوبة',
+              icon: Icons.delete_forever,
+              confirmText: 'حذف من الطرفين',
+              cancelText: 'حذف من عندي فقط',
+              onConfirm: () {
                 Navigator.pop(context);
                 _deleteAllMessages(true);
               },
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _deleteAllMessages(false);
+              },
+              child: Text('حذف من عندي فقط'),
             ),
           ],
         ),
@@ -1367,13 +1546,19 @@ Widget _buildPostMessage(
     if (_isUploadingAudio) {
       return Padding(
         padding: EdgeInsets.all(8),
-        child: CircularProgressIndicator(strokeWidth: 2),
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
       );
     }
 
     return CircleAvatar(
+      radius: 20,
       backgroundColor: Color(0xffA02D87),
       child: IconButton(
+        iconSize: 20,
         icon: Icon(_isRecording ? Icons.stop : Icons.mic, color: Colors.white),
         onPressed: () => _isRecording ? stopRecording() : startRecording(),
       ),
@@ -1383,10 +1568,15 @@ Widget _buildPostMessage(
   @override
   Widget build(BuildContext context) {
     final isOpen = isStoreOpenNow(days, hours);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenWidth < 360;
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 100,
+        toolbarHeight: isLandscape ? 70 : 100,
         flexibleSpace: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(
@@ -1404,22 +1594,29 @@ Widget _buildPostMessage(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(widget.userName,
-                    style: TextStyle(color: Colors.white, fontSize: 24)),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: isSmallScreen ? 18 : 24,
+                    )),
                 Text(status,
-                    style: TextStyle(color: Colors.white, fontSize: 18)),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: isSmallScreen ? 14 : 18,
+                    )),
               ],
             ),
-            SizedBox(width: 20),
+            SizedBox(width: isSmallScreen ? 10 : 20),
             Stack(
               alignment: Alignment.bottomRight,
               children: [
                 CircleAvatar(
-                  radius: 35,
+                  radius: isSmallScreen ? 25 : 35,
                   backgroundImage: profileImage.isNotEmpty
                       ? NetworkImage(profileImage)
                       : AssetImage('assets/images/5.jpg') as ImageProvider,
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(35),
+                    borderRadius:
+                        BorderRadius.circular(isSmallScreen ? 25 : 35),
                     onTap: () {
                       Navigator.push(
                         context,
@@ -1432,8 +1629,8 @@ Widget _buildPostMessage(
                   ),
                 ),
                 Container(
-                  width: 20,
-                  height: 20,
+                  width: isSmallScreen ? 15 : 20,
+                  height: isSmallScreen ? 15 : 20,
                   decoration: BoxDecoration(
                     color: isOpen ? Colors.green : Colors.white,
                     shape: BoxShape.circle,
@@ -1455,7 +1652,7 @@ Widget _buildPostMessage(
           ),
         ],
       ),
-    body: GestureDetector(
+      body: GestureDetector(
         onTap: () {
           FocusScope.of(context).unfocus();
           setState(() => showEmojiPicker = false);
@@ -1472,7 +1669,8 @@ Widget _buildPostMessage(
             children: [
               Expanded(
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: isSmallScreen ? 10 : 20),
                   decoration: BoxDecoration(
                     color: Color(0xffEFEEF0),
                     borderRadius: BorderRadius.only(
@@ -1481,35 +1679,37 @@ Widget _buildPostMessage(
                     ),
                   ),
                   child: StreamBuilder<QuerySnapshot>(
-                    stream: _firestoreService.getChatMessages(currentUserId, widget.userId),
+                    stream: _firestoreService.getChatMessages(
+                        currentUserId, widget.userId),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData) 
+                      if (!snapshot.hasData)
                         return Center(child: CircularProgressIndicator());
 
                       return ListView.builder(
+                        controller: _scrollController,
                         reverse: true,
                         itemCount: snapshot.data!.docs.length,
-                        itemBuilder: (context, index) => _buildMessageItem(snapshot.data!.docs[index]),
+                        itemBuilder: (context, index) =>
+                            _buildMessageItem(snapshot.data!.docs[index]),
                       );
                     },
                   ),
                 ),
               ),
-              
               if (showEmojiPicker)
                 SizedBox(
-                  height: 250,
+                  height: isLandscape ? screenHeight * 0.4 : 250,
                   child: EmojiPicker(
                     onEmojiSelected: (category, emoji) {
                       textEditingController.text += emoji.emoji;
                     },
                   ),
                 ),
-              
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 20),
+                padding:
+                    EdgeInsets.symmetric(horizontal: isSmallScreen ? 10 : 20),
                 color: Color(0xffEFEEF0),
-                height: 100,
+                height: isLandscape ? 80 : 100,
                 child: Row(
                   children: [
                     if (_showCancelEdit)
@@ -1517,11 +1717,10 @@ Widget _buildPostMessage(
                         icon: Icon(Icons.close, color: Colors.grey),
                         onPressed: _cancelEdit,
                       ),
-                    
                     Expanded(
                       child: Container(
                         padding: EdgeInsets.symmetric(horizontal: 4),
-                        height: 50,
+                        height: isLandscape ? 45 : 50,
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(30),
@@ -1529,11 +1728,14 @@ Widget _buildPostMessage(
                         child: Row(
                           children: [
                             IconButton(
-                              icon: Icon(Icons.emoji_emotions_outlined),
-                              onPressed: () => setState(() => showEmojiPicker = !showEmojiPicker),
+                              icon: Icon(Icons.emoji_emotions_outlined,
+                                  size: isSmallScreen ? 20 : 24),
+                              onPressed: () => setState(
+                                  () => showEmojiPicker = !showEmojiPicker),
                             ),
                             IconButton(
-                              icon: Icon(Icons.attach_file),
+                              icon: Icon(Icons.attach_file,
+                                  size: isSmallScreen ? 20 : 24),
                               onPressed: _pickImage,
                             ),
                             Expanded(
@@ -1541,9 +1743,15 @@ Widget _buildPostMessage(
                                 controller: textEditingController,
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
-                                  hintText: _isEditing ? 'تعديل الرسالة...' : 'اكتب رسالة...',
-                                  hintStyle: TextStyle(color: Colors.grey[500]),
+                                  hintText: _isEditing
+                                      ? 'تعديل الرسالة...'
+                                      : 'اكتب رسالة...',
+                                  hintStyle: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: isSmallScreen ? 14 : 16),
                                 ),
+                                style: TextStyle(
+                                    fontSize: isSmallScreen ? 14 : 16),
                               ),
                             ),
                             if (_showSendButton || _isEditing)
@@ -1551,6 +1759,7 @@ Widget _buildPostMessage(
                                 icon: Icon(
                                   _isEditing ? Icons.check : Icons.send,
                                   color: Color(0xffA02D87),
+                                  size: isSmallScreen ? 20 : 24,
                                 ),
                                 onPressed: () {
                                   if (_isEditing) {

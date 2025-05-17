@@ -46,7 +46,8 @@ class NearbyOptionsScreen extends StatelessWidget {
           if (!status.isGranted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                  content: Text('يجب السماح بالوصول للموقع لاستخدام هذه الميزة')),
+                  content:
+                      Text('يجب السماح بالوصول للموقع لاستخدام هذه الميزة')),
             );
             return;
           }
@@ -103,7 +104,8 @@ class NearbyOptionsScreen extends StatelessWidget {
               context: context,
               builder: (context) => AlertDialog(
                 title: const Text("تحديد الموقع"),
-                content: Text("تم تحديد موقعك في: $regionToShow\nهل تريد عرض المتاجر القريبة؟"),
+                content: Text(
+                    "تم تحديد موقعك في: $regionToShow\nهل تريد عرض المتاجر القريبة؟"),
                 actions: [
                   TextButton(
                     child: const Text("إلغاء"),
@@ -149,24 +151,27 @@ class NearbyOptionsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-  title: const Text(
-    'الأقرب إليك',
-    style: TextStyle(fontSize: 20, color: Colors.black87),
-  ),
-  flexibleSpace: Container(
-    decoration: BoxDecoration(
-      gradient: LinearGradient(
-        colors: [MyColor.lightprimaryColor, MyColor.lightprimaryColor],
-        begin: Alignment.topRight,
-        end: Alignment.bottomLeft,
+        title: const Text(
+          'الأقرب إليك',
+          style: TextStyle(
+            fontSize: 20,
+            color: Colors.black,
+            fontFamily: 'Tajawal',
+          ),
+        ),
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [MyColor.lightprimaryColor, MyColor.lightprimaryColor],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+            ),
+          ),
+        ),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
       ),
-    ),
-  ),
-  elevation: 0,
-  backgroundColor: Colors.transparent,
-),
-
-backgroundColor: MyColor.lightprimaryColor,
+      backgroundColor: MyColor.lightprimaryColor,
       body: Center(
         child: SingleChildScrollView(
           child: ConstrainedBox(
@@ -177,34 +182,34 @@ backgroundColor: MyColor.lightprimaryColor,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Padding(
-  padding: EdgeInsets.only(top: 16.0, bottom: 12.0),
-
-  child: Center(
-    child: Text(
-      'اختر طريقة تحديد الموقع\nلتستكشف المتاجر القريبة منك',
-      textAlign: TextAlign.center,
-      style: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: Colors.black87,
-        height: 1.5,
-        shadows: [
-          Shadow(
-            color: Colors.black12,
-            blurRadius: 2,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
-    ),
-  ),
-),
-
+                    padding: EdgeInsets.only(top: 16.0, bottom: 12.0),
+                    child: Center(
+                      child: Text(
+                        'اختر طريقة تحديد الموقع\nلتستكشف المتاجر القريبة منك',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: 20,
+                          fontWeight: FontWeight.normal,
+                          color: Colors.black,
+                          height: 1.5,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black12,
+                              blurRadius: 2,
+                              offset: Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: options.length,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
@@ -234,7 +239,10 @@ backgroundColor: MyColor.lightprimaryColor,
                               ShaderMask(
                                 shaderCallback: (Rect bounds) {
                                   return const LinearGradient(
-                                    colors: [Colors.pinkAccent, Colors.deepPurple],
+                                    colors: [
+                                      Colors.pinkAccent,
+                                      Colors.deepPurple
+                                    ],
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ).createShader(bounds);

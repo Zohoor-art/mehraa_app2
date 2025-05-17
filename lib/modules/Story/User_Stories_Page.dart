@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:mehra_app/models/story.dart';
 import 'package:mehra_app/modules/Story/Story_View_Page.dart';
+import 'package:mehra_app/shared/components/constants.dart';
 
 class UserStoriesPage extends StatefulWidget {
   final String userId;
@@ -33,8 +34,8 @@ class _UserStoriesPageState extends State<UserStoriesPage> {
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Scaffold(
-            appBar: AppBar(title: const Text('حالات المستخدم')),
-            body: const Center(child: Text('🚫 لا توجد قصص متاحة لهذا المستخدم.')),
+            appBar: AppBar(title: const Text('يوميات المستخدم')),
+            body: const Center(child: Text(' لا توجد يوميات متاحة لهذا المستخدم.')),
           );
         }
 
@@ -62,8 +63,8 @@ class _UserStoriesPageState extends State<UserStoriesPage> {
           });
         }
 
-        return const Scaffold(
-          backgroundColor: Colors.black,
+        return  Scaffold(
+          backgroundColor: MyColor.lightprimaryColor,
           body: Center(child: CircularProgressIndicator()),
         );
       },

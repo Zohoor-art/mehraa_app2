@@ -40,6 +40,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 400;
+
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -68,23 +71,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               itemCount: boarding.length,
             ),
           ),
-          SizedBox(height: 20, child: smooth_page_indicator()),
-          const SizedBox(height: 10),
+          SizedBox(
+            height: isSmallScreen ? 15 : 20,
+            child: smooth_page_indicator(),
+          ),
+          SizedBox(height: isSmallScreen ? 5 : 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               GradientButton(
-                fontSize: 18,
-                height: 46,
-                width: 171,
+                fontSize: isSmallScreen ? 16 : 18,
+                height: isSmallScreen ? 40 : 46,
+                width: isSmallScreen ? 150 : 171,
                 onPressed: goToNextPage,
                 text: 'التالي',
               ),
-              const SizedBox(width: 20),
+              SizedBox(width: isSmallScreen ? 15 : 20),
               GradientButton(
-                fontSize: 18,
-                height: 46,
-                width: 171,
+                fontSize: isSmallScreen ? 16 : 18,
+                height: isSmallScreen ? 40 : 46,
+                width: isSmallScreen ? 150 : 171,
                 onPressed: () {
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(builder: (context) => RegisterScreen()),
@@ -94,7 +100,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 25),
+          SizedBox(height: isSmallScreen ? 15 : 25),
           bottomImage()
         ],
       ),

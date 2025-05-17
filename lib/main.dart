@@ -5,14 +5,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-import 'package:mehra_app/models/firebase/auth_methods.dart'; // ✅ جديد
-
-
-import 'package:mehra_app/modules/homePage/navigator_page.dart';
-import 'package:mehra_app/modules/notifications/Notification.dart';
-
+import 'package:mehra_app/modules/onbording/onboarding_screen.dart';
 import 'package:mehra_app/modules/register/register_screen.dart';
+import 'package:mehra_app/modules/register/email_verification_screen.dart';
 import 'package:mehra_app/modules/settings/Settings.dart';
 import 'package:mehra_app/modules/settings/UserProvider.dart';
 import 'package:mehra_app/modules/settings/language_provider.dart';
@@ -100,56 +95,85 @@ class _MyAppState extends State<MyApp> {
         textDirection: languageProvider.selectedLanguage == 'العربية'
             ? TextDirection.rtl
             : TextDirection.ltr,
-
-
         child: FutureBuilder<Widget>(
           future: _getInitialScreen(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Scaffold(body: Center(child: CircularProgressIndicator()));
-            } else if (snapshot.hasError) {
-              return const Scaffold(body: Center(child: Text('حدث خطأ أثناء التحقق من المستخدم')));
             } else {
-              return snapshot.data!;
+              // إذا كان هناك خطأ أو اتصال ضعيف، يتم توجيه المستخدم المسجل إلى الصفحة الرئيسية مباشرة
+              return snapshot.data ?? HomeScreen();
             }
           },
         ),
-
-
       ),
     );
   }
 
   Future<Widget> _getInitialScreen() async {
-  final user = FirebaseAuth.instance.currentUser;
+    try {
+      final user = FirebaseAuth.instance.currentUser;
 
-  // الحالة 1: غير مسجل دخول
-  if (user == null) {
-    return RegisterScreen();
+      // الحالة 1: غير مسجل دخول
+      if (user == null) {
+        return OnboardingScreen();
+      }
+
+      // التحقق من أن البريد الإلكتروني قد تم التحقق منه
+      if (!user.emailVerified) {
+        // محاولة إعادة تحميل بيانات المستخدم مرة واحدة فقط
+        try {
+          await user.reload();
+          final refreshedUser = FirebaseAuth.instance.currentUser;
+          if (refreshedUser == null || !refreshedUser.emailVerified) {
+            return EmailVerificationScreen(
+              userId: user.uid,
+              email: user.email ?? '',
+              storeName: '',
+              profileImage: '',
+            );
+          }
+        } catch (e) {
+          // في حالة فشل إعادة التحميل بسبب مشكلة اتصال، يتم تجاهل الخطأ والمتابعة
+          print('فشل إعادة تحميل بيانات المستخدم: $e');
+        }
+      }
+
+      // محاولة جلب بيانات المستخدم من Firestore مع مهلة زمنية
+      try {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get()
+            .timeout(const Duration(seconds: 10));
+
+        final userData = doc.data();
+
+        // الحالة 2: لا يوجد أي بيانات في Firestore → رجوع لـ Register
+        if (userData == null) {
+          return RegisterScreen();
+        }
+
+        // الحالة 3: عنده بيانات لكن التسجيل غير مكتمل → يروح SignUp2screen
+        if (userData['isCompleted'] != true) {
+          return SignUp2screen(
+            userId: user.uid,
+            email: userData['email'] ?? user.email ?? '',
+            storeName: userData['storeName'] ?? '',
+            profileImage: userData['profileImage'] ?? '',
+          );
+        }
+      } catch (e) {
+        // في حالة فشل الاتصال بفايرستور، يتم توجيه المستخدم إلى الصفحة الرئيسية
+        print('فشل جلب بيانات المستخدم من Firestore: $e');
+      }
+
+      // الحالة 4: مكتمل التسجيل أو اتصال ضعيف → يروح للـ HomePage
+      return HomeScreen();
+    } catch (e) {
+      // في حالة أي خطأ غير متوقع، يتم توجيه المستخدم إلى الصفحة الرئيسية
+      print('حدث خطأ غير متوقع: $e');
+      return HomeScreen();
+    }
   }
-
-  // التحقق من وجود مستند بيانات في Firestore
-  final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-  final userData = doc.data();
-
-  // الحالة 2: لا يوجد أي بيانات في Firestore → رجوع لـ Register
-  if (userData == null) {
-    return RegisterScreen();
-  }
-
-  // الحالة 3: عنده بيانات لكن التسجيل غير مكتمل → يروح SignUp2screen
-  if (userData['isCompleted'] != true) {
-    return HomeScreen(
-      // userId: user.uid,
-      // email: userData['email'] ?? user.email ?? '',
-      // storeName: userData['storeName'] ?? '',
-      // profileImage: userData['profileImage'] ?? '',
-    );
-  }
-
-  // الحالة 4: مكتمل التسجيل → يروح للـ HomePage
-  return HomeScreen();
-}
-
-
 }

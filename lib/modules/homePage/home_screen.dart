@@ -17,6 +17,7 @@ import 'package:mehra_app/modules/login/login_screen.dart';
 import 'package:mehra_app/modules/notifications/Notification.dart';
 import 'package:mehra_app/modules/notifications/notificationScreen.dart';
 import 'package:mehra_app/modules/notifications/weeklyNoti.dart';
+import 'package:mehra_app/modules/reels/home.dart';
 import 'package:mehra_app/modules/settings/PrivacySettingsPage.dart';
 import 'package:mehra_app/modules/settings/Settings.dart';
 import 'package:mehra_app/modules/site/nearToUPage.dart';
@@ -52,9 +53,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _pages = [
     const NearbyOptionsScreen(),
-    const XploreScreen(),
+     HomeReels(),
     const HomePage(),
-    const XploreScreen(),
+     XploreScreen(),
     const ChatsPage(),
   ];
 

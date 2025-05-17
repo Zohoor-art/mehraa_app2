@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mehra_app/shared/components/constants.dart';
 import 'package:story_view/story_view.dart';
 import 'package:mehra_app/models/story.dart';
 import 'package:mehra_app/models/userModel.dart';
 import 'package:mehra_app/modules/Story/story_views.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import 'package:mehra_app/modules/chats/chat_room.dart';
 
 class StoryViewPage extends StatefulWidget {
   final List<List<Story>> groupedStories;
@@ -32,11 +34,12 @@ class _StoryViewPageState extends State<StoryViewPage> {
   List<StoryItem> storyItems = [];
   List<Story> originalStories = [];
   Map<String, bool> likedStories = {};
+  Map<String, int> likesCount = {};
+  Map<String, int> viewsCount = {};
 
   String? currentUserId;
   int currentGroupIndex = 0;
   int currentStoryIndex = 0;
-  bool showSendButton = false;
   bool isLoading = true;
 
   @override
@@ -128,8 +131,9 @@ class _StoryViewPageState extends State<StoryViewPage> {
         );
       } else {
         return StoryItem.text(
-          title: story.caption ?? 'ستوري',
-          backgroundColor: Colors.deepPurple,
+          title: story.caption ?? 'يومية',
+          backgroundColor:
+              Color(story.backgroundColor ?? Colors.deepPurple.value),
           textStyle: const TextStyle(fontSize: 20),
           duration: const Duration(seconds: 10),
         );
@@ -153,23 +157,30 @@ class _StoryViewPageState extends State<StoryViewPage> {
     try {
       if (storyIndex < originalStories.length) {
         final shownStory = originalStories[storyIndex];
-        final storyDoc = FirebaseFirestore.instance.collection('stories').doc(shownStory.storyId);
+        final storyDoc = FirebaseFirestore.instance
+            .collection('stories')
+            .doc(shownStory.storyId);
 
         final docSnapshot = await storyDoc.get();
         if (!docSnapshot.exists) return;
 
-        final views = (docSnapshot.data()?['views'] ?? {}) as Map<String, dynamic>;
+        final viewsData = docSnapshot.data()?['views'] ?? {};
+        final views = Map<String, dynamic>.from(viewsData);
 
-        if (!(views.keys.contains(currentUserId))) {
+        if (!views.containsKey(currentUserId)) {
           await storyDoc.update({
             'views.${currentUserId!}': FieldValue.serverTimestamp(),
           });
           print('✅ سجلنا مشاهدة للستوري: ${shownStory.storyId}');
         }
 
-        final likes = (docSnapshot.data()?['likes'] ?? {}) as Map<String, dynamic>;
+        final likesData = docSnapshot.data()?['likes'] ?? {};
+        final likes = Map<String, dynamic>.from(likesData);
+
         setState(() {
-          likedStories[shownStory.storyId] = likes.keys.contains(currentUserId);
+          likedStories[shownStory.storyId] = likes.containsKey(currentUserId);
+          viewsCount[shownStory.storyId] = views.length;
+          likesCount[shownStory.storyId] = likes.length;
         });
       }
     } catch (e) {
@@ -178,12 +189,14 @@ class _StoryViewPageState extends State<StoryViewPage> {
   }
 
   Future<void> _toggleLike(Story story) async {
-    final storyDoc = FirebaseFirestore.instance.collection('stories').doc(story.storyId);
+    final storyDoc =
+        FirebaseFirestore.instance.collection('stories').doc(story.storyId);
     final docSnapshot = await storyDoc.get();
 
     try {
-      final rawLikes = docSnapshot.data()?['likes'] ?? {};
-      final likes = Map<String, dynamic>.from(rawLikes);
+      final likesData = docSnapshot.data()?['likes'] ?? {};
+      final likes = Map<String, dynamic>.from(likesData);
+
       final isLiked = likes.containsKey(currentUserId);
 
       if (isLiked) {
@@ -192,6 +205,7 @@ class _StoryViewPageState extends State<StoryViewPage> {
         });
         setState(() {
           likedStories[story.storyId] = false;
+          likesCount[story.storyId] = likesCount[story.storyId]! - 1;
         });
       } else {
         await storyDoc.update({
@@ -199,6 +213,7 @@ class _StoryViewPageState extends State<StoryViewPage> {
         });
         setState(() {
           likedStories[story.storyId] = true;
+          likesCount[story.storyId] = (likesCount[story.storyId] ?? 0) + 1;
         });
       }
     } catch (e) {
@@ -210,28 +225,50 @@ class _StoryViewPageState extends State<StoryViewPage> {
     final messageText = _messageController.text.trim();
     if (messageText.isEmpty) return;
 
-    await FirebaseFirestore.instance.collection('chats').add({
-      'receiverId': story.userId,
-      'senderId': currentUserId,
-      'message': messageText,
-      'storyThumbnail': story.mediaUrl,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
+    try {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatRoom(
+            userId: story.userId,
+            userName: user?.storeName ?? 'مستخدم',
+            repliedStory: story, // إرسال الستوري كمعامل
+          ),
+        ),
+      );
+      
+      _messageController.clear();
+      FocusScope.of(context).unfocus();
 
-    _messageController.clear();
-    if (mounted) {
-      setState(() {
-        showSendButton = false;
-      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ تم فتح المحادثة لإرسال الرد'),
+            duration: Duration(seconds: 2)
+          ),
+        );
+      }
+    } catch (e) {
+      print('❌ خطأ أثناء فتح المحادثة: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('❌ حدث خطأ أثناء فتح المحادثة'),
+            duration: Duration(seconds: 2)),
+        );
+      }
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('✅ تم إرسال الرد')),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading || storyItems.isEmpty) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 400;
+    final currentStory =
+        originalStories.isNotEmpty && currentStoryIndex < originalStories.length
+            ? originalStories[currentStoryIndex]
+            : null;
+
+    if (isLoading || storyItems.isEmpty || currentStory == null) {
       return const Scaffold(
         backgroundColor: Colors.black,
         body: Center(
@@ -240,10 +277,12 @@ class _StoryViewPageState extends State<StoryViewPage> {
       );
     }
 
-    final currentStory = originalStories[currentStoryIndex];
+    final isStoryOwner = currentStory.userId == currentUserId;
+    final likes = likesCount[currentStory.storyId] ?? 0;
+    final views = viewsCount[currentStory.storyId] ?? 0;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: MyColor.lightprimaryColor,
       body: SafeArea(
         child: Stack(
           children: [
@@ -260,18 +299,14 @@ class _StoryViewPageState extends State<StoryViewPage> {
                   }
                 });
               },
-              onComplete: () {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) _goToNextUser();
-                });
-              },
+              onComplete: _goToNextUser,
               repeat: false,
               inline: false,
               progressPosition: ProgressPosition.top,
-              indicatorForegroundColor: Color(0xFFB388FF),
+              indicatorForegroundColor: Colors.white,
             ),
             Positioned(
-              top: 10,
+              top: 30,
               left: 20,
               right: 20,
               child: Row(
@@ -280,44 +315,74 @@ class _StoryViewPageState extends State<StoryViewPage> {
                     backgroundImage: NetworkImage(
                       user?.profileImage ?? 'https://via.placeholder.com/150',
                     ),
-                    radius: 20,
+                    radius: isSmallScreen ? 18 : 20,
                   ),
-                  const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user?.storeName ?? 'مستخدم',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user?.storeName ?? 'مستخدم',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: isSmallScreen ? 14 : 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          timeago.format(currentStory.timestamp, locale: 'ar'),
+                          style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: isSmallScreen ? 10 : 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isStoryOwner) ...[
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                StoryViewersPage(storyId: currentStory.storyId),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.remove_red_eye,
+                                color: Colors.white, size: 16),
+                            const SizedBox(width: 4),
+                            Text(
+                              views.toString(),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: isSmallScreen ? 12 : 14,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        timeago.format(currentStory.timestamp, locale: 'ar'),
-                        style: const TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
                   IconButton(
-                    icon: const Icon(Icons.remove_red_eye_outlined, color: Colors.white),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => StoryViewersPage(storyId: currentStory.storyId),
-                        ),
-                      );
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
+                    icon:
+                        const Icon(Icons.close, color: Colors.white, size: 24),
+                    onPressed: () => Navigator.pop(context),
                   ),
                 ],
               ),
@@ -330,47 +395,71 @@ class _StoryViewPageState extends State<StoryViewPage> {
                 children: [
                   Expanded(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      height: isSmallScreen ? 40 : 48,
+                      padding: const EdgeInsets.only(left: 16, right: 8),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(30),
                       ),
-                      child: TextField(
-                        controller: _messageController,
-                        focusNode: _focusNode,
-                        style: const TextStyle(color: Colors.white),
-                        onChanged: (text) {
-                          setState(() {
-                            showSendButton = text.trim().isNotEmpty;
-                          });
-                        },
-                        decoration: const InputDecoration(
-                          hintText: "أرسل رسالة...",
-                          hintStyle: TextStyle(color: Colors.white70),
-                          border: InputBorder.none,
-                        ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _messageController,
+                              focusNode: _focusNode,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: const InputDecoration(
+                                hintText: "أرسل رسالة...",
+                                hintStyle: TextStyle(color: Colors.white70),
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => _sendReply(currentStory),
+                            child: const Icon(Icons.send,
+                                color: Colors.white, size: 24),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   GestureDetector(
                     onTap: () => _toggleLike(currentStory),
-                    child: Icon(
-                      (likedStories[currentStory.storyId] ?? false)
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                      color: (likedStories[currentStory.storyId] ?? false)
-                          ? Colors.purple
-                          : Colors.white,
-                      size: 30,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            (likedStories[currentStory.storyId] ?? false)
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            color: (likedStories[currentStory.storyId] ?? false)
+                                ? Colors.red
+                                : Colors.white,
+                            size: isSmallScreen ? 20 : 24,
+                          ),
+                          if (isStoryOwner) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              likes.toString(),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: isSmallScreen ? 12 : 14,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  if (showSendButton)
-                    GestureDetector(
-                      onTap: () => _sendReply(currentStory),
-                      child: const Icon(Icons.send, color: Colors.white, size: 28),
-                    ),
                 ],
               ),
             ),

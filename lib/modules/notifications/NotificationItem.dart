@@ -70,8 +70,11 @@ class _NotificationItemState extends State<NotificationItem> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 400;
+
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: EdgeInsets.all(isSmallScreen ? 6.0 : 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -83,11 +86,16 @@ class _NotificationItemState extends State<NotificationItem> {
                 children: [
                   Text(
                     widget.action,
-                    style: const TextStyle(fontSize: 18),
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 15 : 16,
+                    ),
                   ),
                   Text(
                     widget.time,
-                    style: const TextStyle(color: Colors.grey, fontSize: 15),
+                    style: TextStyle(
+                      color: Colors.grey, 
+                      fontSize: isSmallScreen ? 13 : 14,
+                    ),
                   ),
                 ],
               ),
@@ -97,25 +105,30 @@ class _NotificationItemState extends State<NotificationItem> {
             Row(
               children: [
                 CircleAvatar(
-                  radius: 35,
+                  radius: isSmallScreen ? 20 : 25,
                   backgroundImage: widget.avatarUrl.isNotEmpty &&
                           widget.avatarUrl.startsWith('http')
                       ? CachedNetworkImageProvider(widget.avatarUrl)
-                      : const AssetImage('assets/default_user.png')
+                      : const AssetImage('assets/images/profile.png')
                           as ImageProvider,
                   onBackgroundImageError: (_, __) {},
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: isSmallScreen ? 8 : 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       '${widget.username} ${widget.action}',
-                      style: const TextStyle(fontSize: 18),
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 15 : 16,
+                      ),
                     ),
                     Text(
                       widget.time,
-                      style: const TextStyle(color: Colors.grey, fontSize: 15),
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: isSmallScreen ? 13 : 14,
+                      ),
                     ),
                   ],
                 ),
@@ -125,8 +138,8 @@ class _NotificationItemState extends State<NotificationItem> {
           // صورة المنشور أو زر الرد أو عبارة "تم المتابعة" أو مساحة فارغة
           if (widget.postImage != null && widget.postImage!.isNotEmpty)
             Container(
-              width: 85,
-              height: 75,
+              width: isSmallScreen ? 70 : 85,
+              height: isSmallScreen ? 60 : 75,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: const [
@@ -154,8 +167,8 @@ class _NotificationItemState extends State<NotificationItem> {
             GestureDetector(
               onTap: _handleFollowBack,
               child: Container(
-                width: 101,
-                height: 38,
+                width: isSmallScreen ? 90 : 101,
+                height: isSmallScreen ? 34 : 38,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   gradient: _isLoading
@@ -168,7 +181,7 @@ class _NotificationItemState extends State<NotificationItem> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: _isLoading
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
@@ -176,19 +189,20 @@ class _NotificationItemState extends State<NotificationItem> {
                           strokeWidth: 2,
                         ),
                       )
-                    : const Text(
+                    : Text(
                         'رد المتابعة',
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
+                          fontSize: isSmallScreen ? 14 : 15,
                         ),
                       ),
               ),
             )
           else if (_isFollowed)
             Container(
-              width: 101,
-              height: 38,
+              width: isSmallScreen ? 90 : 101,
+              height: isSmallScreen ? 34 : 38,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -196,16 +210,20 @@ class _NotificationItemState extends State<NotificationItem> {
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text(
+              child: Text(
                 'تم ردالمتابعه',
                 style: TextStyle(
                   color: Colors.black,
                   fontWeight: FontWeight.bold,
+                  fontSize: isSmallScreen ? 14 : 15,
                 ),
               ),
             )
           else
-            const SizedBox(width: 85, height: 75),
+            SizedBox(
+              width: isSmallScreen ? 70 : 85,
+              height: isSmallScreen ? 60 : 75,
+            ),
         ],
       ),
     );

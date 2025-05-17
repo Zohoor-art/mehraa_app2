@@ -44,7 +44,7 @@ class _CommentsState extends State<Comments> {
         .doc(widget.postId)
         .collection('comments')
         .add({
-      'name': userData['storeName'] ?? 'مستخدم',
+      'name': userData['storeName'] ?? ['displyName'],
       'time': Timestamp.now(),
       'image': userData['profileImage'] ?? '',
       'text': _commentController.text.trim(),
@@ -55,6 +55,7 @@ class _CommentsState extends State<Comments> {
 
     _commentController.clear(); // تنظيف حقل التعليق بعد الإرسال
   }
+
   void _toggleLike(String commentId, bool isLiked) async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
@@ -105,7 +106,8 @@ class _CommentsState extends State<Comments> {
     _replyControllers[commentId]?.clear();
   }
 
-  void _deleteReplyFromComment(String commentId, Map<String, dynamic> reply) async {
+  void _deleteReplyFromComment(
+      String commentId, Map<String, dynamic> reply) async {
     final commentRef = FirebaseFirestore.instance
         .collection('posts')
         .doc(widget.postId)
@@ -127,8 +129,10 @@ class _CommentsState extends State<Comments> {
               controller: _replyControllers[commentId],
               decoration: InputDecoration(
                 hintText: 'اكتب رد...',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               ),
             ),
           ),
@@ -141,10 +145,22 @@ class _CommentsState extends State<Comments> {
     );
   }
 
-   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                MyColor.blueColor,
+                MyColor.purpleColor,
+              ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+          ),
+        ),
         title: Text('التعليقات'),
         actions: [
           StreamBuilder<QuerySnapshot>(
@@ -220,14 +236,17 @@ class _CommentsState extends State<Comments> {
                           itemCount: comments.length,
                           itemBuilder: (context, index) {
                             final data = comments[index];
-                            final commentData = data.data() as Map<String, dynamic>;
+                            final commentData =
+                                data.data() as Map<String, dynamic>;
                             return _buildListItem(
                               commentData['name'],
                               _formatTime(commentData['time']),
                               commentData['image'],
                               commentData['text'],
                               data.id,
-                              commentData.containsKey('uid') ? commentData['uid'] : '',
+                              commentData.containsKey('uid')
+                                  ? commentData['uid']
+                                  : '',
                             );
                           },
                         );
@@ -244,7 +263,8 @@ class _CommentsState extends State<Comments> {
     );
   }
 
-  Widget _buildListItem(String name, String time, String imageUrl, String text, String commentId, String userId) {
+  Widget _buildListItem(String name, String time, String imageUrl, String text,
+      String commentId, String userId) {
     final currentUser = FirebaseAuth.instance.currentUser;
 
     return StreamBuilder<DocumentSnapshot>(
@@ -266,22 +286,26 @@ class _CommentsState extends State<Comments> {
           contentPadding: const EdgeInsets.all(16.0),
           leading: GestureDetector(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(
-                builder: (context) => ProfileScreen(userId: userId),
-              ));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProfileScreen(userId: userId),
+                  ));
             },
             child: CircleAvatar(
               radius: 20,
               backgroundImage: imageUrl.isNotEmpty
                   ? NetworkImage(imageUrl)
-                  : AssetImage('assets/images/2.png') as ImageProvider,
+                  : AssetImage('assets/images/profile.png') as ImageProvider,
             ),
           ),
           title: GestureDetector(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(
-                builder: (context) => ProfileScreen(userId: userId),
-              ));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProfileScreen(userId: userId),
+                  ));
             },
             child: Text(name),
           ),
@@ -291,7 +315,8 @@ class _CommentsState extends State<Comments> {
               Text(text),
               Row(
                 children: [
-                  Text(time, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                  Text(time,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12)),
                   SizedBox(width: 10),
                   GestureDetector(
                     onTap: () => _toggleLike(commentId, isLiked),
@@ -306,7 +331,9 @@ class _CommentsState extends State<Comments> {
                   SizedBox(width: 10),
                   GestureDetector(
                     onTap: () => _showReplyInput(commentId),
-                    child: Text('رد (${replies.length})', style: TextStyle(fontSize: 12, color: MyColor.blueColor)),
+                    child: Text('رد (${replies.length})',
+                        style:
+                            TextStyle(fontSize: 12, color: MyColor.blueColor)),
                   ),
                 ],
               ),
@@ -323,8 +350,10 @@ class _CommentsState extends State<Comments> {
                           Expanded(child: Text(reply['text'] ?? '')),
                           if (reply['uid'] == currentUser?.uid)
                             IconButton(
-                              icon: Icon(Icons.delete, size: 16, color: Colors.red),
-                              onPressed: () => _deleteReplyFromComment(commentId, reply),
+                              icon: Icon(Icons.delete,
+                                  size: 16, color: Colors.red),
+                              onPressed: () =>
+                                  _deleteReplyFromComment(commentId, reply),
                             ),
                         ],
                       ),
@@ -385,9 +414,10 @@ class _CommentsState extends State<Comments> {
                         .doc(FirebaseAuth.instance.currentUser?.uid)
                         .get(),
                     builder: (context, snapshot) {
-                      String img = 'assets/images/2.png';
+                      String img = 'assets/images/profile.png';
                       if (snapshot.hasData && snapshot.data!.exists) {
-                        final data = snapshot.data!.data() as Map<String, dynamic>;
+                        final data =
+                            snapshot.data!.data() as Map<String, dynamic>;
                         img = data['profileImage'] ?? img;
                       }
                       return CircleAvatar(

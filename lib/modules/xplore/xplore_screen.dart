@@ -30,12 +30,9 @@ class _XploreBodyState extends State<XploreBody> {
   List<Users> _searchResults = [];
   bool isLoading = false;
 
-  get otherUserId => null;
-
   @override
   void initState() {
     super.initState();
-
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus) {
         FocusScope.of(context).unfocus();
@@ -61,12 +58,15 @@ class _XploreBodyState extends State<XploreBody> {
       final usersQuery = FirebaseFirestore.instance
           .collection('users')
           .where('storeNameLower', isGreaterThanOrEqualTo: lowerQuery)
-          .where('storeNameLower', isLessThan: lowerQuery + 'z');
+          .where('storeNameLower', isLessThan: lowerQuery + 'z')
+          .limit(20); // تحديد عدد النتائج
 
       final usersSnapshot = await usersQuery.get();
 
-      final users =
-          usersSnapshot.docs.map((doc) => Users.fromFirestore(doc)).toList();
+      final users = usersSnapshot.docs.map((doc) {
+        final user = Users.fromFirestore(doc);
+        return user;
+      }).toList();
 
       setState(() {
         _searchResults = users;
@@ -89,74 +89,154 @@ class _XploreBodyState extends State<XploreBody> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const SizedBox(height: 20),
-        _buildSearchBar(),
-        const SizedBox(height: 20),
-        Expanded(
-          child: isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _searchResults.isEmpty
-                  ? const Center(child: Text('ابدأ البحث عن متجر...'))
-                  : ListView.builder(
-                      itemCount: _searchResults.length,
-                      itemBuilder: (context, index) {
-                        final user = _searchResults[index];
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage: user.profileImage != null
-                                ? NetworkImage(user.profileImage!)
-                                : null,
-                            backgroundColor: Colors.grey[300],
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 400;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: isSmallScreen ? 12.0 : 20.0,
+        vertical: 16.0,
+      ),
+      child: Column(
+        children: [
+          _buildSearchBar(isSmallScreen),
+          SizedBox(height: isSmallScreen ? 16 : 24),
+          Expanded(
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _searchResults.isEmpty
+                    ? Center(
+                        child: Text(
+                          'ابدأ البحث عن متجر...',
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 16 : 18,
+                            color: Colors.grey[600],
                           ),
-                          title: Text(user.storeName),
-                          subtitle: Text(user.workType),
-                          onTap: () {
-                             // ← هنا نجيبه
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    ProfileScreen(userId: otherUserId),
-                              ),
-                            );
-                            //هنا اشتي يتم الانتقال الى صفحةProfileScreen
-                          },
-                        );
-                      },
-                    ),
-        ),
-      ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: EdgeInsets.zero,
+                        itemCount: _searchResults.length,
+                        itemBuilder: (context, index) {
+                          final user = _searchResults[index];
+                          return _buildUserItem(user, isSmallScreen);
+                        },
+                      ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildSearchBar() {
+  Widget _buildSearchBar(bool isSmallScreen) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      height: 50,
+      padding: EdgeInsets.symmetric(
+        horizontal: isSmallScreen ? 12 : 16,
+        vertical: 4,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          const Icon(Icons.search),
-          const SizedBox(width: 8),
+          Icon(Icons.search, size: isSmallScreen ? 22 : 24),
+          SizedBox(width: isSmallScreen ? 8 : 12),
           Expanded(
             child: TextField(
               controller: _searchController,
               focusNode: _focusNode,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'ابحث عن متجر...',
+                hintStyle: TextStyle(fontSize: isSmallScreen ? 14 : 16),
                 border: InputBorder.none,
               ),
-              onChanged: _searchUsers, // ✅ شغّل البحث المباشر
+              style: TextStyle(fontSize: isSmallScreen ? 14 : 16),
+              onChanged: _searchUsers,
             ),
           ),
+          if (_searchController.text.isNotEmpty)
+            IconButton(
+              icon: Icon(Icons.close, size: isSmallScreen ? 18 : 20),
+              onPressed: () {
+                _searchController.clear();
+                _searchUsers('');
+              },
+            ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildUserItem(Users user, bool isSmallScreen) {
+    return Card(
+      margin: EdgeInsets.only(bottom: isSmallScreen ? 8 : 12),
+      elevation: 1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ProfileScreen(userId: user.uid),
+            ),
+          );
+        },
+        child: Padding(
+          padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: isSmallScreen ? 24 : 28,
+                backgroundImage: user.profileImage != null
+                    ? NetworkImage(user.profileImage!)
+                    : const AssetImage('assets/default_profile.png')
+                        as ImageProvider,
+                backgroundColor: Colors.white,
+              ),
+              SizedBox(width: isSmallScreen ? 12 : 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.storeName,
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 16 : 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: isSmallScreen ? 4 : 6),
+                    Text(
+                      user.workType,
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 14 : 15,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_left,
+                size: isSmallScreen ? 24 : 28,
+                color: Colors.grey[400],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

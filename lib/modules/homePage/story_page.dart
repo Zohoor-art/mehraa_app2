@@ -194,7 +194,7 @@ class StoryPage extends StatelessWidget {
               const SizedBox(
                 width: 70,
                 child: Text(
-                  'قصتي',
+                  'يوميتي',
                   style: TextStyle(fontSize: 12),
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,

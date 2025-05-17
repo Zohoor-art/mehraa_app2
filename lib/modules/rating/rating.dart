@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:mehra_app/modules/notifications/notification_methods.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
+import 'package:mehra_app/shared/components/custom_Dialog.dart';
 
 class RatingCard extends StatefulWidget {
-  final String uid; // معرف المتجر اللي بنقيمه
+  final String uid;
 
   const RatingCard({Key? key, required this.uid}) : super(key: key);
 
@@ -16,9 +17,9 @@ class RatingCard extends StatefulWidget {
 
 class _RatingCardState extends State<RatingCard> {
   List<List<bool>> starRatings = [
-    [false, false, false, false], // جودة المنتج
-    [false, false, false, false], // أسلوب التعامل
-    [false, false, false, false], // الالتزام بالمواعيد
+    [false, false, false, false],
+    [false, false, false, false],
+    [false, false, false, false],
   ];
 
   void toggleStar(int rowIndex, int colIndex) {
@@ -41,7 +42,7 @@ class _RatingCardState extends State<RatingCard> {
   Future<void> submitRatings() async {
     if (!isEveryCategoryRated()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('يرجى تقييم جميع الفئات قبل الحفظ ❗')),
+        const SnackBar(content: Text('يرجى تقييم جميع الفئات قبل الحفظ ❗')),
       );
       return;
     }
@@ -56,7 +57,6 @@ class _RatingCardState extends State<RatingCard> {
 
       final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
 
-      // حفظ التقييم كمستند منفصل داخل collection فرعي "ratings"
       final ratingDocRef = await FirebaseFirestore.instance
           .collection('storeRatings')
           .doc(widget.uid)
@@ -70,9 +70,7 @@ class _RatingCardState extends State<RatingCard> {
         'raterUid': currentUserUid,
       });
 
-      // تحديث المستند الرئيسي storeRatings/{uid} بحساب متوسط النقاط و عدد التقييمات
       final storeDocRef = FirebaseFirestore.instance.collection('storeRatings').doc(widget.uid);
-
       final storeSnapshot = await storeDocRef.get();
 
       int totalRatings = 1;
@@ -82,8 +80,6 @@ class _RatingCardState extends State<RatingCard> {
         final data = storeSnapshot.data()!;
         totalRatings = (data['totalRatings'] ?? 0) + 1;
         final prevAvg = (data['averageRating'] ?? 0).toDouble();
-
-        // تحديث المتوسط التراكمي
         totalAverageRating = ((prevAvg * (totalRatings - 1)) + averageRating) / totalRatings;
       }
 
@@ -93,218 +89,150 @@ class _RatingCardState extends State<RatingCard> {
         'lastRatingTimestamp': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
-      // إرسال إشعار التقييم
       await NotificationMethods.sendRatingNotification(
         toUid: widget.uid,
         fromUid: currentUserUid,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تم حفظ تقييمك بنجاح ✅')),
+        const SnackBar(content: Text('تم حفظ تقييمك بنجاح ✅')),
       );
 
       Navigator.of(context).pop();
     } catch (e) {
       print('خطأ أثناء حفظ التقييم: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('حدث خطأ أثناء الحفظ ❌')),
+        const SnackBar(content: Text('حدث خطأ أثناء الحفظ ❌')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isSmallScreen = screenWidth < 360;
+
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 30,
+        toolbarHeight: screenHeight * 0.05,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                MyColor.blueColor,
-                MyColor.purpleColor,
-              ],
+              colors: [MyColor.blueColor, MyColor.purpleColor],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
           ),
         ),
         leading: IconButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
+          onPressed: () => Navigator.of(context).pop(),
           icon: Icon(
             Icons.arrow_back_ios_new_rounded,
-            size: 18,
+            size: screenWidth * 0.045,
             color: Colors.white,
           ),
         ),
       ),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: bottomImage(),
-          ),
+          Positioned.fill(child: bottomImage()),
           Center(
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 70),
-                    child: Container(
-                      width: MediaQuery.of(context).size.width * 0.85,
-                      height: MediaQuery.of(context).size.height * 0.7,
-                      decoration: BoxDecoration(
-                        color: MyColor.LightSearchColor,
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            offset: Offset(0, 0),
-                            blurRadius: 8,
-                            spreadRadius: 7,
-                          ),
-                        ],
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 0.0),
-                            child: GradientButton(
-                              height: 150,
-                              width: MediaQuery.of(context).size.width * 0.85,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(height: screenHeight * 0.02),
+                  Card(
+                    child: Padding(
+                      padding: EdgeInsets.only(top: screenHeight * 0.08),
+                      child: Container(
+                        width: screenWidth * 0.9,
+                        constraints: BoxConstraints(
+                          maxHeight: screenHeight * 0.8,
+                          minHeight: screenHeight * 0.6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: MyColor.LightSearchColor,
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            GradientButton(
+                              height: screenHeight * 0.12,
+                              width: screenWidth * 0.9,
                               onPressed: () {},
                               text: 'تذكر  أن \nقطع الرقاب ولاقطع الارزاق \nلذا راع الله في تقييمك',
+                              fontSize: isSmallScreen ? screenWidth * 0.035 : screenWidth * 0.03,
                             ),
-                          ),
-                          const SizedBox(height: 40),
-                          Center(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                              child: Text(
-                                'تقييم حسب',
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w500,
+                            SizedBox(height: screenHeight * 0.03),
+                            Center(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                                child: Text(
+                                  'تقييم حسب',
+                                  style: TextStyle(
+                                    fontSize: isSmallScreen ? screenWidth * 0.045 : screenWidth * 0.04,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 25),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                buildRatingRow('جودة المنتج', 0),
-                                const SizedBox(height: 20),
-                                buildRatingRow('أسلوب التعامل', 1),
-                                const SizedBox(height: 20),
-                                buildRatingRow('الالتزام بالمواعيد', 2),
-                              ],
+                            SizedBox(height: screenHeight * 0.02),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  buildRatingRow('جودة المنتج', 0, context),
+                                  SizedBox(height: screenHeight * 0.015),
+                                  buildRatingRow('أسلوب التعامل', 1, context),
+                                  SizedBox(height: screenHeight * 0.015),
+                                  buildRatingRow('الالتزام بالمواعيد', 2, context),
+                                ],
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 35),
-                          Center(
-                            child: Column(
-                              children: [
-                                GradientButton(
-                                  height: 46,
-                                  width: 285,
-                                  onPressed: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(15),
-                                        ),
-                                        title: Row(
-                                          children: [
-                                            Icon(Icons.check_circle, color: Colors.green),
-                                            SizedBox(width: 10),
-                                            Text('تأكيد التقييم'),
-                                          ],
-                                        ),
-                                        content: Text('هل أنت متأكد أنك تريد حفظ هذا التقييم؟'),
-                                        actionsAlignment: MainAxisAlignment.spaceBetween,
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                              submitRatings();
-                                            },
-                                            child: Text('نعم', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                            },
-                                            child: Text('لا', style: TextStyle(color: Colors.red)),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                  text: 'تأكيد',
-                                ),
-                                const SizedBox(height: 25),
-                                GradientButton(
-                                  height: 46,
-                                  width: 285,
-                                  onPressed: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(15),
-                                        ),
-                                        title: Row(
-                                          children: [
-                                            Icon(Icons.warning_amber_rounded, color: Colors.orange),
-                                            SizedBox(width: 10),
-                                            Text('تراجع عن التقييم'),
-                                          ],
-                                        ),
-                                        content: Text('ماذا تريد أن تفعل؟'),
-                                        actionsAlignment: MainAxisAlignment.spaceBetween,
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                              setState(() {
-                                                starRatings = [
-                                                  [false, false, false, false],
-                                                  [false, false, false, false],
-                                                  [false, false, false, false],
-                                                ];
-                                              });
-                                            },
-                                            child: Text('تراجع عن التقييم', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              Navigator.pop(context);
-                                              Navigator.of(context).pop();
-                                            },
-                                            child: Text('خروج', style: TextStyle(color: Colors.red)),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                  text: 'تراجع',
-                                ),
-                              ],
+                            SizedBox(height: screenHeight * 0.03),
+                            Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  GradientButton(
+                                    height: screenHeight * 0.06,
+                                    width: screenWidth * 0.7,
+                                    onPressed: () => _showConfirmationDialog(context),
+                                    text: 'تأكيد',
+                                    fontSize: screenWidth * 0.035,
+                                  ),
+                                  SizedBox(height: screenHeight * 0.02),
+                                  GradientButton(
+                                    height: screenHeight * 0.06,
+                                    width: screenWidth * 0.7,
+                                    onPressed: () => _showCancelDialog(context),
+                                    text: 'تراجع',
+                                    fontSize: screenWidth * 0.035,
+                                  ),
+                                  SizedBox(height: screenHeight * 0.02),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -312,19 +240,69 @@ class _RatingCardState extends State<RatingCard> {
     );
   }
 
-  Row buildRatingRow(String label, int rowIndex) {
+  void _showConfirmationDialog(BuildContext context) {
+    CustomDialog.show(
+      context,
+      title: 'تأكيد التقييم',
+      content: 'هل أنت متأكد أنك تريد حفظ هذا التقييم؟',
+      confirmText: 'نعم',
+      cancelText: 'لا',
+      icon: Icons.check_circle,
+      iconColor: Colors.white,
+      confirmButtonColor: Colors.green,
+      onConfirm: submitRatings,
+      onCancel: () => Navigator.pop(context),
+    );
+  }
+
+  void _showCancelDialog(BuildContext context) {
+    CustomDialog.show(
+      context,
+      title: 'تراجع عن التقييم',
+      content: 'ماذا تريد أن تفعل؟',
+      confirmText: 'تراجع عن التقييم',
+      cancelText: 'خروج',
+      icon: Icons.warning_amber_rounded,
+      iconColor: Colors.white,
+      confirmButtonColor: Colors.orange,
+      onConfirm: () {
+        Navigator.pop(context);
+        setState(() {
+          starRatings = [
+            [false, false, false, false],
+            [false, false, false, false],
+            [false, false, false, false],
+          ];
+        });
+      },
+      onCancel: () {
+        Navigator.pop(context);
+        Navigator.of(context).pop();
+      },
+    );
+  }
+
+  Widget buildRatingRow(String label, int rowIndex, BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(fontSize: 22)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: isSmallScreen ? screenWidth * 0.035 : screenWidth * 0.03,
+          ),
+        ),
         Row(
           children: List.generate(4, (colIndex) {
             return GestureDetector(
               onTap: () => toggleStar(rowIndex, colIndex),
               child: Icon(
                 Icons.star,
-                size: 30,
-                color: starRatings[rowIndex][colIndex] ? Colors.yellow : Color(0xFFC4BCBC),
+                size: isSmallScreen ? screenWidth * 0.06 : screenWidth * 0.05,
+                color: starRatings[rowIndex][colIndex] ? Colors.yellow : const Color(0xFFC4BCBC),
               ),
             );
           }),

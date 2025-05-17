@@ -8,6 +8,7 @@ import 'package:mehra_app/modules/homePage/post.dart';
 import 'package:mehra_app/modules/notifications/NotificationItem.dart';
 import 'package:mehra_app/modules/notifications/analitices_screen.dart';
 import 'package:mehra_app/modules/profile/profile_screen.dart';
+import 'package:mehra_app/shared/components/constants.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -49,7 +50,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         .toList();
   }
 
-  Future<bool> checkIfFollowing(String currentUserId, String otherUserId) async {
+  Future<bool> checkIfFollowing(
+      String currentUserId, String otherUserId) async {
     final doc = await FirebaseFirestore.instance
         .collection('users')
         .doc(otherUserId)
@@ -60,7 +62,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return doc.exists;
   }
 
-  Future<void> _handleFollowBack(String notificationId, String fromUserId) async {
+  Future<void> _handleFollowBack(
+      String notificationId, String fromUserId) async {
     final currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
     final batch = FirebaseFirestore.instance.batch();
@@ -112,8 +115,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الإشعارات'),
-        backgroundColor: Colors.deepPurple,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [MyColor.blueColor, MyColor.blueColor],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+          ),
+        ),
+        title: Center(
+            child: const Text(
+          'الإشعارات',
+          style: TextStyle(fontWeight: FontWeight.normal),
+        )),
       ),
       body: FutureBuilder<List<AppNotification>>(
         future: _notificationsFuture,
@@ -144,49 +159,49 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 'rating',
               ].contains(notification.type);
 
-             if (isSystem) {
-  String displayMessage = 'لديك إشعار جديد';
-  String avatarUrl = 'assets/2.png'; // تأكد أنك أضفت صورة مناسبة في assets
-  String title = 'تحليلات الأسبوع';
+              if (isSystem) {
+                String displayMessage = 'لديك إشعار جديد';
+                String avatarUrl =
+                    'assets/images/profile.png'; // تأكد أنك أضفت صورة مناسبة في assets
+                String title = 'تحليلات الأسبوع';
 
-  if (notification.type == 'weeklySummary') {
-    displayMessage = 'إليك ملخص أداءك لهذا الأسبوع!';
-    title = 'تحليلات الأسبوع';
-  } else if (notification.type == 'topRated') {
-    displayMessage = 'أنت من أعلى المتاجر تقييمًا هذا الأسبوع!';
-    title = 'أفضل المتاجر';
-  } else if (notification.type == 'mostOrdered') {
-    displayMessage = 'منتجاتك من الأكثر طلبًا!';
-    title = 'المنتجات الأكثر طلبًا';
-  }
+                if (notification.type == 'weeklySummary') {
+                  displayMessage = 'إليك ملخص أداءك لهذا الأسبوع!';
+                  title = 'تحليلات الأسبوع';
+                } else if (notification.type == 'topRated') {
+                  displayMessage = 'أنت من أعلى المتاجر تقييمًا هذا الأسبوع!';
+                  title = 'أفضل المتاجر';
+                } else if (notification.type == 'mostOrdered') {
+                  displayMessage = 'منتجاتك من الأكثر طلبًا!';
+                  title = 'المنتجات الأكثر طلبًا';
+                }
 
-  return GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => AnalyticsNotificationScreen(
-            title: title,
-            message: notification.message,
-          ),
-        ),
-      );
-    },
-    child: NotificationItem(
-      username: 'فريق مهرة',
-      action: displayMessage,
-      time: _formatTimeAgo(notification.timestamp),
-      avatarUrl: avatarUrl,
-      postImage: null,
-      showButton: false,
-      isSystemNotification: true,
-      isImageFromNetwork: false,
-      isFollowed: false,
-      onFollowBackPressed: null,
-    ),
-  );
-}
-
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => AnalyticsNotificationScreen(
+                          title: title,
+                          message: notification.message,
+                        ),
+                      ),
+                    );
+                  },
+                  child: NotificationItem(
+                    username: 'فريق مهرة',
+                    action: displayMessage,
+                    time: _formatTimeAgo(notification.timestamp),
+                    avatarUrl: avatarUrl,
+                    postImage: null,
+                    showButton: false,
+                    isSystemNotification: true,
+                    isImageFromNetwork: false,
+                    isFollowed: false,
+                    onFollowBackPressed: null,
+                  ),
+                );
+              }
 
               return FutureBuilder<DocumentSnapshot>(
                 future: FirebaseFirestore.instance
@@ -197,8 +212,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   final userData =
                       userSnapshot.data?.data() as Map<String, dynamic>?;
 
-                  final username = userData?['storeName'] ?? 'مستخدم';
-                  final photoUrl = userData?['profileImage'] ?? 'assets/1.png';
+                  final username =
+                      userData?['storeName'] ?? 'مستخدم';
+                  final photoUrl =
+                      userData?['profileImage'] ?? 'assets/images/profile.png';
 
                   return FutureBuilder<bool>(
                     future: notification.type == 'follow'
@@ -207,7 +224,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             notification.fromUid)
                         : Future.value(false),
                     builder: (context, snapshotFollowing) {
-                      final isAlreadyFollowing = snapshotFollowing.data ?? false;
+                      final isAlreadyFollowing =
+                          snapshotFollowing.data ?? false;
                       final isFollowedInNotification =
                           _followStatus[notification.id] ?? false;
 
@@ -227,9 +245,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             : Future.value(null),
                         builder: (context, postSnapshot) {
                           String? postImageUrl;
-                          if (postSnapshot.hasData && postSnapshot.data!.exists) {
-                            final postData =
-                                postSnapshot.data!.data() as Map<String, dynamic>;
+                          if (postSnapshot.hasData &&
+                              postSnapshot.data!.exists) {
+                            final postData = postSnapshot.data!.data()
+                                as Map<String, dynamic>;
                             postImageUrl = postData['postUrl'];
                           }
 
@@ -250,8 +269,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) =>
-                                          ProfileScreen(userId: notification.fromUid),
+                                      builder: (_) => ProfileScreen(
+                                          userId: notification.fromUid),
                                     ),
                                   );
                                   break;
@@ -277,7 +296,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                         ),
                                       );
                                     } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
                                         const SnackBar(
                                             content: Text('المنشور غير موجود')),
                                       );
@@ -295,8 +315,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 case 'rating':
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                        content:
-                                            Text('تم تقييمك: ${notification.message}')),
+                                        content: Text(
+                                            'تم تقييمك: ${notification.message}')),
                                   );
                                   break;
                               }
@@ -310,7 +330,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               showButton: showReplyButton,
                               isSystemNotification: false,
                               isImageFromNetwork: useNetworkImage,
-                              isFollowed: isFollowedInNotification || isAlreadyFollowing,
+                              isFollowed: isFollowedInNotification ||
+                                  isAlreadyFollowing,
                               onFollowBackPressed: showReplyButton
                                   ? () => _handleFollowBack(
                                         notification.id,

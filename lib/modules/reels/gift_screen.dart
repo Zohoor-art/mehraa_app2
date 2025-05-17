@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mehra_app/shared/components/constants.dart'; // تأكد من استيراد ملف الألوان
+import 'package:mehra_app/shared/components/constants.dart';
 
 class GiftsScreen extends StatefulWidget {
   final String postId;
@@ -25,7 +25,6 @@ class _GiftsScreenState extends State<GiftsScreen> {
   bool _isSending = false;
   int? _selectedGiftIndex;
 
-  // قائمة الهدايا المتاحة باستخدام أيقونات Material فقط
   final List<Gift> _availableGifts = [
     Gift(
       id: '1',
@@ -73,70 +72,88 @@ class _GiftsScreenState extends State<GiftsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 400;
+    final isPortrait = screenSize.height > screenSize.width;
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
           'إرسال هدية لـ ${widget.receiverName}',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: isSmallScreen ? 16 : 18,
+          ),
         ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: MyColor.purpleColor,
       ),
-      body: Column(
-        children: [
-          // شبكة الهدايا
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 15,
-                  mainAxisSpacing: 15,
-                  childAspectRatio: 0.9,
-                ),
-                itemCount: _availableGifts.length,
-                itemBuilder: (context, index) {
-                  return _buildGiftItem(_availableGifts[index], index);
-                },
-              ),
-            ),
-          ),
-
-          // زر الإرسال
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: MyColor.pinkColor,
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // شبكة الهدايا
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(isSmallScreen ? 12.0 : 16.0),
+                child: GridView.builder(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: isPortrait ? 2 : 3,
+                    crossAxisSpacing: isSmallScreen ? 10 : 15,
+                    mainAxisSpacing: isSmallScreen ? 10 : 15,
+                    childAspectRatio: isPortrait ? 0.9 : 1.2,
                   ),
+                  itemCount: _availableGifts.length,
+                  itemBuilder: (context, index) {
+                    return _buildGiftItem(_availableGifts[index], index, screenSize);
+                  },
                 ),
-                onPressed: _selectedGiftIndex != null
-                    ? () => _sendGift(_availableGifts[_selectedGiftIndex!])
-                    : null,
-                child: _isSending
-                    ? CircularProgressIndicator(color: MyColor.pinkColor)
-                    : Text(
-                        'إرسال الهدية',
-                        style: TextStyle(fontSize: 16, color:_isSending? Colors.white:Colors.black),
-                      ),
               ),
             ),
-          ),
-        ],
+
+            // زر الإرسال
+            Padding(
+              padding: EdgeInsets.all(isSmallScreen ? 12.0 : 16.0),
+              child: SizedBox(
+                width: double.infinity,
+                height: screenSize.height * 0.07,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: MyColor.pinkColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: _selectedGiftIndex != null
+                      ? () => _sendGift(_availableGifts[_selectedGiftIndex!])
+                      : null,
+                  child: _isSending
+                      ? CircularProgressIndicator(color: Colors.white)
+                      : Text(
+                          'إرسال الهدية',
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 14 : 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildGiftItem(Gift gift, int index) {
+  Widget _buildGiftItem(Gift gift, int index, Size screenSize) {
     final isSelected = _selectedGiftIndex == index;
+    final isSmallScreen = screenSize.width < 400;
 
     return GestureDetector(
       onTap: () {
@@ -165,33 +182,43 @@ class _GiftsScreenState extends State<GiftsScreen> {
           children: [
             // أيقونة الهدية
             Container(
-              width: 60,
-              height: 60,
+              width: isSmallScreen ? 50 : 60,
+              height: isSmallScreen ? 50 : 60,
               decoration: BoxDecoration(
                 color: gift.color.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
-              child: Icon(gift.icon, size: 30, color: gift.color),
+              child: Icon(
+                gift.icon, 
+                size: isSmallScreen ? 25 : 30, 
+                color: gift.color,
+              ),
             ),
-            SizedBox(height: 10),
+            SizedBox(height: isSmallScreen ? 6 : 10),
             Text(
               gift.name,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: Colors.grey[800],
+                fontSize: isSmallScreen ? 14 : 16,
               ),
             ),
-            SizedBox(height: 5),
+            SizedBox(height: isSmallScreen ? 4 : 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.monetization_on, size: 16, color: Colors.amber),
+                Icon(
+                  Icons.monetization_on, 
+                  size: isSmallScreen ? 14 : 16, 
+                  color: Colors.amber,
+                ),
                 SizedBox(width: 4),
                 Text(
                   '${gift.price}',
                   style: TextStyle(
                     color: Colors.amber,
                     fontWeight: FontWeight.bold,
+                    fontSize: isSmallScreen ? 14 : 16,
                   ),
                 ),
               ],
@@ -209,7 +236,6 @@ class _GiftsScreenState extends State<GiftsScreen> {
     setState(() => _isSending = true);
 
     try {
-      // 1. تسجيل الهدية في Firestore
       await _firestore.collection('gifts').add({
         'senderId': currentUser.uid,
         'receiverId': widget.receiverId,
@@ -220,13 +246,11 @@ class _GiftsScreenState extends State<GiftsScreen> {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      // 2. تحديث إحصائيات الهدايا للمستلم
       await _firestore.collection('users').doc(widget.receiverId).update({
         'totalGifts': FieldValue.increment(1),
         'giftsValue': FieldValue.increment(gift.price),
       });
 
-      // 3. إرسال إشعار للمستلم
       if (widget.receiverId != currentUser.uid) {
         await _firestore
             .collection('notifications')
@@ -242,7 +266,6 @@ class _GiftsScreenState extends State<GiftsScreen> {
         });
       }
 
-      // 4. عرض رسالة نجاح
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('تم إرسال ${gift.name} بنجاح!'),

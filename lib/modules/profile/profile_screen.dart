@@ -10,6 +10,7 @@ import 'package:mehra_app/modules/rating/rating.dart';
 import 'package:mehra_app/modules/tabs/feed_view.dart';
 import 'package:mehra_app/modules/tabs/reels_view.dart';
 import 'package:mehra_app/modules/tabs/tagged_view.dart';
+import 'package:mehra_app/shared/components/custom_Dialog.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String userId;
@@ -39,8 +40,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     fetchUserData();
     fetchFollowersAndFollowingCount();
-     fetchRating();
+    fetchRating();
   }
+
   Future<void> fetchRating() async {
     try {
       DocumentSnapshot snapshot = await FirebaseFirestore.instance
@@ -50,14 +52,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (snapshot.exists) {
         setState(() {
-          averageRating = (snapshot['averageRating'] ?? 0) / 25; // نحول من 100 الى 4 نجوم
+          averageRating = (snapshot['averageRating'] ?? 0) / 25;
         });
       }
     } catch (e) {
       print('Error fetching rating: $e');
     }
   }
-
 
   Future<void> fetchUserData() async {
     final snap = await FirebaseFirestore.instance.collection('users').doc(widget.userId).get();
@@ -66,19 +67,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final user = Users.fromSnap(snap);
 
       setState(() {
-  currentUser = user;
+        currentUser = user;
+        final isCurrentUser = widget.userId == FirebaseAuth.instance.currentUser?.uid;
 
-  final isCurrentUser = widget.userId == FirebaseAuth.instance.currentUser?.uid;
+        tabBarViews = [
+          FeedView(userId: widget.userId),
+          UserVideosView(userId: widget.userId),
+          TaggedView(isCurrentUser: isCurrentUser),
+        ];
 
-  tabBarViews = [
-    FeedView(userId: widget.userId),
-    UserVideosView(userId: widget.userId),
-    TaggedView(isCurrentUser: isCurrentUser),
-  ];
-
-  isLoading = false;
-});
-
+        isLoading = false;
+      });
     } else {
       setState(() {
         isLoading = false;
@@ -107,25 +106,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     if (isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(
+            strokeWidth: screenWidth * 0.01,
+          ),
+        ),
       );
     }
 
     bool isStoreOwner = currentUser?.storeName.isNotEmpty ?? false;
 
     return isStoreOwner
-        ? buildStoreProfile(context)
-        : buildGoogleUserProfile(context);
+        ? buildStoreProfile(context, screenWidth, screenHeight)
+        : buildGoogleUserProfile(context, screenWidth, screenHeight);
   }
 
-  Widget buildStoreProfile(BuildContext context) {
+  Widget buildStoreProfile(BuildContext context, double screenWidth, double screenHeight) {
     return DefaultTabController(
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          toolbarHeight: 50,
+          toolbarHeight: screenHeight * 0.07,
           flexibleSpace: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -135,11 +141,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
-          title: Text(currentUser!.storeName, style: const TextStyle(color: Colors.white)),
+          title: Text(
+            currentUser!.storeName, 
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: screenWidth * 0.045,
+            ),
+          ),
           actions: widget.userId == FirebaseAuth.instance.currentUser!.uid
               ? [
                   IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.white),
+                    icon: Icon(Icons.edit, color: Colors.white, size: screenWidth * 0.06),
                     tooltip: 'تعديل الملف الشخصي',
                     onPressed: () async {
                       final updated = await Navigator.push(
@@ -159,12 +171,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       );
 
                       if (updated == true) {
-                        fetchUserData(); // إعادة تحميل البيانات بعد التحديث
+                        fetchUserData();
                       }
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.share, color: Colors.white),
+                    icon: Icon(Icons.share, color: Colors.white, size: screenWidth * 0.06),
                     tooltip: 'مشاركة الملف الشخصي',
                     onPressed: () {},
                   ),
@@ -173,29 +185,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         body: ListView(
           children: [
-            const SizedBox(height: 20),
+            SizedBox(height: screenHeight * 0.02),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('$followingCount', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                    const SizedBox(height: 5),
-                    Text('متابع', style: TextStyle(color: Colors.grey[800])),
+                    Text(
+                      '$followingCount', 
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold, 
+                        fontSize: screenWidth * 0.045
+                      ),
+                    ),
+                    SizedBox(height: screenHeight * 0.005),
+                    Text(
+                      'متابع', 
+                      style: TextStyle(
+                        color: Colors.grey[800],
+                        fontSize: screenWidth * 0.035,
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(width: 20),
+                SizedBox(width: screenWidth * 0.05),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.03),
                   child: Stack(
                     alignment: Alignment.bottomRight,
                     children: [
                       ClipOval(
                         child: Image.network(
                           currentUser!.profileImage ?? '',
-                          height: 100,
-                          width: 100,
+                          height: screenWidth * 0.25,
+                          width: screenWidth * 0.25,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -205,22 +229,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           right: 0,
                           child: GestureDetector(
                             onTap: () async {
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('تعديل صورة الملف الشخصي'),
-                                  content: const Text('هل تريد تعديل صورة الملف الشخصي؟'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context, false),
-                                      child: const Text('لا'),
+                              final confirm = await CustomDialog.show<bool>(
+                                context,
+                                title: 'تعديل صورة الملف الشخصي',
+                                content: 'هل تريد تعديل صورة الملف الشخصي؟',
+                                icon: Icons.edit,
+                                confirmText: 'نعم',
+                                cancelText: 'لا',
+                                onConfirm: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => EditProfileScreen(
+                                      currentData: {
+                                        'storeName': currentUser!.storeName,
+                                        'description': currentUser!.description,
+                                        'location': currentUser!.location,
+                                        'profileImage': currentUser!.profileImage,
+                                      },
+                                      userId: widget.userId,
+                                      user: currentUser!,
                                     ),
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context, true),
-                                      child: const Text('نعم'),
-                                    ),
-                                  ],
+                                  ),
                                 ),
+                                onCancel: () => Navigator.pop(context, false),
                               );
 
                               if (confirm == true) {
@@ -242,7 +273,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               }
                             },
                             child: Container(
-                              padding: const EdgeInsets.all(6),
+                              padding: EdgeInsets.all(screenWidth * 0.015),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: Colors.white,
@@ -253,100 +284,145 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ],
                               ),
-                              child: const Icon(Icons.edit, size: 18, color: Colors.blue),
+                              child: Icon(
+                                Icons.edit,
+                                size: screenWidth * 0.045,
+                                color: MyColor.darkPurpleColor,
+                              ),
                             ),
                           ),
                         ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 20),
+                SizedBox(width: screenWidth * 0.05),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('$followersCount', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                    const SizedBox(height: 5),
-                    Text('متابعين', style: TextStyle(color: Colors.grey[800])),
+                    Text(
+                      '$followersCount', 
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold, 
+                        fontSize: screenWidth * 0.045
+                      ),
+                    ),
+                    SizedBox(height: screenHeight * 0.005),
+                    Text(
+                      'متابعين', 
+                      style: TextStyle(
+                        color: Colors.grey[800],
+                        fontSize: screenWidth * 0.035,
+                      ),
+                    ),
                   ],
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: screenHeight * 0.02),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(currentUser!.storeName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                const Text(' | '),
-                Text(currentUser!.workType, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(
+                  currentUser!.storeName, 
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: screenWidth * 0.04,
+                  ),
+                ),
+                Text(' | ', style: TextStyle(fontSize: screenWidth * 0.04)),
+                Text(
+                  currentUser!.workType, 
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: screenWidth * 0.04,
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 5),
+            SizedBox(height: screenHeight * 0.01),
             Container(
               alignment: Alignment.center,
+              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
               child: Text(
                 currentUser!.description,
                 maxLines: 2,
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontSize: 16),
+                style: TextStyle(fontSize: screenWidth * 0.038),
               ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: screenHeight * 0.01),
             Column(
               children: [
-                Text(currentUser!.location, style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 5),
-                Text(currentUser!.email, style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+                Text(
+                  currentUser!.location, 
+                  style: TextStyle(
+                    color: Colors.blue, 
+                    fontWeight: FontWeight.bold,
+                    fontSize: screenWidth * 0.038,
+                  ),
+                ),
+                SizedBox(height: screenHeight * 0.005),
+                Text(
+                  currentUser!.email, 
+                  style: TextStyle(
+                    color: Colors.blue, 
+                    fontWeight: FontWeight.bold,
+                    fontSize: screenWidth * 0.038,
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: screenHeight * 0.01),
             Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              const Text('التقييم', style: TextStyle(fontSize: 16)),
-              const SizedBox(width: 5),
-              ...List.generate(5, (index) => Icon(
-                index < averageRating ? Icons.star : Icons.star_border,
-                color: Colors.amber,
-              )),
-            ],
-          ),
-          Row(
-            children: [
-              GradientButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => RatingsListPage(userId: widget.userId)),
-                ),
-                text: 'تفاصيل',
-                width: 70,
-                height: 35,
-                fontSize: 10,
+              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.03),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'التقييم', 
+                        style: TextStyle(fontSize: screenWidth * 0.038),
+                      ),
+                      SizedBox(width: screenWidth * 0.01),
+                      ...List.generate(5, (index) => Icon(
+                        index < averageRating ? Icons.star : Icons.star_border,
+                        color: Colors.amber,
+                        size: screenWidth * 0.05,
+                      )),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      GradientButton(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => RatingsListPage(userId: widget.userId))),
+                        text: 'تفاصيل',
+                        width: screenWidth * 0.18,
+                        height: screenHeight * 0.04,
+                        fontSize: screenWidth * 0.03,
+                      ),
+                      SizedBox(width: screenWidth * 0.03),
+                      GradientButton(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => RatingCard(uid: widget.userId))),
+                        text: 'تقييم',
+                        width: screenWidth * 0.18,
+                        height: screenHeight * 0.04,
+                        fontSize: screenWidth * 0.03,
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(width: 10),
-              GradientButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => RatingCard(uid: widget.userId)),
-                ),
-                text: 'تقييم',
-                width: 70,
-                height: 35,
-                fontSize: 10,
-              ),
-            ],
-          ),
-        ],
-      ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: screenHeight * 0.02),
             TabBar(tabs: tabs),
             SizedBox(
-              height: 1000,
+              height: screenHeight * 0.6,
               child: TabBarView(
                 children: tabBarViews,
               ),
@@ -357,26 +433,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget buildGoogleUserProfile(BuildContext context) {
+  Widget buildGoogleUserProfile(BuildContext context, double screenWidth, double screenHeight) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
           currentUser?.email ?? "بلا بريد",
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: screenWidth * 0.045,
+          ),
         ),
       ),
       body: Column(
         children: [
-          const SizedBox(height: 20),
+          SizedBox(height: screenHeight * 0.02),
           CircleAvatar(
             backgroundImage: NetworkImage(currentUser!.profileImage ?? ''),
-            radius: 50,
+            radius: screenWidth * 0.15,
           ),
-          const SizedBox(height: 10),
-          Text(currentUser!.email, style: const TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 5),
-          Text('يتابع: $followingCount'),
-          Text('المتابعين: $followersCount'),
+          SizedBox(height: screenHeight * 0.02),
+          Text(
+            currentUser!.email, 
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: screenWidth * 0.04,
+            ),
+          ),
+          SizedBox(height: screenHeight * 0.01),
+          Text(
+            'يتابع: $followingCount',
+            style: TextStyle(fontSize: screenWidth * 0.035),
+          ),
+          Text(
+            'المتابعين: $followersCount',
+            style: TextStyle(fontSize: screenWidth * 0.035),
+          ),
         ],
       ),
     );
