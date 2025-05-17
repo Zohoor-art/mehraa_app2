@@ -5,6 +5,7 @@ import 'package:mehra_app/models/story.dart';
 import 'package:mehra_app/models/userModel.dart';
 import 'package:mehra_app/modules/Story/Create_Story_Page.dart';
 import 'package:mehra_app/modules/Story/User_Stories_Page.dart';
+import 'package:mehra_app/modules/register/register_screen.dart';
 
 class HouseClipper extends CustomClipper<Path> {
   @override
@@ -48,7 +49,57 @@ class StoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'يرجى تسجيل الدخول أولًا لإنشاء ومشاهدة اليوميات',
+              style: TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => RegisterScreen()), // عدل حسب اسم شاشتك
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.only(left: 5, right: 5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                elevation: 5,
+              ),
+              child: Ink(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xff9022B2), Colors.deepPurple],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'تسجيل الدخول',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final String currentUserId = currentUser.uid;
 
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -72,9 +123,7 @@ class StoryPage extends StatelessWidget {
             .map((doc) => Story.fromDocumentSnapshot(doc))
             .toList();
 
-
         final Map<String, List<Story>> groupedStories = {};
-
 
         for (var story in otherStories) {
           groupedStories.putIfAbsent(story.userId, () => []).add(story);
@@ -104,149 +153,54 @@ class StoryPage extends StatelessWidget {
   }
 
   Widget _buildMyStoryButton(BuildContext context, List<Story> myStories) {
-  final String currentUserId = FirebaseAuth.instance.currentUser!.uid;
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+    final String? currentUserId = currentUser?.uid;
 
-  bool hasStories = myStories.isNotEmpty;
-  bool allOpened = myStories.every((story) => story.isOpened);
-  bool anyUnopened = myStories.any((story) => !story.isOpened);
+    if (currentUserId == null) {
+      return const SizedBox.shrink();
+    }
 
-  return FutureBuilder<Users?>(
-    future: _getUser(currentUserId),
-    builder: (context, snapshot) {
-      final user = snapshot.data;
-
-      return Padding(
-        padding: const EdgeInsets.all(7.0),
-        child: InkWell(
-          onTap: hasStories
-              ? () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => UserStoriesPage(userId: currentUserId)),
-                  );
-                }
-              : null,
-          child: Column(
-            children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  if (hasStories) // 🟢 إظهار الإطار فقط إذا فيه ستوري
-                    ClipPath(
-                      clipper: HouseClipper(),
-                      child: Container(
-                        width: 70,
-                        height: 77,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: allOpened
-                                ? [Colors.grey, Colors.grey]
-                                : [Color(0xff9022B2), Color(0xffEEAB63)],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ClipPath(
-                    clipper: HouseClipper(),
-                    child: Container(
-                      width: 60,
-                      height: 67,
-                      color: Colors.white,
-                      child: user?.profileImage != null
-                          ? Image.network(
-                              user!.profileImage!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
-                            )
-                          : const Icon(Icons.person, size: 40),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: -2,
-                    right: -1,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => CreateStoryPage()),
-                        );
-                      },
-                      child: Container(
-                        width: 25,
-                        height: 25,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [Colors.pink, Colors.purple],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                        ),
-                        child: const Icon(Icons.add, color: Colors.white, size: 20),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              const SizedBox(
-                width: 70,
-                child: Text(
-                  'قصتي',
-                  style: TextStyle(fontSize: 12),
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
-
-  Widget _buildStoryItem(BuildContext context, String userId, List<Story> stories) {
-    bool allOpened = stories.every((story) => story.isOpened);
+    bool hasStories = myStories.isNotEmpty;
+    bool allOpened = myStories.every((story) => story.isOpened);
 
     return FutureBuilder<Users?>(
-      future: _getUser(userId),
+      future: _getUser(currentUserId),
       builder: (context, snapshot) {
         final user = snapshot.data;
 
         return Padding(
           padding: const EdgeInsets.all(7.0),
           child: InkWell(
-            onTap: () async {
-              await _markStoriesAsOpened(stories);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => UserStoriesPage(userId: userId)),
-              );
-            },
+            onTap: hasStories
+                ? () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => UserStoriesPage(userId: currentUserId)),
+                    );
+                  }
+                : null,
             child: Column(
               children: [
                 Stack(
                   alignment: Alignment.center,
                   children: [
-                    ClipPath(
-                      clipper: HouseClipper(),
-                      child: Container(
-                        width: 70,
-                        height: 77,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: allOpened
-                                ? [Colors.grey, Colors.grey]
-                                : [Color(0xff9022B2), Color(0xffEEAB63)],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
+                    if (hasStories)
+                      ClipPath(
+                        clipper: HouseClipper(),
+                        child: Container(
+                          width: 70,
+                          height: 77,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: allOpened
+                                  ? [Colors.grey, Colors.grey]
+                                  : [Color(0xff9022B2), Color(0xffEEAB63)],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
                           ),
                         ),
                       ),
-                    ),
                     ClipPath(
                       clipper: HouseClipper(),
                       child: Container(
@@ -262,24 +216,32 @@ class StoryPage extends StatelessWidget {
                             : const Icon(Icons.person, size: 40),
                       ),
                     ),
-
+                    // زر الإضافة مع التحقق من isCommercial
                     Positioned(
                       bottom: -2,
                       right: -1,
                       child: GestureDetector(
-                        onTap: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => CreateStoryPage()),
-                          );
-
-                          if (result == true) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('✅ تم نشر الستوري بنجاح!'),
-                                backgroundColor: Colors.green,
-                                duration: Duration(seconds: 3),
-                              ),
+                        onTap: () {
+                          if (user?.isCommercial == false) {
+                            showDialog(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: const Text('تنبيه'),
+                                  content: const Text('يجب أن تكون مسجلًا بحساب تجاري لإنشاء ستوري.'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('حسناً'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => CreateStoryPage()),
                             );
                           }
                         },
@@ -298,15 +260,14 @@ class StoryPage extends StatelessWidget {
                         ),
                       ),
                     ),
-
                   ],
                 ),
                 const SizedBox(height: 6),
-                SizedBox(
+                const SizedBox(
                   width: 70,
                   child: Text(
-                    user?.storeName ?? 'مستخدم',
-                    style: const TextStyle(fontSize: 12, color: Color.fromARGB(255, 23, 8, 8) ,fontWeight: FontWeight.w500),
+                    'قصتي',
+                    style: TextStyle(fontSize: 12),
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
                   ),
@@ -318,4 +279,76 @@ class StoryPage extends StatelessWidget {
       },
     );
   }
+Widget _buildStoryItem(BuildContext context, String userId, List<Story> stories) {
+  bool allOpened = stories.every((story) => story.isOpened);
+
+  return FutureBuilder<Users?>(
+    future: _getUser(userId),
+    builder: (context, snapshot) {
+      final user = snapshot.data;
+
+      return Padding(
+        padding: const EdgeInsets.all(7.0),
+        child: InkWell(
+          onTap: () async {
+            await _markStoriesAsOpened(stories);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => UserStoriesPage(userId: userId)),
+            );
+          },
+          child: Column(
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  ClipPath(
+                    clipper: HouseClipper(),
+                    child: Container(
+                      width: 70,
+                      height: 77,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: allOpened
+                              ? [Colors.grey, Colors.grey]
+                              : [Color(0xff9022B2), Color(0xffEEAB63)],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                        ),
+                      ),
+                    ),
+                  ),
+                  ClipPath(
+                    clipper: HouseClipper(),
+                    child: Container(
+                      width: 60,
+                      height: 67,
+                      color: Colors.white,
+                      child: user?.profileImage != null
+                          ? Image.network(
+                              user!.profileImage!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
+                            )
+                          : const Icon(Icons.person, size: 40),
+                    ),
+                  ),
+                  // تم حذف Positioned الذي يحتوي زر الإضافة هنا
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                user?.storeName ?? 'مستخدم',
+                style: const TextStyle(fontSize: 12),
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
 }

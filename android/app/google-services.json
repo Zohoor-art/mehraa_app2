@@ -1,32 +1,104 @@
 {
   "project_info": {
-
     "project_number": "617347888301",
     "firebase_url": "https://greentaxi-44f9b-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "greentaxi-44f9b",
     "storage_bucket": "greentaxi-44f9b.appspot.com"
-
   },
   "client": [
     {
       "client_info": {
-
         "mobilesdk_app_id": "1:617347888301:android:f9ffac81b7064f3e50c224",
-
         "android_client_info": {
           "package_name": "com.example.mehra_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "617347888301-ggsgf4llokr00l4qf8guhhjk1hu1lkq6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mehra_app",
+            "certificate_hash": "8e21d1992ff4d5f95751ce78efde7de62b49ba60"
+          }
+        },
+        {
+          "client_id": "617347888301-n9mug1dvlf571lp6oukq01mfii667sip.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mehra_app",
+            "certificate_hash": "7ef9d639aacf88aac854445bc94744fa18bd5f52"
+          }
+        },
+        {
+          "client_id": "617347888301-i950bugbjm3fap4npsee1l4qs7s20g2k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-
           "current_key": "AIzaSyA6w-8lYiWXcksdEETpYBtSgwO_SboNhDM"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "617347888301-i950bugbjm3fap4npsee1l4qs7s20g2k.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "617347888301-bro4cov5obciq90i947hg7giehd8qobm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.taxiApp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:617347888301:android:0506cf8b72f7c8d150c224",
+        "android_client_info": {
+          "package_name": "com.example.mehraapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "617347888301-fiilhhkuc6ivqvpl5d3tadeck86s1s9j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mehraapp",
+            "certificate_hash": "7ef9d639aacf88aac854445bc94744fa18bd5f52"
+          }
+        },
+        {
+          "client_id": "617347888301-i950bugbjm3fap4npsee1l4qs7s20g2k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6w-8lYiWXcksdEETpYBtSgwO_SboNhDM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "617347888301-i950bugbjm3fap4npsee1l4qs7s20g2k.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "617347888301-bro4cov5obciq90i947hg7giehd8qobm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.taxiApp"
+              }
+            }
+          ]
         }
       }
     },
@@ -37,16 +109,92 @@
           "package_name": "com.example.taxi_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "617347888301-4t4md2pcgg669a8i3me07nbul3dkc0ao.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.taxi_app",
+            "certificate_hash": "8e21d1992ff4d5f95751ce78efde7de62b49ba60"
+          }
+        },
+        {
+          "client_id": "617347888301-kgus6n305ine89h7604d4v99k79av3ij.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.taxi_app",
+            "certificate_hash": "7ef9d639aacf88aac854445bc94744fa18bd5f52"
+          }
+        },
+        {
+          "client_id": "617347888301-i950bugbjm3fap4npsee1l4qs7s20g2k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA6w-8lYiWXcksdEETpYBtSgwO_SboNhDM"
-
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "617347888301-i950bugbjm3fap4npsee1l4qs7s20g2k.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "617347888301-bro4cov5obciq90i947hg7giehd8qobm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.taxiApp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:617347888301:android:4085ab5b032c289950c224",
+        "android_client_info": {
+          "package_name": "com.mehra.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "617347888301-h2qpevlfv6eqbillkl7vuv78ucc4l13i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mehra.app",
+            "certificate_hash": "8e21d1992ff4d5f95751ce78efde7de62b49ba60"
+          }
+        },
+        {
+          "client_id": "617347888301-i950bugbjm3fap4npsee1l4qs7s20g2k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6w-8lYiWXcksdEETpYBtSgwO_SboNhDM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "617347888301-i950bugbjm3fap4npsee1l4qs7s20g2k.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "617347888301-bro4cov5obciq90i947hg7giehd8qobm.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.taxiApp"
+              }
+            }
+          ]
         }
       }
     }

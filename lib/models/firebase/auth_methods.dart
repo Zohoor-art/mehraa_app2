@@ -119,7 +119,7 @@ Future<String> completeSignUpProcess({
       latitude: latitude,
       longitude: longitude,
       locationUrl: locationUrl, 
-      isCommercial: true,
+      isCommercial: true, accountType: 'commercial',
     );
 
     // رفع البيانات مع إضافة isCompleted

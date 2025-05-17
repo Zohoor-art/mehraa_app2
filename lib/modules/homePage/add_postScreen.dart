@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mehra_app/modules/homePage/add_reels.dart';
+import 'package:mehra_app/modules/homePage/home_screen.dart';
+import 'package:mehra_app/shared/appbar.dart';
 import 'package:video_player/video_player.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -75,7 +77,11 @@ class _AddPostscreenState extends State<AddPostscreen> {
         _isLoading = false;
       });
       showSnackBar('تم النشر', context);
-      clearImage();
+       Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => HomeScreen()),
+          (route) => false,
+        );
     } else {
       showSnackBar(res, context);
       setState(() {
@@ -281,7 +287,7 @@ class _AddPostscreenState extends State<AddPostscreen> {
                 ),
               )
             : Scaffold(
-                appBar: AppBar(
+                appBar: CustomGradientAppBar(
                   title: Text('النشر الى'),
                   actions: [
                     TextButton(
@@ -290,7 +296,7 @@ class _AddPostscreenState extends State<AddPostscreen> {
                         userData['storeName'],
                         userData['profileImage'],
                       ),
-                      child: Text('نشر'),
+                      child: Text('نشر',style: TextStyle(color: Colors.white),),
                     ),
                   ],
                 ),
