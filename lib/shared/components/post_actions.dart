@@ -88,8 +88,7 @@ static Future<void> hidePost(BuildContext context, String postId) async {
 
 
  static void goToUserProfile(BuildContext context, String userId) {
-  Navigator.push(
-    context,
+  Navigator.of(context, rootNavigator: true).push(
     MaterialPageRoute(
       builder: (context) => ProfileScreen(userId: userId),
     ),

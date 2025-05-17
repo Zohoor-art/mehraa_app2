@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mehra_app/models/userModel.dart';
 import 'package:mehra_app/modules/profile/editProfile.dart';
+import 'package:mehra_app/shared/appbar.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 import 'package:mehra_app/modules/rating/add_rating.dart';
@@ -25,14 +26,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool isLoading = true;
   int followersCount = 0;
   int followingCount = 0;
+  bool isCurrentUser = false;
+
 
   late List<Widget> tabBarViews;
 
-  final List<Widget> tabs = const [
-    Tab(icon: Icon(Icons.image)),
-    Tab(icon: Icon(Icons.video_collection)),
-    Tab(icon: Icon(Icons.person_2_sharp)),
-  ];
+ List<Widget> get tabs => [
+  const Tab(icon: Icon(Icons.image)),
+  const Tab(icon: Icon(Icons.video_collection)),
+  if (isCurrentUser) const Tab(icon: Icon(Icons.bookmark_add_outlined)),
+];
 
   @override
   void initState() {
@@ -40,6 +43,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     fetchUserData();
     fetchFollowersAndFollowingCount();
      fetchRating();
+     isCurrentUser = widget.userId == FirebaseAuth.instance.currentUser?.uid;
   }
   Future<void> fetchRating() async {
     try {
@@ -73,7 +77,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   tabBarViews = [
     FeedView(userId: widget.userId),
     UserVideosView(userId: widget.userId),
-    TaggedView(isCurrentUser: isCurrentUser),
+    if (isCurrentUser) TaggedView(isCurrentUser: isCurrentUser),
   ];
 
   isLoading = false;
@@ -122,7 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget buildStoreProfile(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: isCurrentUser ? 3 : 2,
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: 50,
@@ -135,6 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
+          automaticallyImplyLeading: true,
           title: Text(currentUser!.storeName, style: const TextStyle(color: Colors.white)),
           actions: widget.userId == FirebaseAuth.instance.currentUser!.uid
               ? [
@@ -359,7 +364,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget buildGoogleUserProfile(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: CustomGradientAppBar(
         title: Text(
           currentUser?.email ?? "بلا بريد",
           style: const TextStyle(color: Colors.white),
