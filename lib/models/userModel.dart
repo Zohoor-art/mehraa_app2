@@ -23,11 +23,15 @@ class Users {
   final double? latitude;
   final double? longitude;
   final String? locationUrl;
+  final String accountType; // 'commercial', 'google', 'guest'
+
 
 
   const Users({
     required this.isCommercial,
     this.provider,
+    required this.accountType,
+
     this.displayName,
     this.lastMessageTime,
     this.locationUrl,
@@ -58,6 +62,8 @@ class Users {
         'following': following,
         'hours': hours,
         'location': location,
+        'accountType': accountType,
+
         'profileImage': profileImage,
         'storeName': storeName,
         'workType': workType,
@@ -81,6 +87,8 @@ class Users {
 
       description: snapshot['description'] ?? '',
       email: snapshot['email'] ?? '',
+      accountType: snapshot['accountType'] ?? 'guest',
+
       followers: snapshot['followers'] ?? [],
       following: snapshot['following'] ?? [],
       hours: snapshot['hours'] ?? '',
@@ -105,6 +113,8 @@ class Users {
       uid: data['uid'] ?? '',
       days: data['days'] ?? '',
       description: data['description'] ?? '',
+      accountType: data['accountType'] ?? 'guest',
+
       email: data['email'] ?? '',
       followers: List.from(data['followers'] ?? []),
       following: List.from(data['following'] ?? []),

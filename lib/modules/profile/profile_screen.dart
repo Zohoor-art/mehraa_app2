@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mehra_app/models/userModel.dart';
 import 'package:mehra_app/modules/profile/editProfile.dart';
+import 'package:mehra_app/shared/appbar.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 import 'package:mehra_app/modules/rating/add_rating.dart';
@@ -26,21 +27,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool isLoading = true;
   int followersCount = 0;
   int followingCount = 0;
+  bool isCurrentUser = false;
+
 
   late List<Widget> tabBarViews;
 
-  final List<Widget> tabs = const [
-    Tab(icon: Icon(Icons.image)),
-    Tab(icon: Icon(Icons.video_collection)),
-    Tab(icon: Icon(Icons.person_2_sharp)),
-  ];
+ List<Widget> get tabs => [
+  const Tab(icon: Icon(Icons.image)),
+  const Tab(icon: Icon(Icons.video_collection)),
+  if (isCurrentUser) const Tab(icon: Icon(Icons.bookmark_add_outlined)),
+];
 
   @override
   void initState() {
     super.initState();
     fetchUserData();
     fetchFollowersAndFollowingCount();
-    fetchRating();
+
+     fetchRating();
+     isCurrentUser = widget.userId == FirebaseAuth.instance.currentUser?.uid;
+
   }
 
   Future<void> fetchRating() async {
@@ -67,8 +73,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final user = Users.fromSnap(snap);
 
       setState(() {
-        currentUser = user;
-        final isCurrentUser = widget.userId == FirebaseAuth.instance.currentUser?.uid;
+
+  currentUser = user;
+
+  final isCurrentUser = widget.userId == FirebaseAuth.instance.currentUser?.uid;
+
+  tabBarViews = [
+    FeedView(userId: widget.userId),
+    UserVideosView(userId: widget.userId),
+    if (isCurrentUser) TaggedView(isCurrentUser: isCurrentUser),
+  ];
+
 
         tabBarViews = [
           FeedView(userId: widget.userId),
@@ -128,7 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget buildStoreProfile(BuildContext context, double screenWidth, double screenHeight) {
     return DefaultTabController(
-      length: 3,
+      length: isCurrentUser ? 3 : 2,
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: screenHeight * 0.07,
@@ -141,6 +156,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
+
           title: Text(
             currentUser!.storeName, 
             style: TextStyle(
@@ -148,6 +164,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               fontSize: screenWidth * 0.045,
             ),
           ),
+
           actions: widget.userId == FirebaseAuth.instance.currentUser!.uid
               ? [
                   IconButton(
@@ -435,7 +452,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget buildGoogleUserProfile(BuildContext context, double screenWidth, double screenHeight) {
     return Scaffold(
-      appBar: AppBar(
+      appBar: CustomGradientAppBar(
         title: Text(
           currentUser?.email ?? "بلا بريد",
           style: TextStyle(

@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:mehra_app/models/post.dart';
 import 'package:mehra_app/modules/chats/chat_room.dart';
@@ -9,6 +10,7 @@ import 'package:mehra_app/modules/notifications/notification_methods.dart';
 import 'package:mehra_app/modules/notifications/notifications_services.dart';
 import 'package:mehra_app/modules/profile/profile_screen.dart';
 import 'package:mehra_app/modules/rating/rating.dart';
+import 'package:mehra_app/modules/register/register_screen.dart';
 import 'package:mehra_app/modules/sharing/sharing.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 import 'package:mehra_app/shared/components/custom_Dialog.dart';
@@ -61,6 +63,8 @@ class _PostWidgetState extends State<PostWidget> {
 
     final otherUserRef =
         FirebaseFirestore.instance.collection('users').doc(otherUserId);
+final bool isLoggedIn = currentUser != null;
+
 
     final followingRef =
         currentUserRef.collection('following').doc(otherUserId);
@@ -238,6 +242,37 @@ class _PostWidgetState extends State<PostWidget> {
     final isLiked = widget.post.likes.contains(widget.currentUserId);
     final isSaved = widget.post.savedBy.contains(widget.currentUserId);
     final isCurrentUserPost = widget.post.uid == widget.currentUserId;
+// دالة مساعدة للتحقق من تسجيل الدخول
+void _handleAuthRequired(BuildContext context, VoidCallback action) {
+  final currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser == null) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('تسجيل الدخول مطلوب'),
+        content: Text('يرجى تسجيل الدخول لاستخدام هذه الخاصية.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => RegisterScreen()), // عدل حسب شاشة التسجيل
+              );
+            },
+            child: Text('تسجيل الدخول'),
+          ),
+        ],
+      ),
+    );
+  } else {
+    action();
+  }
+}
 
     return Card(
       color: MyColor.lightprimaryColor,
@@ -306,16 +341,44 @@ class _PostWidgetState extends State<PostWidget> {
                   ),
                 ),
 
-                // زر متابعة
-                if (!isCurrentUserPost)
-                  GestureDetector(
-                    onTap: () {
-                      if (!isFollowing) {
-                        _toggleFollowUser(); // تنفيذ المتابعة
-                      } else {
-                        _showReviewDialog(); // عرض نافذة التقييم
-                      }
-                    },
+               if (!isCurrentUserPost)
+  GestureDetector(
+    onTap: () {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        // المستخدم غير مسجل دخول → أظهر تنبيه
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: Text('تسجيل الدخول مطلوب'),
+            content: Text('يرجى تسجيل الدخول لمتابعة المتاجر وتقييمها.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text('إلغاء'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => RegisterScreen()), // عدل الاسم حسب شاشة التسجيل
+                  );
+                },
+                child: Text('تسجيل الدخول'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        // المستخدم مسجل دخول → نفذ المتابعة أو التقييم
+        if (!isFollowing) {
+          _toggleFollowUser(); // تنفيذ المتابعة
+        } else {
+          _showReviewDialog(); // عرض نافذة التقييم
+        }
+      }
+    },
                     child: Container(
                       padding:
                           EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -359,104 +422,116 @@ class _PostWidgetState extends State<PostWidget> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _buildInteractionButton(
-                  icon: SvgPicture.asset(
-                    isLiked
-                        ? 'assets/images/fillHeart.svg'
-                        : 'assets/images/heartEmp.svg',
-                    color: isLiked ? Colors.deepPurple : Colors.deepPurple,
-                    width: 25,
-                    height: 25,
-                  ),
-                  countText: widget.post.likes.length.toString(),
-                  onPressed: () async {
-                    widget.onLike?.call();
+_buildInteractionButton(
+  icon: SvgPicture.asset(
+    isLiked
+        ? 'assets/images/fillHeart.svg'
+        : 'assets/images/heartEmp.svg',
+    color: isLiked ? Colors.deepPurple : Colors.deepPurple,
+    width: 25,
+    height: 25,
+  ),
+  countText: widget.post.likes.length.toString(),
+  onPressed: () {
+    _handleAuthRequired(context, () async {
+      widget.onLike?.call();
 
-                    // منطق الإشعار
-                    if (!isLiked && !isCurrentUserPost) {
-                      await NotificationMethods.sendLikeNotification(
-                        fromUid: widget.currentUserId,
-                        toUid: widget.post.uid,
-                        postId: widget.post.postId,
-                        postImage: widget.post.postUrl,
-                      );
-                    }
-                  },
-                ),
-                SizedBox(width: 15),
-                StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('posts')
-                      .doc(widget.post.postId)
-                      .collection('comments')
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    final commentCount =
-                        snapshot.hasData ? snapshot.data!.docs.length : 0;
+      // منطق الإشعار
+      if (!isLiked && !isCurrentUserPost) {
+        await NotificationMethods.sendLikeNotification(
+          fromUid: widget.currentUserId,
+          toUid: widget.post.uid,
+          postId: widget.post.postId,
+          postImage: widget.post.postUrl,
+        );
+      }
+    });
+  },
+),
 
-                    return _buildInteractionButton(
-                        icon: SvgPicture.asset(
-                          'assets/images/comment.svg',
-                          color: Colors.deepPurple,
-                          width: 32,
-                          height: 32,
-                        ),
-                        countText: commentCount.toString(),
-                        onPressed: () async {
-                          await NotificationMethods.sendCommentNotification(
-                            fromUid: widget.currentUserId,
-                            toUid: widget.post.uid,
-                            postId: widget.post.postId,
-                            postImage: widget.post.postUrl,
-                          );
+SizedBox(width: 15),
 
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  Comments(postId: widget.post.postId),
-                            ),
-                          );
-                        });
-                  },
-                ),
-                SizedBox(width: 16),
-                _buildInteractionButton(
-                  icon: SvgPicture.asset(
-                    'assets/images/share.svg',
-                    color: Colors.deepPurple,
-                    width: 25,
-                    height: 25,
-                  ),
-                  countText: widget.post.shareCount.toString(),
-                  onPressed: () async {
-                    // 1. زيادة عداد المشاركات في Firestore
-                    await FirebaseFirestore.instance
-                        .collection('posts')
-                        .doc(widget.post.postId)
-                        .update({
-                      'shareCount': FieldValue.increment(1),
-                    });
-                    await NotificationMethods.sendShareNotification(
-                      fromUid: widget.currentUserId,
-                      toUid: widget.post.uid,
-                      postId: widget.post.postId,
-                      postImage: widget.post.postUrl,
-                    );
+StreamBuilder<QuerySnapshot>(
+  stream: FirebaseFirestore.instance
+      .collection('posts')
+      .doc(widget.post.postId)
+      .collection('comments')
+      .snapshots(),
+  builder: (context, snapshot) {
+    final commentCount = snapshot.hasData ? snapshot.data!.docs.length : 0;
 
-                    // 2. فتح شاشة المشاركة كبوتوم شيت
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (_) => Sharing(
-                        postImageUrl: widget.post.postUrl,
-                        postId: widget.post.postId,
-                        postDescription: widget.post.description,
-                      ),
-                    );
-                  },
-                ),
+    return _buildInteractionButton(
+      icon: SvgPicture.asset(
+        'assets/images/comment.svg',
+        color: Colors.deepPurple,
+        width: 32,
+        height: 32,
+      ),
+      countText: commentCount.toString(),
+      onPressed: () {
+        _handleAuthRequired(context, () async {
+          await NotificationMethods.sendCommentNotification(
+            fromUid: widget.currentUserId,
+            toUid: widget.post.uid,
+            postId: widget.post.postId,
+            postImage: widget.post.postUrl,
+          );
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  Comments(postId: widget.post.postId),
+            ),
+          );
+        });
+      },
+    );
+  },
+),
+
+SizedBox(width: 16),
+
+_buildInteractionButton(
+  icon: SvgPicture.asset(
+    'assets/images/share.svg',
+    color: Colors.deepPurple,
+    width: 25,
+    height: 25,
+  ),
+  countText: widget.post.shareCount.toString(),
+  onPressed: () {
+    _handleAuthRequired(context, () async {
+      // 1. زيادة عداد المشاركات في Firestore
+      await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(widget.post.postId)
+          .update({
+        'shareCount': FieldValue.increment(1),
+      });
+
+      await NotificationMethods.sendShareNotification(
+        fromUid: widget.currentUserId,
+        toUid: widget.post.uid,
+        postId: widget.post.postId,
+        postImage: widget.post.postUrl,
+      );
+
+      // 2. فتح شاشة المشاركة كبوتوم شيت
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => Sharing(
+          postImageUrl: widget.post.postUrl,
+          postId: widget.post.postId,
+          postDescription: widget.post.description,
+        ),
+      );
+    });
+  },
+),
+
                 SizedBox(width: 16),
                 _buildInteractionButton(
                   icon: SvgPicture.asset(
@@ -469,7 +544,11 @@ class _PostWidgetState extends State<PostWidget> {
                   ),
                   countText:
                       '', // زر الحفظ غالبًا ما يحتاج عدد، لكن تقدر تضيف إذا عندك
-                  onPressed: widget.onSave,
+                  onPressed: () {
+    _handleAuthRequired(context, () {
+      widget.onSave?.call();
+    });
+  },
                 ),
               ],
             ),
@@ -598,6 +677,7 @@ class _PostWidgetState extends State<PostWidget> {
               children: [
                 if (widget.post.postUrl.isNotEmpty &&
                     widget.post.videoUrl.isEmpty)
+                    
                   _buildShoppingCartButton(),
               ],
             ),
@@ -606,59 +686,94 @@ class _PostWidgetState extends State<PostWidget> {
       );
     }
   }
+void _handleAuthRequired(BuildContext context, VoidCallback action) {
+  final currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser == null) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('تسجيل الدخول مطلوب'),
+        content: Text('يرجى تسجيل الدخول لاستخدام هذه الخاصية.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => RegisterScreen()), // عدل حسب شاشة التسجيل
+              );
+            },
+            child: Text('تسجيل الدخول'),
+          ),
+        ],
+      ),
+    );
+  } else {
+    action();
+  }
+}
 
   Widget _buildShoppingCartButton() {
-    return Positioned(
-      bottom: 16,
-      right: 16,
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovering = true),
-        onExit: (_) => setState(() => _isHovering = false),
-        child: GestureDetector(
-          onTap: _createOrderAndOpenChat, // << هنا ربطنا الضغطة عالكارد كامل
-          child: AnimatedContainer(
-            duration: Duration(milliseconds: 200),
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: _isHovering
-                  ? Colors.white.withOpacity(0.6)
-                  : Colors.white.withOpacity(0.6),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [Colors.pink, Colors.deepPurple],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.shopping_cart,
-                      color: Colors.white,
-                      size: 16,
-                    ),
+  return Positioned(
+    bottom: 16,
+    right: 16,
+    child: MouseRegion(
+      onEnter: (_) => setState(() => _isHovering = true),
+      onExit: (_) => setState(() => _isHovering = false),
+      child: GestureDetector(
+        onTap: () {
+          _handleAuthRequired(context, () {
+            _createOrderAndOpenChat();
+          });
+        },
+        child: AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: _isHovering
+                ? Colors.white.withOpacity(0.6)
+                : Colors.white.withOpacity(0.6),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [Colors.pink, Colors.deepPurple],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
                 ),
-                SizedBox(width: 8),
-                Text(
-                  'طلب المنتج',
-                  style: TextStyle(color: Colors.black),
+                child: Center(
+                  child: Icon(
+                    Icons.shopping_cart,
+                    color: Colors.white,
+                    size: 16,
+                  ),
                 ),
-              ],
-            ),
+              ),
+              SizedBox(width: 8),
+              Text(
+                'طلب المنتج',
+                style: TextStyle(color: Colors.black),
+              ),
+            ],
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Widget _buildInteractionButton({
     required Widget icon,
@@ -765,6 +880,7 @@ class _PostWidgetState extends State<PostWidget> {
   }
 
   void _showPostOptions() {
+    final parentContext = context;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -822,10 +938,23 @@ class _PostWidgetState extends State<PostWidget> {
                 PostActions.hidePost(context, widget.post.postId);
                 Navigator.pop(context);
               }),
-              _buildOptionTile(Icons.person, 'عن هذا الحساب', () {
-                PostActions.goToUserProfile(context, widget.post.uid);
-                Navigator.pop(context);
-              }),
+           
+_buildOptionTile(Icons.person, 'عن هذا الحساب', () {
+  Navigator.pop(context);
+   // يغلق البوتوم شيت
+
+  Future.microtask(() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProfileScreen(userId: widget.post.uid),
+      ),
+      
+    );
+    
+  });
+}),
+
+
               SizedBox(height: 12),
             ],
           ),

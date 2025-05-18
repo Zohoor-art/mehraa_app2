@@ -7,6 +7,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:mehra_app/models/firebase/firestore.dart';
 import 'package:mehra_app/models/post.dart';
+import 'package:mehra_app/models/userModel.dart';
+import 'package:mehra_app/models/user_permition.dart';
 import 'package:mehra_app/modules/SearchLocation/SearchLocation.dart';
 import 'package:mehra_app/modules/Story/clear_story.dart';
 import 'package:mehra_app/modules/chats/chats.dart';
@@ -17,9 +19,12 @@ import 'package:mehra_app/modules/login/login_screen.dart';
 import 'package:mehra_app/modules/notifications/Notification.dart';
 import 'package:mehra_app/modules/notifications/notificationScreen.dart';
 import 'package:mehra_app/modules/notifications/weeklyNoti.dart';
+import 'package:mehra_app/modules/profile/google_profile.dart';
+
 import 'package:mehra_app/modules/reels/home.dart';
 import 'package:mehra_app/modules/settings/PrivacySettingsPage.dart';
 import 'package:mehra_app/modules/settings/Settings.dart';
+import 'package:mehra_app/modules/signup2/upgrade_account.dart';
 import 'package:mehra_app/modules/site/nearToUPage.dart';
 import 'package:mehra_app/modules/site/site.dart';
 import 'package:mehra_app/modules/xplore/xplore_screen.dart';
@@ -71,6 +76,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+      final currentUser = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 15,
@@ -118,6 +125,7 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    User? currentUser;
     return Scaffold(
       body: Column(children: [
         Padding(
@@ -125,56 +133,122 @@ class HomePage extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(children: [
+              Row(children: <Widget>[
                 GestureDetector(
-                  onTap: () {
-                    final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-                    if (currentUserId != null) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProfileScreen(userId: currentUserId),
-                        ),
-                      );
-                    }
-                  },
-                  child: FutureBuilder<DocumentSnapshot>(
-                    future: FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(FirebaseAuth.instance.currentUser?.uid)
-                        .get(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const CircleAvatar(
-                          radius: 15,
-                          backgroundColor: Colors.grey,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        );
-                      }
+  onTap: () async {
+    final currentUser = FirebaseAuth.instance.currentUser;
 
-                      if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
-                        return const CircleAvatar(
-                          radius: 15,
-                          backgroundColor: Colors.grey,
-                          child: Icon(Icons.person, size: 15),
-                        );
-                      }
+    if (currentUser == null) {
+      // المستخدم مش مسجل دخول
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text("تنبيه"),
+          content: Text("أنت لست مسجل دخول، لا يوجد لديك ملف شخصي."),
+          actions: [
+            TextButton(
+              child: Text("حسنًا"),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
 
-                      final userData = snapshot.data!.data() as Map<String, dynamic>;
-                      final photoUrl = userData['profileImage'] as String?;
+    final userId = currentUser.uid;
+    final providerId = currentUser.providerData.first.providerId;
 
-                      return CircleAvatar(
-                        radius: 15,
-                        backgroundImage: photoUrl != null && photoUrl.isNotEmpty
-                            ? NetworkImage(photoUrl)
-                            : null,
-                        child: (photoUrl == null || photoUrl.isEmpty)
-                            ? const Icon(Icons.person, size: 15)
-                            : null,
-                      );
-                    },
-                  ),
-                ),
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+
+    if (!userDoc.exists) {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text("تنبيه"),
+          content: Text("لا يوجد ملف شخصي مرتبط بحسابك."),
+          actions: [
+            TextButton(
+              child: Text("حسنًا"),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    final userData = userDoc.data()!;
+    final isCommercial = userData['isCommercial'] == true;
+
+    if (isCommercial) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ProfileScreen(userId: userId),
+        ),
+      );
+    } else if (providerId == 'google.com') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => GoogleUserProfile(), // تأكد أنها موجودة عندك
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: Text("تنبيه"),
+          content: Text("لا يوجد ملف شخصي لهذا الحساب."),
+          actions: [
+            TextButton(
+              child: Text("حسنًا"),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      );
+    }
+  },
+  child: FutureBuilder<DocumentSnapshot>(
+    future: FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser?.uid)
+        .get(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const CircleAvatar(
+          radius: 15,
+          backgroundColor: Colors.grey,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        );
+      }
+
+      if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
+        return const CircleAvatar(
+          radius: 15,
+          backgroundColor: Colors.grey,
+          child: Icon(Icons.person, size: 15),
+        );
+      }
+
+      final userData = snapshot.data!.data() as Map<String, dynamic>;
+      final photoUrl = userData['profileImage'] as String?;
+
+      return CircleAvatar(
+        radius: 15,
+        backgroundImage: photoUrl != null && photoUrl.isNotEmpty
+            ? NetworkImage(photoUrl)
+            : null,
+        child: (photoUrl == null || photoUrl.isEmpty)
+            ? const Icon(Icons.person, size: 15)
+            : null,
+      );
+    },
+  ),
+),
+
                 const SizedBox(width: 8),
                  GestureDetector(
                     onTapDown: (TapDownDetails details) {
@@ -254,7 +328,7 @@ class HomePage extends StatelessWidget {
                   ),
 
                 const SizedBox(width: 8),
-                     const SizedBox(width: 8),
+                   if ( currentUser != null)
                StreamBuilder<QuerySnapshot>(
   stream: FirebaseFirestore.instance
       .collection('notifications')
@@ -300,15 +374,49 @@ class HomePage extends StatelessWidget {
 )
 ,
                 const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const AddPostscreen()),
-                    );
-                  },
-                  child: const Icon(Icons.add_circle_outline_outlined, size: 25),
-                ),
+                
+              GestureDetector(
+  onTap: () async {
+    // 1. جلب المستخدم الحالي من Firebase
+    final user = await getCurrentUser(); // لازم يحتوي على isCommercial
+
+    // 2. التحقق من هل هو حساب تجاري
+    if (user.isCommercial == true) {
+      // عنده صلاحية، يروح يضيف منشور
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const AddPostscreen()),
+      );
+    } else {
+      // ما عنده صلاحية، نعرض تنبيه للترقية
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("ترقية مطلوبة"),
+          content: const Text("هذا النوع من الحساب لا يمكنه النشر. قم بترقية حسابك للاستمرار."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("إغلاق"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const UpgradeScreen()),
+                );
+              },
+              child: const Text("ترقية الحساب"),
+            ),
+          ],
+        ),
+      );
+    }
+  },
+  child: const Icon(Icons.add_circle_outline_outlined, size: 25),
+),
+
                 // const SizedBox(width: 8),
                 // GestureDetector(
                 //   onTap: () {
@@ -340,7 +448,7 @@ class HomePage extends StatelessWidget {
           ),
         ),
         Column(children: [
-          Container(height: 115, child: StoryPage()),
+          Container(height: 120, child: StoryPage()),
           // const Divider(color: Color.fromARGB(255, 247, 237, 237)),
         ]),
         Expanded(
@@ -540,4 +648,37 @@ class HomePage extends StatelessWidget {
       ]),
     );
   }
+  
+ Future<Users> getCurrentUser() async {
+  final currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser == null) {
+    // ترجع مستخدم زائر
+    return Users(
+      contactNumber: '',
+      uid: '',
+      days: '',
+      description: '',
+      email: '',
+      followers: [],
+      following: [],
+      hours: '',
+      location: '',
+      profileImage: '',
+      storeName: '',
+      workType: '',
+      latitude: 0.0,
+      longitude: 0.0,
+      locationUrl: '',
+      isCommercial: false,
+      provider: 'guest',
+      displayName: '',
+      lastMessageTime: null,
+      accountType: 'guest', // مهم جداً
+    );
+  }
+
+  final doc = await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).get();
+  final user = Users.fromSnap(doc);
+  return user;
+}
 }
