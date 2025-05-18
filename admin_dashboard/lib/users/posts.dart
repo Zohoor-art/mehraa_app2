@@ -130,6 +130,15 @@ class AdminPostsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('إدارة المنشورات'),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6A1B9A), Color(0xFFAB47BC)],
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+            ),
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -150,29 +159,28 @@ class AdminPostsPage extends StatelessWidget {
           if (posts.isEmpty) return const Center(child: Text('لا توجد منشورات حالياً.'));
 
           return ListView.builder(
-            physics: const AlwaysScrollableScrollPhysics(),
             itemCount: posts.length,
             padding: const EdgeInsets.all(12),
             itemBuilder: (context, index) {
               final post = posts[index];
-
               final data = post.data() as Map<String, dynamic>?;
 
               final postUrl = data?['postUrl'] ?? '';
               final description = data?['description'] ?? 'بدون وصف';
               final storeName = data?['storeName'] ?? data?['uid'] ?? 'مستخدم غير معروف';
               final isHidden = data?['isHidden'] ?? false;
+              final datePublished = (data?['datePublished'] as Timestamp?)?.toDate();
 
               return Card(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 4,
                 margin: const EdgeInsets.symmetric(vertical: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 3,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (postUrl.isNotEmpty)
                       ClipRRect(
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                         child: Image.network(
                           postUrl,
                           fit: BoxFit.cover,
@@ -187,7 +195,7 @@ class AdminPostsPage extends StatelessWidget {
                           },
                           errorBuilder: (context, error, stackTrace) => const SizedBox(
                             height: 200,
-                            child: Center(child: Icon(Icons.broken_image, size: 80)),
+                            child: Center(child: Icon(Icons.broken_image, size: 60)),
                           ),
                         ),
                       ),
@@ -198,8 +206,19 @@ class AdminPostsPage extends StatelessWidget {
                         children: [
                           Text(description, style: const TextStyle(fontSize: 16)),
                           const SizedBox(height: 6),
-                          Text('الناشر: $storeName', style: const TextStyle(color: Colors.grey)),
-                          const SizedBox(height: 6),
+                          Text(
+                            'الناشر: $storeName',
+                            style: TextStyle(
+                              color: isHidden ? Colors.red : Colors.grey[700],
+                              fontWeight: isHidden ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                          if (datePublished != null)
+                            Text(
+                              'تاريخ النشر: ${datePublished.toLocal().toString().split(' ')[0]}',
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          const SizedBox(height: 8),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
