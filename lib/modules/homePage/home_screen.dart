@@ -672,7 +672,7 @@ class HomePage extends StatelessWidget {
       provider: 'guest',
       displayName: '',
       lastMessageTime: null,
-      accountType: 'guest', // مهم جداً
+      accountType: 'guest', storeNameLower: '', // مهم جداً
     );
   }
 
