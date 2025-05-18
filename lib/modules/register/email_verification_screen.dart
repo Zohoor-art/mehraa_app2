@@ -43,7 +43,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
         setState(() {
           isVerified = true;
         });
-        // انتقل مباشرة إلى الصفحة الثانية للتسجيل
         _navigateToSecondSignUp();
       }
     }
@@ -83,7 +82,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           email: widget.email,
           storeName: widget.storeName,
           profileImage: widget.profileImage,
-          
         ),
       ),
     );
@@ -91,10 +89,6 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 350;
-
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 15,
@@ -108,103 +102,143 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          Container(color: MyColor.lightprimaryColor),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Image.asset(
-              'assets/bottom.png',
-              fit: BoxFit.cover,
-              width: screenWidth,
-            ),
-          ),
-          Center(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(isSmallScreen ? 16.0 : 24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.mark_email_read_outlined,
-                    size: 80,
-                    color: MyColor.purpleColor,
-                  ),
-                  SizedBox(height: 20),
-                  Text(
-                    'التحقق من البريد الإلكتروني',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: MyColor.blueColor,
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Text(
-                    'تم إرسال رابط التحقق إلى بريدك الإلكتروني:',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    widget.email,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: MyColor.purpleColor,
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Text(
-                    'الرجاء التحقق من بريدك الإلكتروني ثم اضغط على الزر أدناه للمتابعة',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16),
-                  ),
-                  SizedBox(height: 30),
-                  if (isLoading)
-                    CircularProgressIndicator()
-                  else
-                    GradientButton(
-                      onPressed: () async {
-                        setState(() => isLoading = true);
-                        bool verified = await AuthMethods()
-                            .checkEmailVerification(widget.userId);
-                        setState(() => isLoading = false);
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final screenHeight = constraints.maxHeight;
+          final screenWidth = constraints.maxWidth;
+          final isSmallScreen = screenWidth < 350;
 
-                        if (verified) {
-                          _navigateToSecondSignUp();
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('لم يتم التحقق بعد، الرجاء التحقق من بريدك الإلكتروني'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      },
-                      text: 'تم التحقق والمتابعة',
-                      width: isSmallScreen ? screenWidth * 0.8 : 319,
-                      height: isSmallScreen ? 50 : 67,
+          return Stack(
+            children: [
+              Container(color: MyColor.lightprimaryColor),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Image.asset(
+                  'assets/bottom.png',
+                  fit: BoxFit.cover,
+                  width: screenWidth,
+                ),
+              ),
+              Center(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.05,
+                    vertical: 20,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: screenHeight,
                     ),
-                  SizedBox(height: 20),
-                  TextButton(
-                    onPressed: isResending ? null : _resendVerification,
-                    child: Text(
-                      isResending ? 'جاري الإرسال...' : 'إعادة إرسال رابط التحقق',
-                      style: TextStyle(
-                        color: MyColor.blueColor,
-                        fontSize: 16,
+                    child: IntrinsicHeight(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.mark_email_read_outlined,
+                            size: screenHeight * 0.12,
+                            color: MyColor.purpleColor,
+                          ),
+                          SizedBox(height: screenHeight * 0.02),
+                          Text(
+                            'التحقق من البريد الإلكتروني',
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.06,
+                              fontWeight: FontWeight.bold,
+                              color: MyColor.blueColor,
+                            ),
+                          ),
+                          SizedBox(height: screenHeight * 0.02),
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.05,
+                            ),
+                            child: Text(
+                              'تم إرسال رابط التحقق إلى بريدك الإلكتروني:',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: screenWidth * 0.04,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.05,
+                            ),
+                            child: Text(
+                              widget.email,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: screenWidth * 0.045,
+                                fontWeight: FontWeight.bold,
+                                color: MyColor.purpleColor,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: screenHeight * 0.02),
+                          Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: screenWidth * 0.05,
+                            ),
+                            child: Text(
+                              'الرجاء التحقق من بريدك الإلكتروني ثم اضغط على الزر أدناه للمتابعة',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: screenWidth * 0.04,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: screenHeight * 0.03),
+                          if (isLoading)
+                            CircularProgressIndicator()
+                          else
+                            GradientButton(
+                              onPressed: () async {
+                                setState(() => isLoading = true);
+                                bool verified = await AuthMethods()
+                                    .checkEmailVerification(widget.userId);
+                                setState(() => isLoading = false);
+
+                                if (verified) {
+                                  _navigateToSecondSignUp();
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                          'لم يتم التحقق بعد، الرجاء التحقق من بريدك الإلكتروني'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              },
+                              text: 'تم التحقق والمتابعة',
+                              width: screenWidth * 0.8,
+                              height: screenHeight * 0.07,
+                            ),
+                          SizedBox(height: screenHeight * 0.02),
+                          TextButton(
+                            onPressed: isResending ? null : _resendVerification,
+                            child: Text(
+                              isResending
+                                  ? 'جاري الإرسال...'
+                                  : 'إعادة إرسال رابط التحقق',
+                              style: TextStyle(
+                                color: MyColor.blueColor,
+                                fontSize: screenWidth * 0.04,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }

@@ -10,7 +10,7 @@ import 'package:mehra_app/shared/components/constants.dart';
 import 'package:mehra_app/modules/reels/reels.dart';
 
 class HomeReels extends StatelessWidget {
-    String? _videoPath;
+  String? _videoPath;
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -86,10 +86,9 @@ class HomeReels extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Shoplets',
-                      style: GoogleFonts.pacifico(color: MyColor.blueColor,fontSize: 30)
-                    ),
+                    Text('Shoplets',
+                        style: GoogleFonts.pacifico(
+                            color: MyColor.blueColor, fontSize: 30)),
                     IconButton(
                       icon: ShaderMask(
                         shaderCallback: (bounds) {
@@ -108,10 +107,12 @@ class HomeReels extends StatelessWidget {
                       ),
                       onPressed: () {
                         Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CreateReelScreen(videoPath: _videoPath!),
-        ),);
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                CreateReelScreen(videoPath: _videoPath!),
+                          ),
+                        );
                         // تنفيذ ما تريد هنا
                       },
                     ),

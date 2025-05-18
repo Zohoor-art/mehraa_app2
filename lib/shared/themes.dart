@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 ThemeData lightTheme = ThemeData(
+  fontFamily: 'Tajawal',
   primarySwatch: Colors.pink,
   scaffoldBackgroundColor: Colors.white,
   appBarTheme: AppBarTheme(
@@ -9,6 +10,7 @@ ThemeData lightTheme = ThemeData(
       color: Colors.white,
       fontWeight: FontWeight.bold,
       fontSize: 20,
+      fontFamily: 'Tajawal',
     ),
     iconTheme: IconThemeData(color: Colors.white),
     elevation: 0,
@@ -16,7 +18,6 @@ ThemeData lightTheme = ThemeData(
   floatingActionButtonTheme: FloatingActionButtonThemeData(
     backgroundColor: Colors.pinkAccent,
   ),
-  fontFamily: 'Tajawal',
   bottomNavigationBarTheme: BottomNavigationBarThemeData(
     type: BottomNavigationBarType.fixed,
     selectedItemColor: Colors.pink,
@@ -24,12 +25,18 @@ ThemeData lightTheme = ThemeData(
     backgroundColor: Colors.white,
   ),
   textTheme: TextTheme(
-    bodyLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.black),
+    bodyLarge: TextStyle(
+        fontFamily: 'Tajawal',
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: Colors.black),
     bodyMedium: TextStyle(fontSize: 16, color: Colors.black87),
   ),
 );
 
 ThemeData darkTheme = ThemeData(
+  fontFamily: 'Tajawal',
+
   brightness: Brightness.dark,
   scaffoldBackgroundColor: Colors.black,
   cardColor: Color(0xFF1E1E1E), // لون البلوكات
@@ -49,7 +56,6 @@ ThemeData darkTheme = ThemeData(
     backgroundColor: Colors.purpleAccent,
     foregroundColor: Colors.black,
   ),
-  fontFamily: 'Tajawal',
   bottomNavigationBarTheme: BottomNavigationBarThemeData(
     type: BottomNavigationBarType.fixed,
     selectedItemColor: Colors.purpleAccent,
@@ -61,7 +67,8 @@ ThemeData darkTheme = ThemeData(
     trackColor: MaterialStateProperty.all(Colors.purpleAccent),
   ),
   textTheme: TextTheme(
-    bodyLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+    bodyLarge: TextStyle(
+        fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
     bodyMedium: TextStyle(fontSize: 16, color: Colors.white70),
     titleLarge: TextStyle(color: Colors.white),
     labelLarge: TextStyle(color: Colors.purpleAccent),

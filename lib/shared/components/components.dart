@@ -297,7 +297,7 @@ Widget defultTextFormField({
     );
 Widget headingTitle()=> Padding(
   
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -309,7 +309,7 @@ Widget headingTitle()=> Padding(
           const Expanded(
             child: Center(
               child: Text(
-                'روز للورود الطبيعية',
+                'المحادثات',
                 style: TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 20,

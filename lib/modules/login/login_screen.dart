@@ -1,4 +1,3 @@
-import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -6,6 +5,7 @@ import 'package:mehra_app/modules/homePage/home_screen.dart';
 import 'package:mehra_app/modules/register/register_screen.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
+import 'package:mehra_app/shared/components/custom_Dialog.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -35,59 +35,59 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 350;
-     final local = AppLocalizations.of(context)!;
-
-  Future<void> _login() async {
     final local = AppLocalizations.of(context)!;
 
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        isLoading = true;
-      });
-
-      try {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: emailController.text.trim(),
-          password: passwordController.text.trim(),
-        );
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-        );
-      } on FirebaseAuthException catch (e) {
-        String message = local.errorOccurred;
-
-        if (e.code == 'user-not-found') {
-          message = local.userNotFound;
-        } else if (e.code == 'wrong-password') {
-          message = local.wrongPassword;
-        }
-
-        AwesomeDialog(
-          context: context,
-          dialogType: DialogType.error,
-          animType: AnimType.scale,
-          title: local.error,
-          desc: message,
-          btnOkOnPress: () {},
-          btnOkColor: Colors.red,
-        ).show();
-      } finally {
+    Future<void> _login() async {
+      if (_formKey.currentState?.validate() ?? false) {
         setState(() {
-          isLoading = false;
+          isLoading = true;
         });
+
+        try {
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+            email: emailController.text.trim(),
+            password: passwordController.text.trim(),
+          );
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+          );
+        } on FirebaseAuthException catch (e) {
+          String message = local.errorOccurred;
+          String title = local.error;
+
+          if (e.code == 'user-not-found') {
+            message = local.userNotFound;
+          } else if (e.code == 'wrong-password') {
+            message = local.wrongPassword;
+          }
+
+          CustomDialog.show(
+            context,
+            title: title,
+            content: message,
+            icon: Icons.error,
+            iconColor: Colors.white,
+            confirmButtonColor: Colors.red,
+            confirmText: local.ok,
+            cancelText: 'لا',
+            onConfirm: () {},
+            onCancel: null,
+            showIcon: true,
+          );
+        } finally {
+          setState(() {
+            isLoading = false;
+          });
+        }
       }
     }
-  }
-
-
 
     return Scaffold(
       appBar: AppBar(
@@ -118,9 +118,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: screenWidth,
               ),
             ),
-            Center( // تم إضافة Center هنا لجعل المحتوى في المنتصف
+            Center(
               child: SingleChildScrollView(
-
                 padding: EdgeInsets.only(
                   bottom: MediaQuery.of(context).viewInsets.bottom,
                 ),
@@ -167,32 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             SizedBox(height: 24),
                             GradientButton(
-                              onPressed: () async {
-                                if (_formKey.currentState!.validate()) {
-                                  setState(() => isLoading = true);
-                                  try {
-                                    await FirebaseAuth.instance.signInWithEmailAndPassword(
-                                      email: emailController.text.trim(),
-                                      password: passwordController.text.trim(),
-                                    );
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => HomeScreen()),
-                                    );
-                                  } on FirebaseAuthException catch (e) {
-                                    AwesomeDialog(
-                                      context: context,
-                                      dialogType: DialogType.error,
-                                      animType: AnimType.bottomSlide,
-                                      title: 'خطأ',
-                                      desc: e.message ?? 'حدث خطأ أثناء تسجيل الدخول',
-                                      btnOkOnPress: () {},
-                                    ).show();
-                                  } finally {
-                                    setState(() => isLoading = false);
-                                  }
-                                }
-                              },
+                              onPressed: _login,
                               text: "الدخول",
                               width: isSmallScreen ? screenWidth * 0.85 : screenWidth * 0.8,
                               height: 50,
@@ -214,7 +188,6 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ],
-
                         ),
                       ),
                     ),

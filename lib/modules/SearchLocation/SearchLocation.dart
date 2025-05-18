@@ -20,8 +20,8 @@ class _RegionStoresGridScreenState extends State<RegionStoresGridScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MyColor.lightprimaryColor,
       appBar: AppBar(
+        
         title: Text('المتاجر في ${widget.location}'),
         flexibleSpace: Container(
           decoration: BoxDecoration(

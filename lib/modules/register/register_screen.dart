@@ -8,7 +8,6 @@ import 'package:mehra_app/modules/login/login_screen.dart';
 import 'package:mehra_app/modules/register/sign_up.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -26,24 +25,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      checkUserLoggedIn();
-    });
   }
 
+  // التحقق مما إذا كان المستخدم قد سجل الدخول
   void checkUserLoggedIn() async {
     User? user = firebaseAuth.currentUser;
     if (user != null) {
-      print('المستخدم مسجل مسبقاً: ${user.uid}');
-      if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-          (route) => false,
-        );
-      }
+      Navigator.of(context).pushReplacementNamed("HomeScreen");
     }
   }
 
+// في ملف تسجيل الدخول
   Future<UserCredential?> signInWithGoogle() async {
     try {
       setState(() => isLoading = true);
@@ -90,41 +82,60 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       await Firebase_Firestor().saveGoogleUser(user);
 
-      print("تم تسجيل الدخول بنجاح! UID: ${user.uid}");
-      print("بيانات المستخدم: ${user.displayName}, ${user.email}");
-
-      if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-          (route) => false,
-        );
-      }
-
+      print("User ID: ${user.uid}");
       return userCredential;
     } catch (e) {
       print("حدث خطأ أثناء تسجيل الدخول باستخدام Google: $e");
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text("خطأ"),
-            content: Text("فشل تسجيل الدخول:\n$e"),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text("موافق"),
-              ),
-            ],
-          ),
-        );
-      }
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("خطأ"),
+          content: Text("فشل تسجيل الدخول:\n$e"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("موافق"),
+            ),
+          ],
+        ),
+      );
       return null;
     } finally {
-      if (mounted) {
-        setState(() => isLoading = false);
-      }
+      setState(() => isLoading = false);
     }
   }
+// Future<UserCredential?> signInWithGoogle() async {
+//   try {
+//     setState(() => isLoading = true);
+
+//     final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+//     if (googleUser == null) return null;
+
+//     final GoogleSignInAuthentication googleAuth =
+//         await googleUser.authentication;
+
+//     final credential = GoogleAuthProvider.credential(
+//       accessToken: googleAuth.accessToken,
+//       idToken: googleAuth.idToken,
+//     );
+
+//     final UserCredential userCredential =
+//         await firebaseAuth.signInWithCredential(credential);
+
+//     // حفظ بيانات المستخدم باستخدام Firebase_Firestor
+//     await Firebase_Firestor().saveGoogleUser(userCredential.user!);
+
+//     return userCredential;
+//   } catch (e) {
+//     print("Error during Google Sign-In: $e");
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(content: Text('فشل تسجيل الدخول: ${e.toString()}')),
+//     );
+//     return null;
+//   } finally {
+//     setState(() => isLoading = false);
+//   }
+// }
 
   @override
   Widget build(BuildContext context) {
@@ -135,93 +146,123 @@ class _RegisterScreenState extends State<RegisterScreen> {
       backgroundColor: MyColor.lightprimaryColor,
       body: Stack(
         children: [
+          // محتوى الصفحة
           SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: screenHeight,
-              ),
+            child: SizedBox(
+              height: screenHeight,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(height: screenHeight * 0.1),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: screenWidth * 0.8,
-                          height: screenHeight * 0.08,
-                          child: GradientButton(
-                            onPressed: () {
-                              Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(builder: (context) => HomeScreen()),
-                                (route) => false,
-                              );
-                            },
-                            text: 'المتابعة بدون تسجيل دخول',
-                            fontSize: screenWidth < 400 ? 16 : 18,
-                          ),
-                        ),
-                        SizedBox(height: screenHeight * 0.05),
-                        SizedBox(
-                          width: screenWidth * 0.8,
-                          height: screenHeight * 0.08,
-                          child: GradientButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => SignUpscreen()),
-                              );
-                            },
-                            text: 'انشاء حساب تجاري',
-                            fontSize: screenWidth < 400 ? 16 : 18,
-                          ),
-                        ),
-                        SizedBox(height: screenHeight * 0.05),
-                        SizedBox(
-                          width: screenWidth * 0.8,
-                          height: screenHeight * 0.08,
-                          child: buildGoogleButton(
-                            text: 'المتابعة بحساب جوجل',
-                            fontSize: screenWidth < 400 ? 16 : 18,
-                            onPressed: () async {
-                              if (!isLoading) {
-                                await signInWithGoogle();
-                              }
-                            },
-                          ),
-                        ),
-                        SizedBox(height: screenHeight * 0.04),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => LoginScreen()),
-                            );
-                          },
-                          child: Text(
-                            'لديك حساب! الدخول بالحساب',
-                            style: TextStyle(
+                  // المساحة العلوية
+                  SizedBox(height: screenHeight * 0.2),
+
+                  // الأزرار الرئيسية
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.1,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // زر المتابعة بدون تسجيل
+                          SizedBox(
+                            width: screenWidth * 0.8,
+                            height: screenHeight * 0.08,
+                            child: GradientButton(
+                              onPressed: () {
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(
+                                      builder: (context) => HomeScreen()),
+                                );
+                              },
+                              text: 'المتابعة بدون تسجيل دخول',
                               fontSize: screenWidth < 400 ? 16 : 18,
-                              color: Colors.black,
                             ),
                           ),
-                        ),
-                      ],
+
+                          SizedBox(height: screenHeight * 0.05),
+
+                          // زر إنشاء حساب تجاري
+                          SizedBox(
+                            width: screenWidth * 0.8,
+                            height: screenHeight * 0.08,
+                            child: GradientButton(
+                              onPressed: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => SignUpscreen()),
+                                );
+                              },
+                              text: 'انشاء حساب تجاري',
+                              fontSize: screenWidth < 400 ? 16 : 18,
+                            ),
+                          ),
+
+                          SizedBox(height: screenHeight * 0.05),
+
+                          // زر جوجل
+                          SizedBox(
+                            width: screenWidth * 0.8,
+                            height: screenHeight * 0.08,
+                            child: buildGoogleButton(
+                              text: 'المتابعة بحساب جوجل',
+                              fontSize: screenWidth < 400 ? 16 : 18,
+                              onPressed: () async {
+                                if (!isLoading) {
+                                  UserCredential? userCredential =
+                                      await signInWithGoogle();
+                                  if (userCredential != null) {
+                                    Navigator.of(context)
+                                        .pushNamedAndRemoveUntil(
+                                            "HomeScreen", (route) => false);
+                                    print("User signed in successfully!");
+                                  } else {
+                                    print("Failed to sign in with Google.");
+                                  }
+                                }
+                              },
+                            ),
+                          ),
+
+                          SizedBox(height: screenHeight * 0.04),
+
+                          // زر لديك حساب
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => LoginScreen()),
+                              );
+                            },
+                            child: Text(
+                              'لديك حساب! الدخول بالحساب',
+                              style: TextStyle(
+                                fontSize: screenWidth < 400 ? 16 : 18,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  SizedBox(height: screenHeight * 0.1),
-                  Align(
-                    alignment: Alignment.bottomCenter,
+
+                  // الصورة السفلية
+                  SizedBox(
+                    height: screenHeight * 0.2,
                     child: bottomImage(),
                   ),
                 ],
               ),
             ),
           ),
+
+          // مؤشر التحميل
           if (isLoading)
-            const Center(
+            Center(
               child: CircularProgressIndicator(),
             ),
         ],

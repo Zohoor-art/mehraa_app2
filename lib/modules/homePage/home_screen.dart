@@ -20,6 +20,7 @@ import 'package:mehra_app/modules/notifications/Notification.dart';
 import 'package:mehra_app/modules/notifications/notificationScreen.dart';
 import 'package:mehra_app/modules/notifications/weeklyNoti.dart';
 import 'package:mehra_app/modules/profile/google_profile.dart';
+
 import 'package:mehra_app/modules/reels/home.dart';
 import 'package:mehra_app/modules/settings/PrivacySettingsPage.dart';
 import 'package:mehra_app/modules/settings/Settings.dart';
@@ -59,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const NearbyOptionsScreen(),
      HomeReels(),
     const HomePage(),
-    const XploreScreen(),
+     XploreScreen(),
     const ChatsPage(),
   ];
 

@@ -108,65 +108,80 @@ class Firebase_Firestor {
     });
   }
 
-  Future<void> sendChatMessage({
-    required String receiverId,
-    String? text,
-    String? imageUrl,
-    String? audioUrl,
-    required Timestamp timestamp,
-    bool isPostMessage = false,
-    String? postId,
-    String? postImageUrl,
-    String? postDescription,
-  }) async {
-    final currentUserId = _auth.currentUser?.uid;
-    if (currentUserId == null) return;
+ Future<void> sendChatMessage({
+  required String receiverId,
+  String? text,
+  String? imageUrl,
+  String? audioUrl,
+  required Timestamp timestamp,
+  bool isPostMessage = false,
+  bool isStoryReply = false,
+  String? postId,
+  String? postImageUrl,
+  String? postDescription,
+  String? storyId,
+  Map<String, dynamic>? storyData,
+}) async {
+  final currentUserId = _auth.currentUser?.uid;
+  if (currentUserId == null) return;
 
-    final messageId = _uuid.v1();
+  final messageId = _uuid.v1();
 
-    final messageData = {
-      'senderId': currentUserId,
-      'receiverId': receiverId,
-      'text': text,
-      'imageUrl': imageUrl,
-      'audioUrl': audioUrl,
-      'timestamp': FieldValue.serverTimestamp(),
-      'isRead': false,
-      'isPostMessage': isPostMessage,
-      if (isPostMessage) ...{
-        'postId': postId,
-        'postImageUrl': postImageUrl,
-        'postDescription': postDescription,
-      },
-    };
+  final messageData = {
+    'senderId': currentUserId,
+    'receiverId': receiverId,
+    'text': text,
+    'imageUrl': imageUrl,
+    'audioUrl': audioUrl,
+    'timestamp': FieldValue.serverTimestamp(),
+    'isRead': false,
+    'isPostMessage': isPostMessage,
+    'isStoryReply': isStoryReply,
+    if (isPostMessage) ...{
+      'postId': postId,
+      'postImageUrl': postImageUrl,
+      'postDescription': postDescription,
+    },
+    if (isStoryReply) ...{
+      'storyId': storyId,
+      'storyData': storyData,
+    },
+  };
 
-    // Save the message in sender's messages
+  // Save the message in sender's messages
+  await _firebaseFirestore
+      .collection('users')
+      .doc(currentUserId)
+      .collection('chats')
+      .doc(receiverId)
+      .collection('messages')
+      .doc(messageId)
+      .set(messageData);
+
+  // Save the message in receiver's messages
+  await _firebaseFirestore
+      .collection('users')
+      .doc(receiverId)
+      .collection('chats')
+      .doc(currentUserId)
+      .collection('messages')
+      .doc(messageId)
+      .set(messageData);
+
+  // Update reply count in the original story if this is a story reply
+  if (isStoryReply && storyId != null) {
     await _firebaseFirestore
-        .collection('users')
-        .doc(currentUserId)
-        .collection('chats')
-        .doc(receiverId)
-        .collection('messages')
-        .doc(messageId)
-        .set(messageData);
-
-    // Save the message in receiver's messages
-    await _firebaseFirestore
-        .collection('users')
-        .doc(receiverId)
-        .collection('chats')
-        .doc(currentUserId)
-        .collection('messages')
-        .doc(messageId)
-        .set(messageData);
-
-    await _updateUserMessagesStatus(currentUserId);
-    await _updateUserMessagesStatus(receiverId);
-
-    await _updateLastMessage(
-        currentUserId, receiverId, text, imageUrl, audioUrl);
+        .collection('stories')
+        .doc(storyId)
+        .update({'replyCount': FieldValue.increment(1)});
   }
 
+  await _updateUserMessagesStatus(currentUserId);
+  await _updateUserMessagesStatus(receiverId);
+
+  await _updateLastMessage(
+      currentUserId, receiverId, text, imageUrl, audioUrl);
+}
   Future<void> sendOrderConfirmation({
     required String receiverId,
     required String orderId,

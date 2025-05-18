@@ -1,12 +1,9 @@
-import 'package:awesome_dialog/awesome_dialog.dart';
-import 'package:day_picker/day_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:mehra_app/models/firebase/auth_methods.dart';
 import 'package:mehra_app/modules/homePage/home_screen.dart';
 import 'package:mehra_app/modules/signup2/locationCard.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SignUp2screen extends StatefulWidget {
   final String userId;
@@ -33,13 +30,31 @@ class _SignUp2screenState extends State<SignUp2screen> {
   late TextEditingController locationController;
 
   String? selectedWorkType;
-  String? selectedDays;
-  String? selectedHours;
+  List<String> selectedDays = [];
+  TimeOfDay? startTime;
+  TimeOfDay? endTime;
   bool isLoading = false;
-  String? locationUrl;      // لحفظ رابط الموقع (يدوي أو من الخريطة)
-  double? latitude;         // إحداثيات من الخريطة فقط
+  String? locationUrl;
+  double? latitude;
   double? longitude;
-  String? selectedArea;     // اسم المنطقة المختارة
+  String? selectedArea;
+
+  final List<Map<String, dynamic>> days = [
+    {'name': 'السبت', 'value': 'السبت'},
+    {'name': 'الأحد', 'value': 'الأحد'},
+    {'name': 'الاثنين', 'value': 'الاثنين'},
+    {'name': 'الثلاثاء', 'value': 'الثلاثاء'},
+    {'name': 'الأربعاء', 'value': 'الأربعاء'},
+    {'name': 'الخميس', 'value': 'الخميس'},
+    {'name': 'الجمعة', 'value': 'الجمعة'},
+  ];
+
+  final List<String> workTypes = [
+    'الخياطة',
+    'الكيك',
+    'الكوافير',
+    'أعمال صغيرة أخرى'
+  ];
 
   @override
   void initState() {
@@ -57,92 +72,303 @@ class _SignUp2screenState extends State<SignUp2screen> {
     super.dispose();
   }
 
-  InputDecoration inputDecoration(String label, IconData icon) {
+  InputDecoration _buildInputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      prefixIcon: Icon(icon, color: MyColor.blueColor),
+      labelStyle: TextStyle(
+        color: Colors.black.withOpacity(0.6),
+      ),
+      prefixIcon: Icon(icon, color: MyColor.purpleColor),
       border: OutlineInputBorder(
-        borderSide: BorderSide(color: MyColor.purpleColor),
+        borderSide: BorderSide(color: MyColor.purpleColor, width: 2),
+        borderRadius: BorderRadius.circular(12),
       ),
       focusedBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: MyColor.purpleColor),
+        borderSide: BorderSide(color: MyColor.purpleColor, width: 2),
+        borderRadius: BorderRadius.circular(10),
       ),
+      enabledBorder: OutlineInputBorder(
+        borderSide: BorderSide(color: MyColor.purpleColor, width: 2),
+        borderRadius: BorderRadius.circular(5),
+      ),
+      contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      filled: true,
+      fillColor: Colors.white,
     );
   }
 
   Future<void> _completeRegistration() async {
-  if (_formKey.currentState!.validate() &&
-      selectedWorkType != null &&
-      selectedDays != null &&
-      selectedHours != null &&
-      selectedArea != null 
-     
-) {
-    setState(() => isLoading = true);
+    if (_formKey.currentState!.validate() &&
+        selectedWorkType != null &&
+        selectedDays.isNotEmpty &&
+        startTime != null &&
+        endTime != null &&
+        selectedArea != null) {
+      setState(() => isLoading = true);
 
-    final authMethods = AuthMethods();
-    final result = await authMethods.completeSignUpProcess(
-      userId: widget.userId,
-      contactNumber: contactNumberController.text.trim(),
-      days: selectedDays!,
-      description: descriptionController.text.trim(),
-      email: widget.email,
-      hours: selectedHours!,
-      location: selectedArea!, // المنطقة
-      locationUrl: locationUrl, // يدوي أو رابط من الخريطة
-      latitude:  latitude,       // فقط لو تم استخدام الخريطة
-      longitude: longitude,
-      profileImage: widget.profileImage,
-      storeName: widget.storeName,
-      workType: selectedWorkType!,
+      final hours = '${_formatTime(startTime!)} - ${_formatTime(endTime!)}';
+
+      final authMethods = AuthMethods();
+      final result = await authMethods.completeSignUpProcess(
+        userId: widget.userId,
+        contactNumber: contactNumberController.text.trim(),
+        days: selectedDays.join(", "), // سيتم حفظ الأسماء العربية مباشرة
+        description: descriptionController.text.trim(),
+        email: widget.email,
+        hours: hours,
+        location: selectedArea!,
+        locationUrl: locationUrl!,
+        latitude: latitude,
+        longitude: longitude,
+        profileImage: widget.profileImage,
+        storeName: widget.storeName,
+        workType: selectedWorkType!,
+      );
+
+      setState(() => isLoading = false);
+
+      if (result == 'success') {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => HomePage()),
+          (route) => false,
+        );
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(result)));
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("يرجى تعبئة جميع الحقول المطلوبة")));
+    }
+  }
+
+  String _formatTime(TimeOfDay time) {
+    final hour = time.hourOfPeriod;
+    final minute = time.minute.toString().padLeft(2, '0');
+    final period = time.period == DayPeriod.am ? 'صباحًا' : 'مساءً';
+    return '$hour:$minute $period';
+  }
+
+  Future<void> _selectTime(BuildContext context, bool isStartTime) async {
+    final initialTime = isStartTime
+        ? startTime ?? TimeOfDay(hour: 8, minute: 0)
+        : endTime ?? TimeOfDay(hour: 17, minute: 0);
+
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: MyColor.blueColor,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+            timePickerTheme: TimePickerThemeData(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: child!,
+          ),
+        );
+      },
     );
 
-    setState(() => isLoading = false);
-    
-    if (result == 'success') {
-     Navigator.pushAndRemoveUntil(
-    context,
-    MaterialPageRoute(builder: (_) => HomePage()),
-    (route) => false,
-  );
-    } else {
-       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result)));
+    if (pickedTime != null) {
+      setState(() {
+        if (isStartTime) {
+          startTime = pickedTime;
+        } else {
+          endTime = pickedTime;
+        }
+      });
     }
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("يرجى تعبئة جميع الحقول المطلوبة"))
+  }
+
+  void _toggleDaySelection(String dayValue) {
+    setState(() {
+      if (selectedDays.contains(dayValue)) {
+        selectedDays.remove(dayValue);
+      } else {
+        selectedDays.add(dayValue);
+      }
+    });
+  }
+
+  Future<void> _showDaysSelectionDialog(BuildContext context) async {
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              padding: EdgeInsets.all(16),
+              margin: EdgeInsets.only(top: 60),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text('اختر أيام العمل',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black.withOpacity(0.6),
+                      )),
+                  SizedBox(height: 16),
+                  Flexible(
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: days.length,
+                      itemBuilder: (context, index) {
+                        final day = days[index];
+                        final isSelected = selectedDays.contains(day['value']);
+                        return CheckboxListTile(
+                            value: isSelected,
+                            onChanged: (bool? value) {
+                              setState(() {
+                                _toggleDaySelection(day['value']);
+                              });
+                            },
+                            title: Text(day['name'],
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: isSelected
+                                      ? MyColor.blueColor
+                                      : Colors.black,
+                                )),
+                            secondary: Icon(
+                              isSelected
+                                  ? Icons.check_circle
+                                  : Icons.circle_outlined,
+                              color: isSelected
+                                  ? MyColor.purpleColor
+                                  : Colors.grey,
+                            ),
+                            controlAffinity: ListTileControlAffinity.leading,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                            activeColor: MyColor.purpleColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5),
+                            ));
+                      },
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: MyColor.blueColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: Text('تم',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          )),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
-}
+
+  Widget _buildTimeField(String label, TimeOfDay? time, VoidCallback onTap) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: MyColor.purpleColor, width: 2),
+            borderRadius: BorderRadius.circular(5),
+            color: Colors.white,
+          ),
+          child: Center(
+            child: Text(
+              time != null ? _formatTime(time) : label,
+              style: TextStyle(
+                fontSize: 14,
+                color: time != null ? Colors.black : Colors.grey[600],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDaysButton() {
+    return Expanded(
+      flex: 3,
+      child: InkWell(
+        onTap: () => _showDaysSelectionDialog(context),
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: MyColor.purpleColor, width: 2),
+            borderRadius: BorderRadius.circular(5),
+            color: Colors.white,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Text(
+                  selectedDays.isEmpty
+                      ? 'أيام العمل'
+                      : '${selectedDays.length} يوم',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: selectedDays.isNotEmpty
+                        ? Colors.black
+                        : Colors.grey[600],
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Icon(Icons.calendar_today, color: MyColor.purpleColor, size: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 400;
-
-    final List<DayInWeek> days = [
-      DayInWeek("السبت", dayKey: "saturday"),
-      DayInWeek("الأحد", dayKey: "sunday"),
-      DayInWeek("الاثنين", dayKey: "monday"),
-      DayInWeek("الثلاثاء", dayKey: "tuesday"),
-      DayInWeek("الأربعاء", dayKey: "wednesday"),
-      DayInWeek("الخميس", dayKey: "thursday"),
-      DayInWeek("الجمعة", dayKey: "friday", isSelected: true),
-    ];
-
-    final List<String> workTypes = [
-      'الخياطة',
-      'الكيك',
-      'الكوافير',
-      'أعمال صغيرة أخرى'
-    ];
-
-    final List<String> hours = [
-      'من 8 صباحًا إلى 1 ظهرًا',
-      'من 1 ظهرًا إلى 8 مساءً',
-      'من 8 مساءً إلى منتصف الليل'
-    ];
+    final isSmallScreen = screenWidth < 350;
 
     return Scaffold(
       appBar: AppBar(
@@ -150,7 +376,7 @@ class _SignUp2screenState extends State<SignUp2screen> {
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [MyColor.blueColor, MyColor.purpleColor],
+              colors: [MyColor.blueColor, MyColor.blueColor],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
@@ -173,20 +399,20 @@ class _SignUp2screenState extends State<SignUp2screen> {
                 width: screenWidth,
               ),
             ),
-            SingleChildScrollView(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                top: 20,
-              ),
-              child: Center(
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  top: screenHeight * 0.1,
+                ),
                 child: Container(
                   width: isSmallScreen ? screenWidth * 0.95 : screenWidth * 0.9,
-                  constraints: BoxConstraints(
-                    minHeight: screenHeight * 0.7,
-                    maxHeight: screenHeight * 0.9,
-                  ),
-                  margin: EdgeInsets.only(bottom: 20),
+                  margin: EdgeInsets.only(bottom: screenHeight * 0.12),
                   child: Card(
+                    color: Colors.white,
+                    shadowColor: const Color(0xFF000000),
+                    elevation: 5,
                     child: Padding(
                       padding: EdgeInsets.all(isSmallScreen ? 12.0 : 16.0),
                       child: Form(
@@ -194,34 +420,63 @@ class _SignUp2screenState extends State<SignUp2screen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              'إكمال بيانات المتجر',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: MyColor.blueColor,
+                            Center(
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.store,
+                                    size: 40,
+                                    color: MyColor.blueColor,
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'إكمال بيانات المتجر',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: MyColor.blueColor,
+                                    ),
+                                  ),
+                                  Text(
+                                    'الخطوة الأخيرة لبدء استخدام التطبيق',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            SizedBox(height: 20),
-                            defultTextFormField(
+
+                            SizedBox(height: screenHeight * 0.02),
+
+                            // وصف المتجر
+                            TextFormField(
                               controller: descriptionController,
-                              type: TextInputType.text,
-                              label: "الوصف",
-                              prefix: Icons.description,
-                              validate: (value) {
+                              keyboardType: TextInputType.multiline,
+                              maxLines: 2,
+                              decoration: _buildInputDecoration(
+                                  "وصف المتجر", Icons.note),
+                              validator: (value) {
                                 if (value!.isEmpty) {
-                                  return 'يرجى إدخال وصف العمل';
+                                  return 'يرجى إدخال وصف المتجر';
                                 }
                                 return null;
                               },
                             ),
-                            SizedBox(height: isSmallScreen ? 8 : 12),
+                            SizedBox(height: screenHeight * 0.02),
+
+                            // نوع العمل
                             DropdownButtonFormField<String>(
                               value: selectedWorkType,
-                              hint: Text('اختر نوع العمل'),
+                              hint: Text('اختر نوع العمل',
+                                  style: TextStyle(color: Colors.grey[600])),
                               items: workTypes
                                   .map((e) => DropdownMenuItem(
-                                      value: e, child: Text(e)))
+                                      value: e,
+                                      child: Text(e,
+                                          style:
+                                              TextStyle(color: Colors.black))))
                                   .toList(),
                               onChanged: (value) =>
                                   setState(() => selectedWorkType = value),
@@ -231,98 +486,120 @@ class _SignUp2screenState extends State<SignUp2screen> {
                                 }
                                 return null;
                               },
-                              decoration:
-                                  inputDecoration('نوع العمل', Icons.business),
+                              decoration: _buildInputDecoration(
+                                  'نوع العمل', Icons.shopping_cart),
+                              dropdownColor: Colors.white,
+                              icon: Icon(Icons.arrow_drop_down,
+                                  color: MyColor.blueColor),
                             ),
-                            SizedBox(height: isSmallScreen ? 8 : 12),
-                            SelectWeekDays(
-                              days: days,
-                              border: false,
-                              boxDecoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [MyColor.blueColor, MyColor.purpleColor],
+                            SizedBox(height: screenHeight * 0.02),
+
+                            // صف الأيام والساعات
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'أيام وساعات العمل',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black.withOpacity(0.6),
+                                  ),
                                 ),
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              onSelect: (values) {
-                                setState(() {
-                                  selectedDays = values.join(", ");
-                                });
-                              },
+                                SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    // زر أيام العمل
+                                    _buildDaysButton(),
+                                    SizedBox(width: 8),
+
+                                    // ساعات العمل
+                                    Expanded(
+                                      flex: 2,
+                                      child: Row(
+                                        children: [
+                                          _buildTimeField('من', startTime,
+                                              () => _selectTime(context, true)),
+                                          Padding(
+                                            padding: EdgeInsets.symmetric(
+                                                horizontal: 4),
+                                            child: Text('',
+                                                style: TextStyle(
+                                                    fontSize: 16,
+                                                    color: MyColor.blueColor)),
+                                          ),
+                                          _buildTimeField(
+                                              'الى',
+                                              endTime,
+                                              () =>
+                                                  _selectTime(context, false)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                            SizedBox(height: isSmallScreen ? 8 : 12),
-                            DropdownButtonFormField<String>(
-                              value: selectedHours,
-                              hint: Text('اختر الساعات'),
-                              items: hours
-                                  .map((e) => DropdownMenuItem(
-                                      value: e, child: Text(e)))
-                                  .toList(),
-                              onChanged: (value) =>
-                                  setState(() => selectedHours = value),
-                              validator: (value) {
-                                if (value == null) {
-                                  return 'يرجى اختيار الساعات';
-                                }
-                                return null;
-                              },
-                              decoration:
-                                  inputDecoration('الساعات', Icons.access_time),
-                            ),
-                            SizedBox(height: isSmallScreen ? 8 : 12),
-                            defultTextFormField(
+                            SizedBox(height: screenHeight * 0.02),
+
+                            // رقم التواصل
+                            TextFormField(
                               controller: contactNumberController,
-                              type: TextInputType.phone,
-                              label: 'رقم التواصل',
-                              prefix: Icons.phone,
-                              validate: (value) {
+                              keyboardType: TextInputType.phone,
+                              decoration: _buildInputDecoration(
+                                  'رقم التواصل', Icons.phone),
+                              validator: (value) {
                                 if (value!.isEmpty) {
-                                  return 'يرجى إدخال رقم تواصل';
+                                  return 'يرجى إدخال رقم التواصل';
                                 }
                                 return null;
                               },
                             ),
-                            SizedBox(height: isSmallScreen ? 8 : 12),
-                     defultTextFormField(
-  controller: locationController,
-  type: TextInputType.text,
-  label: 'الموقع',
-  prefix: Icons.map,
-  readOnly: true,
-  onTap: () async {
-  final result = await showModalBottomSheet<Map<String, dynamic>>(
-    context: context,
-    isScrollControlled: true,
-    builder: (context) => LocationSelectionCard(locationController),
-  );
+                            SizedBox(height: screenHeight * 0.02),
 
-  if (result != null) {
-    locationController.text = result['fullText'];
-    selectedArea = result['area'];
-    locationUrl = result['mapUrl'] ?? result['manual'];
-    latitude = result['lat'];
-    longitude = result['lng'];
-  }
-},
+                            // الموقع
+                            TextFormField(
+                              controller: locationController,
+                              keyboardType: TextInputType.text,
+                              decoration: _buildInputDecoration(
+                                  'الموقع', Icons.location_on),
+                              readOnly: true,
+                              onTap: () async {
+                                final result = await showModalBottomSheet<
+                                    Map<String, dynamic>>(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  builder: (context) =>
+                                      LocationSelectionCard(locationController),
+                                );
 
-  validate: (value) {
-    if (value == null || value.isEmpty) {
-      return 'يرجى إدخال الموقع';
-    }
-    return null;
-  },
-),
+                                if (result != null) {
+                                  locationController.text = result['fullText'];
+                                  selectedArea = result['area'];
+                                  locationUrl =
+                                      result['mapUrl'] ?? result['manual'];
+                                  latitude = result['lat'];
+                                  longitude = result['lng'];
+                                }
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'يرجى إدخال الموقع';
+                                }
+                                return null;
+                              },
+                            ),
+                            SizedBox(height: screenHeight * 0.03),
 
-                            SizedBox(height: isSmallScreen ? 16 : 24),
+                            // زر الإرسال
                             GradientButton(
                               onPressed: _completeRegistration,
-                              text: isLoading
-                                  ? 'جارٍ التسجيل...'
-                                  : 'إكمال التسجيل',
+                              text:
+                                  isLoading ? 'جارٍ الحفظ...' : 'اكمال التسجيل',
                               width: isSmallScreen ? screenWidth * 0.8 : 319,
                               height: isSmallScreen ? 50 : 67,
                             ),
-                            SizedBox(height: isSmallScreen ? 8 : 12),
+                            SizedBox(height: screenHeight * 0.02),
                           ],
                         ),
                       ),

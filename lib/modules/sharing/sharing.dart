@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mehra_app/shared/components/constants.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/services.dart';
 
@@ -193,7 +194,19 @@ class _SharingState extends State<Sharing> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text('مشاركة')),
+      appBar: AppBar(flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                MyColor.blueColor,
+                MyColor.purpleColor,
+              ],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+          ),
+        ),
+        title: Text('مشاركة'),),
       body: Column(
         children: [
           // صورة البوست + مربع الرسالة
@@ -365,7 +378,7 @@ class _SharingState extends State<Sharing> {
       leading: CircleAvatar(
         backgroundImage: (img != null && img.isNotEmpty)
             ? NetworkImage(img)
-            : AssetImage('assets/images/2.png') as ImageProvider,
+            : AssetImage('assets/images/profile.png') as ImageProvider,
       ),
       title: Text(user['storeName'] ?? user['displayName']),
       trailing: Container(
@@ -381,7 +394,7 @@ class _SharingState extends State<Sharing> {
             padding:
                 const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
             child: Text(
-              isSent ? 'تم' : 'إرسال',
+              isSent ? 'تم الارسال' : 'إرسال',
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,

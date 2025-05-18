@@ -4,9 +4,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:mehra_app/models/post.dart';
 import 'package:mehra_app/modules/comments/comments.dart';
 import 'package:mehra_app/modules/profile/profile_screen.dart';
+import 'package:mehra_app/modules/rating/rating.dart';
 import 'package:mehra_app/modules/reels/gift_screen.dart';
 import 'package:mehra_app/modules/sharing/sharing.dart';
 import 'package:mehra_app/shared/components/constants.dart';
+import 'package:mehra_app/shared/components/custom_Dialog.dart';
 import 'package:mehra_app/shared/components/post_actions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -214,24 +216,22 @@ class _OptionsScreenState extends State<OptionsScreen> {
   }
 
   void _showReviewDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('تقييم المتجر'),
-        content: Text('هل تريد تقييم هذا المتجر؟'),
-        actions: [
-          TextButton(
-            child: Text('إلغاء'),
-            onPressed: () => Navigator.pop(context),
+    CustomDialog.show(
+      context,
+      title: 'تقييم المتجر',
+      content: 'هل تريد تقييم هذا المتجر؟',
+      icon: Icons.star_rate,
+      confirmText: 'موافق',
+      cancelText: 'إلغاء',
+      onConfirm: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RatingCard(uid: widget.post.uid),
           ),
-          ElevatedButton(
-            child: Text('موافق'),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
-        ],
-      ),
+        );
+      },
+      onCancel: () => Navigator.pop(context),
     );
   }
 
@@ -274,7 +274,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
                       backgroundColor: Colors.transparent,
                       builder: (_) => Sharing(
                         postImageUrl: widget.post.postUrl,
-                        postId: widget.post.postId, 
+                        postId: widget.post.postId,
                         postDescription: widget.post.description,
                       ),
                     );
@@ -317,7 +317,6 @@ class _OptionsScreenState extends State<OptionsScreen> {
     );
   }
 
-
   Future<void> _shareViaApps(String url) async {
     try {
       await Share.share(
@@ -337,7 +336,6 @@ class _OptionsScreenState extends State<OptionsScreen> {
       SnackBar(content: Text('تم نسخ الرابط بنجاح')),
     );
   }
-
 
   Widget _buildActionIcon(IconData icon, String label,
       List<Color> gradientColors, VoidCallback onTap) {
@@ -375,17 +373,22 @@ class _OptionsScreenState extends State<OptionsScreen> {
   }
 
   TextStyle _getTextStyleWithShadow() {
-    return TextStyle(color: Colors.white, shadows: [
-      Shadow(
-        blurRadius: 10.0,
-        color: Colors.black,
-        offset: Offset(1.0, 1.0),
-      )
-    ]);
+    return TextStyle(
+      color: Colors.white,
+      shadows: [
+        Shadow(
+          blurRadius: 10.0,
+          color: Colors.black,
+          offset: Offset(1.0, 1.0),
+        )
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 400;
     final isCurrentUserPost = widget.post.uid == widget.currentUserId;
 
     return Padding(
@@ -401,7 +404,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 100),
+                    SizedBox(height: isSmallScreen ? 80 : 100),
                     Row(
                       children: [
                         GestureDetector(
@@ -417,13 +420,18 @@ class _OptionsScreenState extends State<OptionsScreen> {
                           child: CircleAvatar(
                             backgroundImage:
                                 NetworkImage(widget.post.profileImage),
-                            radius: 16,
+                            radius: isSmallScreen ? 14 : 16,
                           ),
                         ),
                         SizedBox(width: 6),
-                        Text(
-                          widget.post.storeName,
-                          style: _getTextStyleWithShadow(),
+                        Flexible(
+                          child: Text(
+                            widget.post.storeName,
+                            style: _getTextStyleWithShadow().copyWith(
+                              fontSize: isSmallScreen ? 14 : 16,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         SizedBox(width: 10),
                         if (!isCurrentUserPost)
@@ -442,6 +450,10 @@ class _OptionsScreenState extends State<OptionsScreen> {
                                     backgroundColor: _isFollowing
                                         ? Colors.grey[300]
                                         : Colors.black.withOpacity(0.5),
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: isSmallScreen ? 8 : 12,
+                                      vertical: isSmallScreen ? 4 : 8,
+                                    ),
                                   ),
                                   child: Text(
                                     _isFollowing ? 'تقييم' : 'متابعة',
@@ -449,27 +461,30 @@ class _OptionsScreenState extends State<OptionsScreen> {
                                       color: _isFollowing
                                           ? Colors.black
                                           : Colors.white,
+                                      fontSize: isSmallScreen ? 12 : 14,
                                     ),
                                   ),
                                 ),
                       ],
                     ),
-                    SizedBox(height: 10),
+                    SizedBox(height: isSmallScreen ? 6 : 10),
                     LayoutBuilder(
                       builder: (context, constraints) {
                         final textSpan = TextSpan(
                           text: widget.post.description,
-                          style: _getTextStyleWithShadow(),
+                          style: _getTextStyleWithShadow().copyWith(
+                            fontSize: isSmallScreen ? 14 : 16,
+                          ),
                         );
-                        
+
                         final textPainter = TextPainter(
                           text: textSpan,
                           maxLines: 2,
                           textDirection: TextDirection.rtl,
                         )..layout(maxWidth: constraints.maxWidth);
-                        
+
                         final isTextLong = textPainter.didExceedMaxLines;
-                        
+
                         return GestureDetector(
                           onTap: () {
                             setState(() {
@@ -491,6 +506,7 @@ class _OptionsScreenState extends State<OptionsScreen> {
                                   '...المزيد',
                                   style: _getTextStyleWithShadow().copyWith(
                                     color: Colors.grey[300],
+                                    fontSize: isSmallScreen ? 12 : 14,
                                   ),
                                 ),
                             ],
@@ -498,60 +514,75 @@ class _OptionsScreenState extends State<OptionsScreen> {
                         );
                       },
                     ),
-                    SizedBox(height: 10),
+                    SizedBox(height: isSmallScreen ? 6 : 10),
                     Row(
                       children: [
                         Icon(
                           Icons.location_on_sharp,
                           color: MyColor.blueColor,
-                          size: 20,
+                          size: isSmallScreen ? 16 : 20,
                         ),
-                        FutureBuilder<DocumentSnapshot>(
-                          future: FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(widget.post.uid)
-                              .get(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return Text(
-                                'جاري التحميل...',
-                                style: _getTextStyleWithShadow(),
-                              );
-                            }
-                            if (snapshot.hasError) {
-                              return Text(
-                                'فشل تحميل الموقع',
-                                style: _getTextStyleWithShadow(),
-                              );
-                            }
-                            if (!snapshot.hasData || !snapshot.data!.exists) {
-                              return Text(
-                                'لا يوجد موقع',
-                                style: _getTextStyleWithShadow(),
-                              );
-                            }
+                        SizedBox(width: 4),
+                        Flexible(
+                          child: FutureBuilder<DocumentSnapshot>(
+                            future: FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(widget.post.uid)
+                                .get(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Text(
+                                  'جاري التحميل...',
+                                  style: _getTextStyleWithShadow().copyWith(
+                                    fontSize: isSmallScreen ? 12 : 14,
+                                  ),
+                                );
+                              }
+                              if (snapshot.hasError) {
+                                return Text(
+                                  'فشل تحميل الموقع',
+                                  style: _getTextStyleWithShadow().copyWith(
+                                    fontSize: isSmallScreen ? 12 : 14,
+                                  ),
+                                );
+                              }
+                              if (!snapshot.hasData || !snapshot.data!.exists) {
+                                return Text(
+                                  'لا يوجد موقع',
+                                  style: _getTextStyleWithShadow().copyWith(
+                                    fontSize: isSmallScreen ? 12 : 14,
+                                  ),
+                                );
+                              }
 
-                            final userData =
-                                snapshot.data!.data() as Map<String, dynamic>;
-                            final storeLocation = userData['location'] ??
-                                'غير محدد';
+                              final userData =
+                                  snapshot.data!.data() as Map<String, dynamic>;
+                              final storeLocation =
+                                  userData['location'] ?? 'غير محدد';
 
-                            return Text(
-                              storeLocation,
-                              style: _getTextStyleWithShadow(),
-                            );
-                          },
+                              return Text(
+                                storeLocation,
+                                style: _getTextStyleWithShadow().copyWith(
+                                  fontSize: isSmallScreen ? 12 : 14,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              );
+                            },
+                          ),
                         ),
-                        SizedBox(width: 10),
+                        SizedBox(width: isSmallScreen ? 6 : 10),
                         Icon(
                           Icons.music_note,
                           color: MyColor.blueColor,
-                          size: 20,
+                          size: isSmallScreen ? 16 : 20,
                         ),
+                        SizedBox(width: 4),
                         Text(
                           'الصوت الأصلي',
-                          style: _getTextStyleWithShadow(),
+                          style: _getTextStyleWithShadow().copyWith(
+                            fontSize: isSmallScreen ? 12 : 14,
+                          ),
                         ),
                       ],
                     ),
@@ -559,10 +590,11 @@ class _OptionsScreenState extends State<OptionsScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 10 : 20),
                 child: Column(
                   children: [
                     IconButton(
+                      iconSize: isSmallScreen ? 22 : 25,
                       onPressed: () {
                         Navigator.push(
                           context,
@@ -585,7 +617,6 @@ class _OptionsScreenState extends State<OptionsScreen> {
                         ).createShader(bounds),
                         child: FaIcon(
                           FontAwesomeIcons.gift,
-                          size: 25.0,
                           color: Colors.white,
                         ),
                       ),
@@ -600,11 +631,13 @@ class _OptionsScreenState extends State<OptionsScreen> {
                             snapshot.hasData ? snapshot.data!.docs.length : 0;
                         return Text(
                           _formatCount(giftCount),
-                          style: _getTextStyleWithShadow(),
+                          style: _getTextStyleWithShadow().copyWith(
+                            fontSize: isSmallScreen ? 12 : 14,
+                          ),
                         );
                       },
                     ),
-                    SizedBox(height: 10),
+                    SizedBox(height: isSmallScreen ? 6 : 10),
                     ShaderMask(
                       shaderCallback: (bounds) => LinearGradient(
                         colors: [
@@ -614,10 +647,11 @@ class _OptionsScreenState extends State<OptionsScreen> {
                         ],
                       ).createShader(bounds),
                       child: IconButton(
+                        iconSize: isSmallScreen ? 28 : 33,
                         icon: _isLiking
                             ? SizedBox(
-                                width: 25,
-                                height: 25,
+                                width: isSmallScreen ? 20 : 25,
+                                height: isSmallScreen ? 20 : 25,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   color: Colors.white,
@@ -627,7 +661,6 @@ class _OptionsScreenState extends State<OptionsScreen> {
                                 _isLiked
                                     ? Icons.favorite
                                     : Icons.favorite_border,
-                                size: 33.0,
                                 color: _isLiked ? Colors.red : Colors.white,
                               ),
                         onPressed: _toggleLike,
@@ -635,9 +668,11 @@ class _OptionsScreenState extends State<OptionsScreen> {
                     ),
                     Text(
                       _formatCount(_likeCount),
-                      style: _getTextStyleWithShadow(),
+                      style: _getTextStyleWithShadow().copyWith(
+                        fontSize: isSmallScreen ? 12 : 14,
+                      ),
                     ),
-                    SizedBox(height: 10),
+                    SizedBox(height: isSmallScreen ? 6 : 10),
                     ShaderMask(
                       shaderCallback: (bounds) => LinearGradient(
                         colors: [
@@ -647,9 +682,9 @@ class _OptionsScreenState extends State<OptionsScreen> {
                         ],
                       ).createShader(bounds),
                       child: IconButton(
+                        iconSize: isSmallScreen ? 22 : 25,
                         icon: Icon(
                           Icons.mode_comment_outlined,
-                          size: 25.0,
                           color: Colors.white,
                         ),
                         onPressed: () {
@@ -674,11 +709,13 @@ class _OptionsScreenState extends State<OptionsScreen> {
                             snapshot.hasData ? snapshot.data!.docs.length : 0;
                         return Text(
                           _formatCount(commentCount),
-                          style: _getTextStyleWithShadow(),
+                          style: _getTextStyleWithShadow().copyWith(
+                            fontSize: isSmallScreen ? 12 : 14,
+                          ),
                         );
                       },
                     ),
-                    SizedBox(height: 10),
+                    SizedBox(height: isSmallScreen ? 6 : 10),
                     Transform(
                       transform: Matrix4.rotationZ(6.5),
                       child: ShaderMask(
@@ -690,14 +727,15 @@ class _OptionsScreenState extends State<OptionsScreen> {
                           ],
                         ).createShader(bounds),
                         child: IconButton(
-                          icon:
-                              Icon(Icons.send, size: 25.0, color: Colors.white),
+                          iconSize: isSmallScreen ? 22 : 25,
+                          icon: Icon(Icons.send, color: Colors.white),
                           onPressed: () => _shareViaApps(widget.post.videoUrl),
                         ),
                       ),
                     ),
-                    SizedBox(height: 3),
+                    SizedBox(height: isSmallScreen ? 2 : 3),
                     IconButton(
+                      iconSize: isSmallScreen ? 22 : 24,
                       icon: Icon(Icons.more_vert, color: Colors.white),
                       onPressed: _showPostOptions,
                     ),

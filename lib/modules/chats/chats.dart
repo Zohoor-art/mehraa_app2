@@ -22,21 +22,6 @@ class _ChatsPageState extends State<ChatsPage> with TickerProviderStateMixin {
     });
   }
 
-  double changePositionOfLine() {
-    switch (current) {
-      case 0:
-        return MediaQuery.of(context).size.width * 0.5;
-      case 1:
-        return 0;
-      default:
-        return 0;
-    }
-  }
-
-  double changeContainerWidth() {
-    return MediaQuery.of(context).size.width * 0.4;
-  }
-
   @override
   void initState() {
     tabController = TabController(length: tabs.length, vsync: this);
@@ -54,52 +39,89 @@ class _ChatsPageState extends State<ChatsPage> with TickerProviderStateMixin {
   Widget _buildTabBar() {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
-      height: 35,
-      child: Stack(
+      height: 45,
+      child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: tabs.map((tab) {
-              int index = tabs.indexOf(tab);
-              return GestureDetector(
-                onTap: () {
-                  tabController.animateTo(index);
-                },
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    tab,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontFamily: 'Tajawal',
-                      color: current == index ? Colors.black : Colors.grey,
-                      fontWeight: current == index
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                    ),
+            children: [
+              // تبويب الدردشات
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => tabController.animateTo(0),
+                  child: Column(
+                    children: [
+                      Text(
+                        tabs[0],
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontFamily: 'Tajawal',
+                          color: current == 0 ? Colors.black : Colors.grey,
+                          fontWeight: current == 0 
+                              ? FontWeight.bold 
+                              : FontWeight.normal,
+                        ),
+                      ),
+                      if (current == 0)
+                        Center(
+                          child: Container(
+                            width: MediaQuery.of(context).size.width * 0.2, // 40% من نصف الشاشة
+                            height: 6,
+                            margin: const EdgeInsets.only(top: 8),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF4423B1),
+                                  Color(0xFF6B2298),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-              );
-            }).toList(),
-          ),
-          AnimatedPositioned(
-            bottom: 0,
-            left: changePositionOfLine(),
-            duration: Duration(milliseconds: 100),
-            child: AnimatedContainer(
-              duration: Duration(milliseconds: 100),
-              width: changeContainerWidth(),
-              height: 6,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFF4423B1),
-                    Color(0xFF6B2298),
-                  ],
+              ),
+              
+              // تبويب الطلبات
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => tabController.animateTo(1),
+                  child: Column(
+                    children: [
+                      Text(
+                        tabs[1],
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontFamily: 'Tajawal',
+                          color: current == 1 ? Colors.black : Colors.grey,
+                          fontWeight: current == 1 
+                              ? FontWeight.bold 
+                              : FontWeight.normal,
+                        ),
+                      ),
+                      if (current == 1)
+                        Center(
+                          child: Container(
+                            width: MediaQuery.of(context).size.width * 0.2, // 40% من نصف الشاشة
+                            height: 6,
+                            margin: const EdgeInsets.only(top: 8),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFF4423B1),
+                                  Color(0xFF6B2298),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ],
       ),
@@ -110,35 +132,32 @@ class _ChatsPageState extends State<ChatsPage> with TickerProviderStateMixin {
     return Container(
       width: MediaQuery.of(context).size.width * 0.9,
       height: 55,
-      margin: EdgeInsets.symmetric(vertical: 13),
+      margin: EdgeInsets.symmetric(
+          vertical: MediaQuery.of(context).size.height * 0.02),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 5,
-            offset: Offset(0, 3),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: [
-            Icon(Icons.search_outlined, size: 30, color: Color(0xFF6319A5)),
-            SizedBox(width: 10),
+            Icon(Icons.search_outlined, size: 30, color: const Color(0xFF6319A5)),
+            const SizedBox(width: 10),
             Expanded(
               child: TextField(
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
+                onChanged: (value) => setState(() => _searchQuery = value),
                 decoration: InputDecoration(
                   hintText: 'بحث',
-                  hintStyle: TextStyle(
+                  hintStyle: const TextStyle(
                     color: Colors.black,
                     fontSize: 18,
                     fontFamily: 'Tajawal',
@@ -147,12 +166,12 @@ class _ChatsPageState extends State<ChatsPage> with TickerProviderStateMixin {
                 ),
               ),
             ),
-            Icon(
+            const Icon(
               Icons.person_outlined,
               color: Color(0xFF6319A5),
               size: 30,
             ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
           ],
         ),
       ),
@@ -162,11 +181,11 @@ class _ChatsPageState extends State<ChatsPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xffFAF5FF),
+      backgroundColor: const Color(0xffFAF5FF),
       appBar: AppBar(
         toolbarHeight: 3,
         flexibleSpace: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [
                 Color(0xFF4423B1),
@@ -184,9 +203,9 @@ class _ChatsPageState extends State<ChatsPage> with TickerProviderStateMixin {
         child: SafeArea(
           child: Column(
             children: [
-              SizedBox(height: 10),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
               headingTitle(),
-              SizedBox(height: 10),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.02),
               _buildTabBar(),
               _buildSearchBar(),
               Expanded(

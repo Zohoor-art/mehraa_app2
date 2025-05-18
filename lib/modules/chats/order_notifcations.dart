@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:mehra_app/shared/components/constants.dart';
 
-
 class OrderNotifications extends StatefulWidget {
   final String searchQuery;
   
@@ -129,10 +128,13 @@ class _OrderNotificationsState extends State<OrderNotifications> {
   }
 
   Widget _buildOrdersStatsCard(String title, int count, Color color) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+
     return Expanded(
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 4),
-        padding: EdgeInsets.all(12),
+        padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(12),
@@ -143,7 +145,7 @@ class _OrderNotificationsState extends State<OrderNotifications> {
             Text(
               title,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: isSmallScreen ? 12 : 14,
                 fontWeight: FontWeight.bold,
                 color: color,
               ),
@@ -152,7 +154,7 @@ class _OrderNotificationsState extends State<OrderNotifications> {
             Text(
               count.toString(),
               style: TextStyle(
-                fontSize: 20,
+                fontSize: isSmallScreen ? 16 : 20,
                 fontWeight: FontWeight.bold,
                 color: color,
               ),
@@ -164,9 +166,12 @@ class _OrderNotificationsState extends State<OrderNotifications> {
   }
 
   Widget _buildOrdersStats() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+
     return Container(
-      margin: EdgeInsets.all(12),
-      padding: EdgeInsets.all(12),
+      margin: EdgeInsets.all(isSmallScreen ? 8 : 12),
+      padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -184,12 +189,12 @@ class _OrderNotificationsState extends State<OrderNotifications> {
           Text(
             'إحصائيات الطلبات',
             style: TextStyle(
-              fontSize: 16,
+              fontSize: isSmallScreen ? 14 : 16,
               fontWeight: FontWeight.bold,
               color: Colors.grey[800],
             ),
           ),
-          SizedBox(height: 12),
+          SizedBox(height: isSmallScreen ? 8 : 12),
           Row(
             children: [
               _buildOrdersStatsCard('هذا الأسبوع', _weeklyOrders, MyColor.blueColor),
@@ -247,8 +252,14 @@ class _OrderNotificationsState extends State<OrderNotifications> {
       'pending': MyColor.pinkColor,
     };
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: EdgeInsets.symmetric(
+        horizontal: isSmallScreen ? 8 : 12,
+        vertical: isSmallScreen ? 4 : 6,
+      ),
       decoration: BoxDecoration(
         color: colors[status]!.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
@@ -262,7 +273,7 @@ class _OrderNotificationsState extends State<OrderNotifications> {
         }[status]!,
         style: TextStyle(
           color: colors[status],
-          fontSize: 12,
+          fontSize: isSmallScreen ? 10 : 12,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -276,9 +287,15 @@ class _OrderNotificationsState extends State<OrderNotifications> {
         ? '${description.substring(0, 50)}...'
         : description;
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+
     return AnimatedContainer(
       duration: Duration(milliseconds: 300),
-      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      margin: EdgeInsets.symmetric(
+        vertical: 8,
+        horizontal: isSmallScreen ? 8 : 16,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -294,7 +311,7 @@ class _OrderNotificationsState extends State<OrderNotifications> {
         children: [
           ListTile(
             leading: CircleAvatar(
-              radius: 24,
+              radius: isSmallScreen ? 20 : 24,
               backgroundImage: NetworkImage(order['buyerImage'] ?? ''),
               child: order['buyerImage'] == null
                   ? Icon(Icons.person, color: Colors.white)
@@ -304,32 +321,34 @@ class _OrderNotificationsState extends State<OrderNotifications> {
               order['buyerName'],
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: 16,
+                fontSize: isSmallScreen ? 14 : 16,
               ),
             ),
             subtitle: Text(
               _formatDateTime(order['createdAt']),
               style: TextStyle(
                 color: Colors.grey[600],
-                fontSize: 12,
+                fontSize: isSmallScreen ? 10 : 12,
               ),
             ),
             trailing: _buildStatusIndicator(order['status']),
           ),
           if (order['productImage'] != null) ...[
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+              padding: EdgeInsets.symmetric(
+                horizontal: isSmallScreen ? 8 : 16,
+              ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.network(
                   order['productImage'],
-                  height: 180,
+                  height: isSmallScreen ? 120 : 180,
                   width: double.infinity,
                   fit: BoxFit.cover,
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;
                     return Container(
-                      height: 180,
+                      height: isSmallScreen ? 120 : 180,
                       color: Colors.grey[200],
                       child: Center(
                         child: CircularProgressIndicator(
@@ -344,22 +363,24 @@ class _OrderNotificationsState extends State<OrderNotifications> {
                 ),
               ),
             ),
-            SizedBox(height: 12),
+            SizedBox(height: isSmallScreen ? 8 : 12),
           ],
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
+            padding: EdgeInsets.symmetric(
+              horizontal: isSmallScreen ? 8 : 16,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   isExpanded ? description : shortDescription,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: isSmallScreen ? 12 : 14,
                     color: Colors.grey[800],
                   ),
                 ),
                 if (description.length > 50) ...[
-                  SizedBox(height: 8),
+                  SizedBox(height: isSmallScreen ? 4 : 8),
                   GestureDetector(
                     onTap: () {
                       setState(() {
@@ -371,6 +392,7 @@ class _OrderNotificationsState extends State<OrderNotifications> {
                       style: TextStyle(
                         color: MyColor.blueColor,
                         fontWeight: FontWeight.bold,
+                        fontSize: isSmallScreen ? 12 : 14,
                       ),
                     ),
                   ),
@@ -379,46 +401,63 @@ class _OrderNotificationsState extends State<OrderNotifications> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(16),
+            padding: EdgeInsets.all(isSmallScreen ? 8 : 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                ElevatedButton(
-                  onPressed: order['status'] == 'pending'
-                      ? () => _updateOrderStatus(order['id'], 'completed')
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: order['status'] == 'pending'
-                        ? MyColor.blueColor
-                        : Colors.grey,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: order['status'] == 'pending'
+                        ? () => _updateOrderStatus(order['id'], 'completed')
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: order['status'] == 'pending'
+                          ? MyColor.blueColor
+                          : Colors.grey,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isSmallScreen ? 8 : 20,
+                        vertical: isSmallScreen ? 6 : 8,
+                      ),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  ),
-                  child: Text(
-                    order['status'] == 'completed' ? 'تم القبول' : 'قبول الطلب',
-                    style: TextStyle(color: Colors.white),
+                    child: Text(
+                      order['status'] == 'completed' ? 'تم القبول' : 'قبول الطلب',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: isSmallScreen ? 12 : 14,
+                      ),
+                    ),
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: order['status'] == 'pending'
-                      ? () => _updateOrderStatus(order['id'], 'cancelled')
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        order['status'] == 'pending' ? Colors.red : Colors.grey,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                SizedBox(width: isSmallScreen ? 8 : 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: order['status'] == 'pending'
+                        ? () => _updateOrderStatus(order['id'], 'cancelled')
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          order['status'] == 'pending' ? Colors.red : Colors.grey,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isSmallScreen ? 8 : 20,
+                        vertical: isSmallScreen ? 6 : 8,
+                      ),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  ),
-                  child: Text(
+                    child: Text(
                       order['status'] == 'cancelled' ? 'تم الرفض' : 'رفض الطلب',
                       style: TextStyle(
-                          color: order['status'] == 'pending'
-                              ? Colors.white
-                              : Colors.grey)),
+                        color: order['status'] == 'pending'
+                            ? Colors.white
+                            : Colors.grey,
+                        fontSize: isSmallScreen ? 12 : 14,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -427,7 +466,6 @@ class _OrderNotificationsState extends State<OrderNotifications> {
       ),
     );
   }
-
 
   List<Map<String, dynamic>> _filterOrders() {
     if (widget.searchQuery.isEmpty) return _orders;
@@ -441,7 +479,9 @@ class _OrderNotificationsState extends State<OrderNotifications> {
   @override
   Widget build(BuildContext context) {
     final filteredOrders = _filterOrders();
-    
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 360;
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -449,7 +489,7 @@ class _OrderNotificationsState extends State<OrderNotifications> {
           'طلبات المنتجات',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 20,
+            fontSize: isSmallScreen ? 18 : 20,
           ),
         ),
         centerTitle: true,
@@ -478,16 +518,16 @@ class _OrderNotificationsState extends State<OrderNotifications> {
                     children: [
                       Icon(
                         Icons.shopping_bag_outlined,
-                        size: 60,
+                        size: isSmallScreen ? 50 : 60,
                         color: Colors.grey[400],
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: isSmallScreen ? 12 : 16),
                       Text(
                         widget.searchQuery.isEmpty 
                             ? 'لا توجد طلبات متاحة'
                             : 'لا توجد نتائج بحث',
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: isSmallScreen ? 16 : 18,
                           color: Colors.grey[600],
                         ),
                       ),
@@ -501,7 +541,10 @@ class _OrderNotificationsState extends State<OrderNotifications> {
                     await _fetchOrdersCount();
                   },
                   child: ListView(
-                    padding: EdgeInsets.only(top: 16, bottom: 24),
+                    padding: EdgeInsets.only(
+                      top: isSmallScreen ? 8 : 16,
+                      bottom: isSmallScreen ? 16 : 24,
+                    ),
                     children: [
                       _buildOrdersStats(),
                       ...filteredOrders.map((order) => _buildOrderItem(order)).toList(),

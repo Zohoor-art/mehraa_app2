@@ -13,6 +13,7 @@ import 'package:mehra_app/modules/rating/rating.dart';
 import 'package:mehra_app/modules/register/register_screen.dart';
 import 'package:mehra_app/modules/sharing/sharing.dart';
 import 'package:mehra_app/shared/components/constants.dart';
+import 'package:mehra_app/shared/components/custom_Dialog.dart';
 import 'package:mehra_app/shared/components/post_actions.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
@@ -75,39 +76,38 @@ final bool isLoggedIn = currentUser != null;
       await followingRef.set({'followedAt': Timestamp.now()});
       await followerRef.set({'followedAt': Timestamp.now()});
 
+      setState(() {
+        isFollowing = true; // يخفي الزر
+      });
+      await NotificationMethods.sendFollowNotification(
+        fromUid: currentUser.uid,
+        toUid: otherUserId,
+      );
+    } catch (e) {
+      debugPrint('Error following user: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('حدث خطأ أثناء المتابعة')),
+      );
+    }
 
-    setState(() {
-      isFollowing = true; // يخفي الزر
-    });
-    await NotificationMethods.sendFollowNotification(
-      fromUid: currentUser.uid,
-      toUid: otherUserId,
-    );
-  } catch (e) {
-    debugPrint('Error following user: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('حدث خطأ أثناء المتابعة')),
-    );
+    void checkIfFollowing() async {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final otherUserId = _userData?['uid'];
 
+      if (currentUser == null || otherUserId == null) return;
+
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('following')
+          .doc(otherUserId)
+          .get();
+      if (!mounted) return;
+      setState(() {
+        isFollowing = doc.exists; // ← true إذا تتابعه
+      });
+    }
   }
-
-  void checkIfFollowing() async {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    final otherUserId = _userData?['uid'];
-
-    if (currentUser == null || otherUserId == null) return;
-
-    final doc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUser.uid)
-        .collection('following')
-        .doc(otherUserId)
-        .get();
-    if (!mounted) return;
-    setState(() {
-      isFollowing = doc.exists; // ← true إذا تتابعه
-    });
-  }}
 
   @override
   void initState() {
@@ -149,87 +149,84 @@ final bool isLoggedIn = currentUser != null;
         _userData = data;
         _isUserDataLoading = false;
       });
-       checkIfFollowing();
+      checkIfFollowing();
     }
   }
 
 // داخل _PostWidgetState
-Future<void> _createOrderAndOpenChat() async {
-  try {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser == null || _userData == null) return;
+  Future<void> _createOrderAndOpenChat() async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null || _userData == null) return;
 
-    // 1. التحقق من أن المستخدم الحالي ليس صاحب المنشور
-    if (currentUser.uid == widget.post.uid) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('لا يمكنك طلب منتجك الخاص')),
-      );
-      return;
-    }
+      // 1. التحقق من أن المستخدم الحالي ليس صاحب المنشور
+      if (currentUser.uid == widget.post.uid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('لا يمكنك طلب منتجك الخاص')),
+        );
+        return;
+      }
 
-    // 2. إنشاء الطلب في جدول orders الخاص بصاحب المنشور
-    final orderRef = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(widget.post.uid)
-        .collection('orders')
-        .add({
-      'productDescription': widget.post.description,
-      'productImage': widget.post.postUrl,
-      'buyerId': currentUser.uid,
-      'sellerId': widget.post.uid,
-      'createdAt': FieldValue.serverTimestamp(),
-      'status': 'pending',
-      'postId': widget.post.postId,
-    });
+      // 2. إنشاء الطلب في جدول orders الخاص بصاحب المنشور
+      final orderRef = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.post.uid)
+          .collection('orders')
+          .add({
+        'productDescription': widget.post.description,
+        'productImage': widget.post.postUrl,
+        'buyerId': currentUser.uid,
+        'sellerId': widget.post.uid,
+        'createdAt': FieldValue.serverTimestamp(),
+        'status': 'pending',
+        'postId': widget.post.postId,
+      });
 // ✅ إرسال الإشعار بعد إنشاء الطلب
-await NotificationService.sendNotification(
-  toUid: widget.post.uid,
-  fromUid: currentUser.uid,
-  type: 'order',
-  postId: widget.post.postId,
-  message: 'تم استلام طلب جديد على منتجك 🎉',
-);
+      await NotificationService.sendNotification(
+        toUid: widget.post.uid,
+        fromUid: currentUser.uid,
+        type: 'order',
+        postId: widget.post.postId,
+        message: 'تم استلام طلب جديد على منتجك 🎉',
+      );
 
-    // 3. فتح صفحة المحادثة مع إرسال الرسالة التلقائية
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChatRoom(
-          userId: widget.post.uid,
-          userName: _userData?['storeName'] ??
-              _userData?['displayName'] ??
-              'مستخدم',
-          orderId: orderRef.id, // إرسال معرف الطلب
+      // 3. فتح صفحة المحادثة مع إرسال الرسالة التلقائية
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatRoom(
+            userId: widget.post.uid,
+            userName: _userData?['storeName'] ??
+                _userData?['displayName'] ??
+                'مستخدم',
+            orderId: orderRef.id, // إرسال معرف الطلب
+          ),
         ),
-      ),
-    );
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('حدث خطأ أثناء إنشاء الطلب: ${e.toString()}')),
-    );
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('حدث خطأ أثناء إنشاء الطلب: ${e.toString()}')),
+      );
+    }
   }
-}
 
-void checkIfFollowing() async {
-  final currentUser = FirebaseAuth.instance.currentUser;
-  final otherUserId = _userData?['uid'];
+  void checkIfFollowing() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final otherUserId = _userData?['uid'];
 
-  if (currentUser == null || otherUserId == null) return;
+    if (currentUser == null || otherUserId == null) return;
 
-  final doc = await FirebaseFirestore.instance
-      .collection('users')
-      .doc(currentUser.uid)
-      .collection('following')
-      .doc(otherUserId)
-      .get();
-if (!mounted) return;
-  setState(() {
-    isFollowing = doc.exists; // ← true إذا تتابعه
-  });
-
-
-}
-
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('following')
+        .doc(otherUserId)
+        .get();
+    if (!mounted) return;
+    setState(() {
+      isFollowing = doc.exists; // ← true إذا تتابعه
+    });
+  }
 
   @override
   void dispose() {
@@ -425,7 +422,7 @@ void _handleAuthRequired(BuildContext context, VoidCallback action) {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-               _buildInteractionButton(
+_buildInteractionButton(
   icon: SvgPicture.asset(
     isLiked
         ? 'assets/images/fillHeart.svg'
@@ -452,9 +449,9 @@ void _handleAuthRequired(BuildContext context, VoidCallback action) {
   },
 ),
 
-                SizedBox(width: 15),
+SizedBox(width: 15),
 
-           StreamBuilder<QuerySnapshot>(
+StreamBuilder<QuerySnapshot>(
   stream: FirebaseFirestore.instance
       .collection('posts')
       .doc(widget.post.postId)
@@ -473,7 +470,6 @@ void _handleAuthRequired(BuildContext context, VoidCallback action) {
       countText: commentCount.toString(),
       onPressed: () {
         _handleAuthRequired(context, () async {
-          // هذا الجزء سينفذ فقط لو المستخدم مسجل دخول
           await NotificationMethods.sendCommentNotification(
             fromUid: widget.currentUserId,
             toUid: widget.post.uid,
@@ -484,7 +480,8 @@ void _handleAuthRequired(BuildContext context, VoidCallback action) {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => Comments(postId: widget.post.postId),
+              builder: (context) =>
+                  Comments(postId: widget.post.postId),
             ),
           );
         });
@@ -494,8 +491,8 @@ void _handleAuthRequired(BuildContext context, VoidCallback action) {
 ),
 
 SizedBox(width: 16),
-            
-               _buildInteractionButton(
+
+_buildInteractionButton(
   icon: SvgPicture.asset(
     'assets/images/share.svg',
     color: Colors.deepPurple,
@@ -810,30 +807,21 @@ void _handleAuthRequired(BuildContext context, VoidCallback action) {
   }
 
   void _showReviewDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('تقييم المتجر'),
-        content: Text('هل تريد تقييم هذا المتجر؟'),
-        actions: [
-          TextButton(
-            child: Text('إلغاء'),
-            onPressed: () => Navigator.pop(context),
+    CustomDialog.show(
+      context,
+      title: 'تقييم المتجر',
+      content: 'هل تريد تقييم هذا المتجر؟',
+      icon: Icons.star_rate,
+      confirmText: 'موافق',
+      cancelText: 'إلغاء',
+      onConfirm: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RatingCard(uid: widget.post.uid),
           ),
-          ElevatedButton(
-            child: Text('موافق'),
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => RatingCard(uid: widget.post.uid),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -873,22 +861,16 @@ void _handleAuthRequired(BuildContext context, VoidCallback action) {
   }
 
   Future<void> _confirmDelete() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('حذف المنشور'),
-        content: Text('هل أنت متأكد أنك تريد حذف هذا المنشور؟'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('إلغاء'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('حذف', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+    final confirmed = await CustomDialog.show<bool>(
+      context,
+      title: 'حذف المنشور',
+      content: 'هل أنت متأكد أنك تريد حذف هذا المنشور؟',
+      icon: Icons.delete,
+      confirmText: 'حذف',
+      cancelText: 'إلغاء',
+      confirmButtonColor: Colors.red,
+      onConfirm: () => Navigator.pop(context, true),
+      onCancel: () => Navigator.pop(context, false),
     );
 
     if (confirmed == true && widget.onDelete != null) {

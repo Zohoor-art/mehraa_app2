@@ -152,133 +152,134 @@ class StoryPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMyStoryButton(BuildContext context, List<Story> myStories) {
-    final User? currentUser = FirebaseAuth.instance.currentUser;
-    final String? currentUserId = currentUser?.uid;
+ Widget _buildMyStoryButton(BuildContext context, List<Story> myStories) {
+  final User? currentUser = FirebaseAuth.instance.currentUser;
+  final String? currentUserId = currentUser?.uid;
 
-    if (currentUserId == null) {
-      return const SizedBox.shrink();
-    }
+  if (currentUserId == null) {
+    return const SizedBox.shrink();
+  }
 
-    bool hasStories = myStories.isNotEmpty;
-    bool allOpened = myStories.every((story) => story.isOpened);
+  bool hasStories = myStories.isNotEmpty;
+  bool allOpened = myStories.every((story) => story.isOpened);
 
-    return FutureBuilder<Users?>(
-      future: _getUser(currentUserId),
-      builder: (context, snapshot) {
-        final user = snapshot.data;
+  return FutureBuilder<Users?>(
+    future: _getUser(currentUserId),
+    builder: (context, snapshot) {
+      final user = snapshot.data;
 
-        return Padding(
-          padding: const EdgeInsets.all(7.0),
-          child: InkWell(
-            onTap: hasStories
-                ? () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => UserStoriesPage(userId: currentUserId)),
-                    );
-                  }
-                : null,
-            child: Column(
-              children: [
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    if (hasStories)
-                      ClipPath(
-                        clipper: HouseClipper(),
-                        child: Container(
-                          width: 70,
-                          height: 77,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: allOpened
-                                  ? [Colors.grey, Colors.grey]
-                                  : [Color(0xff9022B2), Color(0xffEEAB63)],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                            ),
-                          ),
-                        ),
-                      ),
+      return Padding(
+        padding: const EdgeInsets.all(7.0),
+        child: InkWell(
+          onTap: hasStories
+              ? () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => UserStoriesPage(userId: currentUserId)),
+                  );
+                }
+              : null,
+          child: Column(
+            children: [
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  if (hasStories)
                     ClipPath(
                       clipper: HouseClipper(),
                       child: Container(
-                        width: 60,
-                        height: 67,
-                        color: Colors.white,
-                        child: user?.profileImage != null
-                            ? Image.network(
-                                user!.profileImage!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
-                              )
-                            : const Icon(Icons.person, size: 40),
-                      ),
-                    ),
-                    // زر الإضافة مع التحقق من isCommercial
-                    Positioned(
-                      bottom: -2,
-                      right: -1,
-                      child: GestureDetector(
-                        onTap: () {
-                          if (user?.isCommercial == false) {
-                            showDialog(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: const Text('تنبيه'),
-                                  content: const Text('يجب أن تكون مسجلًا بحساب تجاري لإنشاء ستوري.'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text('حسناً'),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          } else {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => CreateStoryPage()),
-                            );
-                          }
-                        },
-                        child: Container(
-                          width: 25,
-                          height: 25,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [Colors.pink, Colors.purple],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                        width: 70,
+                        height: 77,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: allOpened
+                                ? [Colors.grey, Colors.grey]
+                                : [Color(0xff9022B2), Color(0xffEEAB63)],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
                           ),
-                          child: const Icon(Icons.add, color: Colors.white, size: 20),
                         ),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                const SizedBox(
-                  width: 70,
-                  child: Text(
-                    'قصتي',
-                    style: TextStyle(fontSize: 12),
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
+                  ClipPath(
+                    clipper: HouseClipper(),
+                    child: Container(
+                      width: 60,
+                      height: 67,
+                      color: Colors.white,
+                      child: user?.profileImage != null
+                          ? Image.network(
+                              user!.profileImage!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const Icon(Icons.broken_image),
+                            )
+                          : const Icon(Icons.person, size: 40),
+                    ),
                   ),
+                  // زر الإضافة مع شرط الحساب التجاري
+                  Positioned(
+                    bottom: -2,
+                    right: -1,
+                    child: GestureDetector(
+                      onTap: () {
+                        if (user?.isCommercial == false) {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: const Text('تنبيه'),
+                                content: const Text('يجب أن تكون مسجلًا بحساب تجاري لإنشاء ستوري.'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('حسناً'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => CreateStoryPage()),
+                          );
+                        }
+                      },
+                      child: Container(
+                        width: 25,
+                        height: 25,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [Colors.pink, Colors.purple],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: const Icon(Icons.add, color: Colors.white, size: 20),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              const SizedBox(
+                width: 70,
+                child: Text(
+                  'يومياتي',
+                  style: TextStyle(fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-      },
-    );
-  }
+        ),
+      );
+    },
+  );
+}
+
 Widget _buildStoryItem(BuildContext context, String userId, List<Story> stories) {
   bool allOpened = stories.every((story) => story.isOpened);
 

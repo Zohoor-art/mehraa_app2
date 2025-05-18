@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 ThemeData darkTheme = ThemeData(
+  
   primarySwatch: Colors.pink,
   scaffoldBackgroundColor: Color(0xFF121216),
   appBarTheme: AppBarTheme(
@@ -36,9 +37,12 @@ ThemeData darkTheme = ThemeData(
       color: Colors.white,
     ),
     bodyMedium: TextStyle(
+        fontFamily: 'Tajawal',
+
       fontSize: 16,
       color: Colors.white,
     ),
+    
   ),
 );
 // ThemeData lightTheme = ThemeData(

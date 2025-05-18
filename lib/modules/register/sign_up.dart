@@ -12,6 +12,7 @@ import 'package:mehra_app/models/firebase/auth_methods.dart';
 import 'package:mehra_app/modules/register/email_verification_screen.dart';
 import 'package:mehra_app/shared/components/components.dart';
 import 'package:mehra_app/shared/components/constants.dart';
+import 'package:mehra_app/shared/components/custom_Dialog.dart';
 
 class SignUpscreen extends StatefulWidget {
   const SignUpscreen({super.key});
@@ -58,6 +59,37 @@ class _SignUpscreenState extends State<SignUpscreen> {
     }
   }
 
+  Future<void> _showConfirmationDialog() async {
+    await CustomDialog.show(
+      context,
+      title: 'تأكيد البريد الإلكتروني',
+      content: 'هل أنت متأكد من صحة البريد الإلكتروني المدخل؟\n${emailController.text}',
+      icon: Icons.email,
+      iconColor: Colors.white,
+      confirmButtonColor: MyColor.blueColor,
+      confirmText: 'نعم، متأكد',
+      cancelText: 'تعديل البريد',
+      onConfirm: _submitForm,
+      onCancel: () {
+        Navigator.of(context).pop(); // إغلاق مربع الحوار أولاً
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          FocusScope.of(context).requestFocus(FocusNode());
+          // تحديد النص بالكامل لتسهيل التعديل
+          emailController.selection = TextSelection(
+            baseOffset: 0,
+            extentOffset: emailController.text.length,
+          );
+          // إعادة التركيز على حقل البريد بعد تأخير بسيط
+          Future.delayed(Duration(milliseconds: 100), () {
+            FocusScope.of(context).requestFocus(emailController.selection.extentOffset == emailController.text.length 
+                ? null 
+                : FocusNode());
+          });
+        });
+      },
+    );
+  }
+
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate() && _imageBytes != null) {
       setState(() => isLoading = true);
@@ -73,16 +105,27 @@ class _SignUpscreenState extends State<SignUpscreen> {
       setState(() => isLoading = false);
 
       if (result['success'] == true) {
-        Navigator.pushReplacement(
+        await CustomDialog.show(
           context,
-          MaterialPageRoute(
-            builder: (context) => EmailVerificationScreen(
-              userId: result['userId'],
-              email: emailController.text.trim(),
-              storeName: storeNameController.text.trim(),
-              profileImage: result['profileImage'],
-            ),
-          ),
+          title: 'تحقق من بريدك الإلكتروني',
+          content: 'لقد أرسلنا رابط التحقق إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد أو الرسائل غير المرغوب فيها.',
+          icon: Icons.email,
+          iconColor: Colors.white,
+          confirmButtonColor: MyColor.blueColor,
+          confirmText: 'حسناً',
+          onConfirm: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => EmailVerificationScreen(
+                  userId: result['userId'],
+                  email: emailController.text.trim(),
+                  storeName: storeNameController.text.trim(),
+                  profileImage: result['profileImage'],
+                ),
+              ),
+            );
+          },
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -238,7 +281,18 @@ class _SignUpscreenState extends State<SignUpscreen> {
                             ),
                             SizedBox(height: screenHeight * 0.03),
                             GradientButton(
-                              onPressed: _submitForm,
+                              onPressed: () {
+                                if (_formKey.currentState!.validate() && _imageBytes != null) {
+                                  _showConfirmationDialog();
+                                } else if (_imageBytes == null) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('الرجاء اختيار صورة للملف الشخصي'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              },
                               text: isLoading ? 'جارٍ التحميل...' : 'المتابعة',
                               width: isSmallScreen ? screenWidth * 0.8 : 319,
                               height: isSmallScreen ? 50 : 67,
